@@ -9,15 +9,11 @@ import SwiftUI
 
 struct HomeView: View {
     
-    
-    
     var body: some View {
         VStack {
-            RecordingsView()
+            RecordingsListView(recordings: Recording.recordingsFixture)
             Divider()
             Divider()
-            
-            
             RecordButtonView()
                 .ignoresSafeArea()
                 .padding(.top)
