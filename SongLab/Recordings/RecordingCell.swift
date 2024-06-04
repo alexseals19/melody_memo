@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RecordingCard: View {
+struct RecordingCell: View {
         
     @Binding var currentlyPlaying: Recording?
     

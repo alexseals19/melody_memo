@@ -41,7 +41,7 @@ struct RecordingsView: View {
             LazyVStack(alignment: .leading) {
                 ForEach(recordings) { recording in
                     Divider()
-                    RecordingCard(currentlyPlaying: $currentlyPlaying, recording: recording)
+                    RecordingCell(currentlyPlaying: $currentlyPlaying, recording: recording)
                         .padding(.horizontal)
                 }
             }
