@@ -14,7 +14,7 @@ struct HomeView: View {
             RecordingsListView(recordings: Recording.recordingsFixture)
             Divider()
             Divider()
-            TrackingToolbarView()
+            TrackingToolbarView(recordingManager: DefaultRecordingManager.shared)
                 .ignoresSafeArea()
                 .padding(.top)
         }

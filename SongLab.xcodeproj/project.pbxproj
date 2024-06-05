@@ -21,6 +21,7 @@
 		99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE542B6EC9DE003308D2 /* HomeView.swift */; };
 		99F9EE572B6EC9E0003308D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE562B6EC9E0003308D2 /* Assets.xcassets */; };
 		99F9EE5A2B6EC9E0003308D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */; };
+		99FEF52A2C112442004E1031 /* TrackingToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		99F9EE542B6EC9DE003308D2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		99F9EE562B6EC9E0003308D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingToolbarViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,10 +110,9 @@
 		99F0F72B2C10F8A1001B22CE /* TrackingToolBar */ = {
 			isa = PBXGroup;
 			children = (
-				99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */,
-				991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */,
 				99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */,
-				99F0F7302C110318001B22CE /* TrackingSettingsView.swift */,
+				99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */,
+				99FEF52B2C1126D6004E1031 /* Components */,
 			);
 			path = TrackingToolBar;
 			sourceTree = "<group>";
@@ -151,6 +152,16 @@
 				99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		99FEF52B2C1126D6004E1031 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */,
+				991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */,
+				99F0F7302C110318001B22CE /* TrackingSettingsView.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -227,6 +238,7 @@
 				99F0F72D2C10F8C3001B22CE /* MetronomeView.swift in Sources */,
 				99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */,
 				99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */,
+				99FEF52A2C112442004E1031 /* TrackingToolbarViewModel.swift in Sources */,
 				99C364F02C0F642B00873213 /* RecordingFixtures.swift in Sources */,
 				99F0F7332C112055001B22CE /* RecordingManager.swift in Sources */,
 				991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */,
