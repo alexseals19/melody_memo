@@ -12,8 +12,15 @@ struct TrackingToolbarView: View {
     //MARK: - API
     
     @State var metronomeActive = false
-    
     @State var isRecording = false
+    
+    init(recordingManager: RecordingManager) {
+        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(recordingManager: recordingManager))
+    }
+    
+    //MARK: - Variables
+    
+    @StateObject private var viewModel: TrackingToolbarViewModel
     
     //MARK: - Body
     
@@ -31,5 +38,5 @@ struct TrackingToolbarView: View {
 }
 
 #Preview {
-    TrackingToolbarView(metronomeActive: false, isRecording: false)
+    TrackingToolbarView(recordingManager: MockRecordingManager())
 }

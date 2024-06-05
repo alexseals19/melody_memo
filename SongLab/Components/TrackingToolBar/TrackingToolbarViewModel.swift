@@ -8,7 +8,7 @@
 import Foundation
 
 @MainActor
-class TrackingToolBarViewModel: ObservableObject {
+class TrackingToolbarViewModel: ObservableObject {
     
     //MARK: - API
     
