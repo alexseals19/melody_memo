@@ -46,7 +46,6 @@ struct RecordButtonView: View {
                     recordButtonDimensions = 21
                     recordButtonCornerRadius = 5
                     reordButtonOpacity = 0.0
-                    
                 }
             }
             isRecording.toggle()
@@ -67,9 +66,7 @@ struct RecordButtonView: View {
             if isRecording {
                 HStack {
                     Spacer()
-                    Spacer()
-                    Spacer()
-                    Spacer()
+                        .frame(width: 140)
                     RoundedRectangle(cornerRadius: stopButtonCornerRadius)
                         .frame(width: stopButtonDimensions, height: stopButtonDimensions)
                         .foregroundColor(.red)
@@ -79,12 +76,9 @@ struct RecordButtonView: View {
                                 .easeInOut(duration: 0.75)
                                 .repeatForever(autoreverses: true)) {
                                     stopButtonOpacity = 1.0
-                                    
                                 }
-                            
                         }
                         .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
-                    Spacer()
                 }
             }
         }

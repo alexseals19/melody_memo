@@ -13,7 +13,6 @@ struct TrackingSettingsView: View {
     
     var body: some View {
         Image(systemName: "slider.horizontal.3")
-            .padding(.trailing)
     }
 }
 

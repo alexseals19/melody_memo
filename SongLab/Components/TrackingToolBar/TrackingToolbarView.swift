@@ -25,6 +25,7 @@ struct TrackingToolbarView: View {
             RecordButtonView(isRecording: $isRecording)
             Spacer()
             TrackingSettingsView()
+                .padding(.trailing)
         }
     }
 }
