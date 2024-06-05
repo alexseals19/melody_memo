@@ -28,7 +28,6 @@ struct MetronomeView: View {
             }
         } label: {
             metronomeLabel
-                
         }
         .buttonStyle(.plain)
     }
@@ -36,24 +35,22 @@ struct MetronomeView: View {
     private var metronomeLabel: some View {
         Group {
             if metronomeActive {
-                VStack {
-                    Spacer()
-                    Spacer()
-                    Spacer()
+                VStack(spacing: -2) {
+                    Text("\(bpm)")
+                        .font(.caption)
+                        .opacity(0)
                     Image(systemName: "metronome.fill")
+                        .frame(width: 26, height: 26)
                     Text("\(bpm)")
                         .font(.caption)
                         .matchedGeometryEffect(id: 2, in: namespace, properties: .position)
-                    Spacer()
                 }
-                .frame(height: 55)
             } else {
                 Image(systemName: "metronome")
+                    .frame(width: 26, height: 26)
                     .matchedGeometryEffect(id: 2, in: namespace, properties: .position)
-                    
             }
         }
-        
     }
 }
 
