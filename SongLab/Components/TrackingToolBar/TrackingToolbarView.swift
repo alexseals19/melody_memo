@@ -11,9 +11,6 @@ struct TrackingToolbarView: View {
     
     //MARK: - API
     
-    @State var metronomeActive = false
-    @State var isRecording = false
-    
     init(recordingManager: RecordingManager) {
         _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(recordingManager: recordingManager))
     }
@@ -29,7 +26,7 @@ struct TrackingToolbarView: View {
             MetronomeView()
                 .padding(.leading)
             Spacer()
-            RecordButtonView(isRecording: $isRecording)
+            RecordButtonView(isRecording: $viewModel.isRecording)
             Spacer()
             TrackingSettingsView()
                 .padding(.trailing)

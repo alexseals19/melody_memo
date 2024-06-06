@@ -40,15 +40,17 @@ struct MetronomeView: View {
                         .font(.caption)
                         .opacity(0)
                     Image(systemName: "metronome.fill")
-                        .frame(width: 26, height: 26)
+                        .resizable()
+                        .frame(width: 21.5, height: 20)
                     Text("\(bpm)")
                         .font(.caption)
-                        .matchedGeometryEffect(id: 2, in: namespace, properties: .position)
+                        .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
                 }
             } else {
                 Image(systemName: "metronome")
-                    .frame(width: 26, height: 26)
-                    .matchedGeometryEffect(id: 2, in: namespace, properties: .position)
+                    .resizable()
+                    .frame(width: 21.5, height: 20)
+                    .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
             }
         }
     }

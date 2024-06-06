@@ -10,9 +10,9 @@ import SwiftUI
 struct RecordingsListView: View {
     
     // MARK: - API
-    
-    init(recordings: [Recording]) {
-        _viewModel = StateObject(wrappedValue: RecordingsListViewModel(recordings: recordings))
+
+    init(recordingManager: RecordingManager) {
+        _viewModel = StateObject(wrappedValue: RecordingsListViewModel(recordingManager: recordingManager))
     }
     
     // MARK: - Variables
@@ -25,7 +25,7 @@ struct RecordingsListView: View {
         ScrollView {
             LazyVStack(alignment: .leading) {
                 ForEach(viewModel.recordings) { recording in
-                    RecordingCell(currentlyPlaying: $viewModel.currentlyPlaying, recording: recording)
+                    RecordingCell(currentlyPlaying: $viewModel.currentlyPlaying, recording: recording.name)
                         .padding(.horizontal)
                 }
             }
@@ -34,5 +34,5 @@ struct RecordingsListView: View {
 }
 
 #Preview {
-    RecordingsListView(recordings: Recording.recordingsFixture)
+    RecordingsListView(recordingManager: DefaultRecordingManager.shared)
 }
