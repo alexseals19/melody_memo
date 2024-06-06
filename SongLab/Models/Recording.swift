@@ -10,6 +10,7 @@ import Foundation
 struct Recording: Identifiable, Equatable {
     let name: String
     let date: String
+    let url: URL
     let id = UUID()
 }
 

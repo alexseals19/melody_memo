@@ -13,18 +13,23 @@ class RecordingsListViewModel: ObservableObject {
     //MARK: - API
     
     @Published var currentlyPlaying: Recording?
+    @Published var recordings: [Recording] = []
     
-    public var recordings: [Recording] = []
-    
-    init(recordings: [Recording]) {
-        self.recordings = recordings
+    init(recordingManager: RecordingManager) {
+        self.recordingManager = recordingManager
+        recordings = self.recordingManager.getRecordings()
+        self.recordingManager.delegate = self
     }
     
     public func doSomethingPublic() {}
     
     // MARK: - Variables
     
-    // MARK: - Functions
-    
-    private func doSomethingPrivate() {}
+    private var recordingManager: RecordingManager
+}
+
+extension RecordingsListViewModel: RecordingManagerDelegate {
+    func recordingManagerDidUpdate(recordings: [Recording]) {
+        self.recordings = recordings
+    }
 }

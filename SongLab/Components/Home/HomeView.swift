@@ -9,19 +9,28 @@ import SwiftUI
 
 struct HomeView: View {
     
+    init(recordingManager: RecordingManager) {
+        self.recordingManager = recordingManager
+    }
+    
+    private let recordingManager: RecordingManager
+    
     var body: some View {
         VStack {
-            RecordingsListView(recordings: Recording.recordingsFixture)
+            RecordingsListView(recordingManager: recordingManager)
             Divider()
             Divider()
-            TrackingToolbarView(recordingManager: DefaultRecordingManager.shared)
+            TrackingToolbarView(recordingManager: recordingManager)
                 .ignoresSafeArea()
                 .padding(.top)
         }
         .padding()
+        .onAppear {
+            recordingManager.setUpSession()
+        }
     }
 }
 
 #Preview {
-    HomeView()
+    HomeView(recordingManager: DefaultRecordingManager.shared)
 }

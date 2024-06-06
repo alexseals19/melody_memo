@@ -12,6 +12,17 @@ class TrackingToolbarViewModel: ObservableObject {
     
     //MARK: - API
     
+    var metronomeActive = false
+    @Published var isRecording = false {
+        didSet {
+            if isRecording {
+                startTracking()
+            } else {
+                stopTracking()
+            }
+        }
+    }
+    
     init(recordingManager: RecordingManager) {
         self.recordingManager = recordingManager
     }
@@ -26,7 +37,15 @@ class TrackingToolbarViewModel: ObservableObject {
         recordingManager.playRecording(id: recording.id)
     }
     
-    private func recordRecording(_ recording: Recording) {
-        recordingManager.recordRecording()
+    private func startTracking() {
+        recordingManager.startTracking()
+    }
+    
+    private func stopTracking() {
+        recordingManager.stopTracking()
+    }
+    
+    private func setUpSession(_ recording: Recording) async {
+        recordingManager.setUpSession()
     }
 }
