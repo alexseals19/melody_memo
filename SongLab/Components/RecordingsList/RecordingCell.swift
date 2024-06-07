@@ -9,34 +9,38 @@ import SwiftUI
 
 struct RecordingCell: View {
         
+    // MARK: - API
+    
     @Binding var currentlyPlaying: Recording?
     
-    var recording: String
+    // MARK: - Variables
+        
+    var recording: Recording
     
     var body: some View {
         VStack {
             Divider()
             HStack {
                 VStack(alignment: .leading) {
-                    Text(recording)
-//                    Text(recording.date)
-//                        .font(.caption)
+                    Text(recording.name)
+                    Text(recording.date)
+                        .font(.caption)
                 }
                 
                 Spacer()
                 
                 Button {
-//                    if let currentlyPlaying, currentlyPlaying == recording {
-//                        self.currentlyPlaying = nil
-//                    } else {
-//                        currentlyPlaying = recording
-//                    }
+                    if let currentlyPlaying, currentlyPlaying == recording {
+                        self.currentlyPlaying = nil
+                    } else {
+                        currentlyPlaying = recording
+                    }
                 } label: {
-//                    if let currentlyPlaying, currentlyPlaying == recording {
-//                        Image(systemName: "pause")
-//                    } else {
-//                        Image(systemName: "play")
-//                    }
+                    if let currentlyPlaying, currentlyPlaying == recording {
+                        Image(systemName: "pause")
+                    } else {
+                        Image(systemName: "play")
+                    }
                 }
                 .buttonStyle(.plain)
             }
@@ -45,9 +49,14 @@ struct RecordingCell: View {
 }
 
 #Preview {
+    
     RecordingCell(
         currentlyPlaying: .constant(nil),
-        recording: "Recording.recordingFixture"
+        recording: Recording(
+            name: "RecordingFixture",
+            date: Date().formatted(date: .numeric, time: .omitted),
+            url: URL(fileURLWithPath: "url")
+        )
     )
         .padding(.horizontal)
 }

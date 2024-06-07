@@ -12,7 +12,17 @@ class RecordingsListViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var currentlyPlaying: Recording?
+    @Published var currentlyPlaying: Recording? {
+        didSet {
+            if currentlyPlaying != nil {
+                playRecording()
+            } else {
+                recordingManager.stopPlayback()
+            }
+            
+        }
+    }
+    
     @Published var recordings: [Recording] = []
     
     init(recordingManager: RecordingManager) {
@@ -26,6 +36,12 @@ class RecordingsListViewModel: ObservableObject {
     // MARK: - Variables
     
     private var recordingManager: RecordingManager
+    
+    private func playRecording() {
+        if let recording = currentlyPlaying {
+            recordingManager.playRecording(id: recording.id)
+        } else {}
+    }
 }
 
 extension RecordingsListViewModel: RecordingManagerDelegate {

@@ -17,6 +17,7 @@ protocol RecordingManager {
     func startTracking()
     func stopTracking()
     func playRecording(id: UUID)
+    func stopPlayback()
     func setUpSession()
     func getRecordings() -> [Recording]
 }
@@ -25,20 +26,21 @@ class DefaultRecordingManager: RecordingManager {
     
     // MARK: - API
     
-    static let shared = DefaultRecordingManager(session: AVAudioSession(), recorder: AVAudioRecorder())
+    static let shared = DefaultRecordingManager(session: AVAudioSession(), recorder: AVAudioRecorder(), player: AVAudioPlayer())
     
     weak var delegate: RecordingManagerDelegate?
     
     func startTracking() {
         do {
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let fileName = url.appendingPathComponent("Session \(self.recordings.count + 1).m4a")
+            let fileName = url.appendingPathComponent("Session " + "\(recordings.count + 1)")
             let settings = [
-                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                AVSampleRateKey: 12000,
+                AVFormatIDKey: Int(kAudioFormatAppleLossless),
+                AVSampleRateKey: 32000,
                 AVNumberOfChannelsKey: 1,
-                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
             ]
+            
+            recordings.insert(Recording(name: fileName.lastPathComponent, date: Date().formatted(date: .numeric, time: .omitted), url: fileName), at: 0)
             
             recorder = try AVAudioRecorder(url: fileName, settings: settings)
             
@@ -50,21 +52,30 @@ class DefaultRecordingManager: RecordingManager {
     
     func stopTracking() {
         self.recorder.stop()
-        print(self.recordings.count)
-        recordings.removeAll()
-        loadRecordingsFromDisk()
-        for i in recordings {
-            print(i.name)
-        }
-        print(self.recordings.count)
+        delegate?.recordingManagerDidUpdate(recordings: recordings)
     }
     
-    func playRecording(id: UUID) {}
+    func playRecording(id: UUID) {
+        do {
+            let recording = recordings.filter { $0.id == id }
+            
+            player = try AVAudioPlayer(contentsOf: recording[0].url)
+            
+            player.play()
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func stopPlayback() {
+        player.stop()
+    }
     
     func setUpSession() {
         do {
             session = AVAudioSession.sharedInstance()
             try session.setCategory(.playAndRecord)
+            try session.overrideOutputAudioPort(AVAudioSession.PortOverride.speaker)
         } catch {
             print(error.localizedDescription)
         }
@@ -78,14 +89,16 @@ class DefaultRecordingManager: RecordingManager {
     
     private var session: AVAudioSession
     private var recorder: AVAudioRecorder
+    private var player: AVAudioPlayer
     private var isRecording = false
     private var recordings: [Recording] = []
     
     // MARK: - Functions
     
-    private init(session: AVAudioSession, recorder: AVAudioRecorder) {
+    private init(session: AVAudioSession, recorder: AVAudioRecorder, player: AVAudioPlayer) {
         self.session = session
         self.recorder = recorder
+        self.player = player
         loadRecordingsFromDisk()
     }
     
@@ -95,7 +108,11 @@ class DefaultRecordingManager: RecordingManager {
             let result = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
                         
             for i in result {
-                recordings.append(Recording(name: i.relativeString, date: Date().formatted(date: .numeric, time: .omitted), url: i))
+                recordings.append(Recording(name: i.lastPathComponent, date: Date().formatted(date: .numeric, time: .omitted), url: i))
+            }
+            
+            recordings = recordings.sorted { (lhs: Recording, rhs: Recording) -> Bool in
+                return lhs.name > rhs.name
             }
             
             delegate?.recordingManagerDidUpdate(recordings: recordings)
@@ -114,6 +131,8 @@ class MockRecordingManager: RecordingManager {
     func stopTracking() {}
     
     func playRecording(id: UUID) {}
+    
+    func stopPlayback() {}
     
     func setUpSession() {}
         

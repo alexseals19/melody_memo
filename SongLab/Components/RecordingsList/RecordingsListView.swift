@@ -25,7 +25,7 @@ struct RecordingsListView: View {
         ScrollView {
             LazyVStack(alignment: .leading) {
                 ForEach(viewModel.recordings) { recording in
-                    RecordingCell(currentlyPlaying: $viewModel.currentlyPlaying, recording: recording.name)
+                    RecordingCell(currentlyPlaying: $viewModel.currentlyPlaying, recording: recording)
                         .padding(.horizontal)
                 }
             }
