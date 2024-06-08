@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import AVKit
+import AVFoundation
 
 protocol RecordingManagerDelegate: AnyObject {
     func recordingManagerDidUpdate(recordings: [Recording])
@@ -17,9 +17,9 @@ protocol RecordingManager {
     var delegate: RecordingManagerDelegate? { get set }
     func startTracking()
     func stopTracking() async
-    func startPlayback(id: UUID)
+    func startPlayback(recording: Recording)
     func stopPlayback()
-    func setUpSession()
+    func removeRecording(with name: String)
     func getRecordings() -> [Recording]
 }
 
@@ -29,46 +29,104 @@ class DefaultRecordingManager: RecordingManager {
     // MARK: - API
     
     static let shared = DefaultRecordingManager(
-        session: AVAudioSession(),
+        recordSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
         player: AVAudioPlayer(),
-        currentRecordingName: URL(filePath: ""),
-        fileNameWithExtension: URL(filePath: ""),
+        engine: AVAudioEngine(),
+        mixerNode: AVAudioMixerNode(),
+        file: AVAudioFile(),
         dataPersistenceManager: DataPersistenceManager())
     
     weak var delegate: RecordingManagerDelegate?
     
     func startTracking() {
+        
         do {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            currentRecordingName = url.appendingPathComponent("Session " + "\(recordings.count + 1).m4a")
+            currentFileName = "Session\(recordings.count + 1)"
+            
+            guard let currentFileName else {
+                assertionFailure("currentFileName is nil.")
+                return
+            }
+            
+            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+            
             let settings = [
                 AVFormatIDKey: Int(kAudioFormatAppleLossless),
                 AVSampleRateKey: 32000,
                 AVNumberOfChannelsKey: 1
             ]
-            
-            recorder = try AVAudioRecorder(url: currentRecordingName, settings: settings)
+            guard let inputs = recordSession.availableInputs else {
+                assertionFailure("inputs")
+                return
+            }
+            try recordSession.setPreferredInput(inputs[0])
+            recorder = try AVAudioRecorder(url: url, settings: settings)
             
             recorder.record()
         } catch {
             print(error.localizedDescription)
         }
+        
+//        do {
+//            let tapNode: AVAudioNode = mixerNode
+//            let format = tapNode.outputFormat(forBus: 0)
+//            
+//            print("\(format.settings)")
+//            
+//            currentFileName = "Session\(recordings.count + 1)"
+//            
+//            guard let currentFileName else {
+//                assertionFailure("currentFileName is nil.")
+//                return
+//            }
+//            
+//            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+//            file = try AVAudioFile(forWriting: url, settings: format.settings)
+//            tapNode.removeTap(onBus: 0)
+//            guard let inputs = recordSession.inputDataSources else {
+//                assertionFailure("inputs")
+//                return
+//            }
+//            try recordSession.setInputDataSource(inputs[0])
+//            tapNode.installTap(onBus: 0, bufferSize: 1024, format: format, block: { (buffer, time ) in
+//                try? self.file.write(from: buffer)
+//            })
+//            
+//            try engine.start()
+//            recorder.record()
+//        } catch {
+//            print(error.localizedDescription)
+//        }
     }
     
     func stopTracking() async {
+//        engine.inputNode.removeTap(onBus: 0)
+//        engine.stop()
+        
+        
         self.recorder.stop()
+        
+        guard let currentFileName else {
+            assertionFailure("currentFileName is nil.")
+            return
+        }
+        
+        let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+        
         do {
-            let audioAsset = AVURLAsset(url: currentRecordingName, options: nil)
+            let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
-            let name = currentRecordingName.lastPathComponent.replacingOccurrences(of: ".m4a", with: "")
-            recordings.insert(Recording(
-                                name: name,
-                                date: Date(),
-                                url: currentRecordingName,
-                                length: .seconds(durationInSeconds),
-                                id: UUID()), at: 0)
+            recordings.insert(
+                Recording(
+                    name: currentFileName,
+                    date: Date(),
+                    length: .seconds(durationInSeconds),
+                    id: UUID()
+                ),
+                at: 0
+            )
         } catch {
             print(error.localizedDescription)
         }
@@ -81,18 +139,21 @@ class DefaultRecordingManager: RecordingManager {
         delegate?.recordingManagerDidUpdate(recordings: recordings)
     }
     
-    func startPlayback(id: UUID) {
+    func startPlayback(recording: Recording) {
+        print(recordSession.availableInputs)
+        
+        let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
         do {
-            if let recording = recordings.first(where: { $0.id == id }) {
-                print("\(recording.url)")
-                player = try AVAudioPlayer(contentsOf: recording.url)
-                player.play()
-            }
-            
-            
+//            guard let inputs = recordSession. else {
+//                assertionFailure("inputs")
+//                return
+//            }
+            try recordSession.overrideOutputAudioPort(.none)
+            player = try AVAudioPlayer(contentsOf: url)
+            player.play()
         } catch {
+            print("\(url)")
             print(error.localizedDescription)
-            print("Error is here")
         }
     }
     
@@ -100,13 +161,16 @@ class DefaultRecordingManager: RecordingManager {
         player.stop()
     }
     
-    func setUpSession() {
+    func removeRecording(with name: String) {
         do {
-            session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.allowBluetoothA2DP, .allowBluetooth, .defaultToSpeaker])
+            try DataPersistenceManager.delete(name, fileType: .caf)
+            if let index = recordings.firstIndex(where: { $0.name == name }) {
+                recordings.remove(at: index)
+            }
         } catch {
             print(error.localizedDescription)
         }
+        delegate?.recordingManagerDidUpdate(recordings: recordings)
     }
     
     func getRecordings() -> [Recording] {
@@ -115,12 +179,14 @@ class DefaultRecordingManager: RecordingManager {
     
     // MARK: - Variables
     
-    private var session: AVAudioSession
+    private var recordSession: AVAudioSession
     private var recorder: AVAudioRecorder
     private var player: AVAudioPlayer
+    private var engine: AVAudioEngine
+    private var mixerNode: AVAudioMixerNode
+    private var file: AVAudioFile
     private var isRecording = false
-    private var currentRecordingName: URL
-    private var fileNameWithExtension: URL
+    private var currentFileName: String?
     private var dataPersistenceManager: DataPersistenceManager
     
     private var recordings: [Recording] = []
@@ -128,19 +194,63 @@ class DefaultRecordingManager: RecordingManager {
     // MARK: - Functions
     
     private init(
-        session: AVAudioSession,
+        recordSession: AVAudioSession,
         recorder: AVAudioRecorder,
         player: AVAudioPlayer,
-        currentRecordingName: URL,
-        fileNameWithExtension: URL,
+        engine: AVAudioEngine,
+        mixerNode: AVAudioMixerNode,
+        file: AVAudioFile,
         dataPersistenceManager: DataPersistenceManager) {
-            self.session = session
+            self.recordSession = recordSession
             self.recorder = recorder
             self.player = player
-            self.currentRecordingName = currentRecordingName
-            self.fileNameWithExtension = fileNameWithExtension
+            self.engine = engine
+            self.mixerNode = mixerNode
+            self.file = file
             self.dataPersistenceManager = dataPersistenceManager
             loadRecordingsFromDisk()
+            setUpSession()
+            setUpEngine()
+    }
+    
+    private func setUpSession() {
+        do {
+            recordSession = AVAudioSession.sharedInstance()
+            try recordSession.setCategory(.multiRoute)
+//            print(recordSession.availableInputs)
+            guard let inputs = recordSession.availableInputs else {
+                assertionFailure("inputs")
+                return
+            }
+            try recordSession.setPreferredInput(inputs[0])
+//            try recordSession.overrideOutputAudioPort(.speaker)
+            try recordSession.setSupportsMultichannelContent(true)
+            try recordSession.setActive(true)
+            
+        } catch {
+            print(error.localizedDescription)
+            print("Recording")
+        }
+    }
+    
+    private func setUpEngine() {
+        engine = AVAudioEngine()
+        mixerNode = AVAudioMixerNode()
+        
+        mixerNode.volume = 0
+        
+        engine.attach(mixerNode)
+        makeConnections()
+    }
+    
+    private func makeConnections() {
+        let inputNode = engine.inputNode
+        let inputFormat = inputNode.outputFormat(forBus: 0)
+        engine.connect(inputNode, to: mixerNode, format: inputFormat)
+        
+        let mainMixerNode = engine.mainMixerNode
+        let mixerFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: inputFormat.sampleRate, channels: 2, interleaved: false)
+        engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
     }
     
     private func loadRecordingsFromDisk() {
@@ -160,11 +270,11 @@ class MockRecordingManager: RecordingManager {
     
     func stopTracking() async {}
     
-    func startPlayback(id: UUID) {}
+    func startPlayback(recording: Recording) {}
     
     func stopPlayback() {}
     
-    func setUpSession() {}
-        
+    func removeRecording(with name: String) {}
+            
     func getRecordings() -> [Recording] {return []}
 }

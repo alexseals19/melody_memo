@@ -42,8 +42,4 @@ class TrackingToolbarViewModel: ObservableObject {
     private func stopTracking() async {
         await recordingManager.stopTracking()
     }
-    
-    private func setUpSession(_ recording: Recording) {
-        recordingManager.setUpSession()
-    }
 }

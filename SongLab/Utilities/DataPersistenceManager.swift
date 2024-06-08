@@ -6,8 +6,14 @@
 //
 import Foundation
 
+enum FileType: String {
+    case json
+    case caf
+    case m4a
+}
+
 final class DataPersistenceManager {
-    
+        
     static let decoder = JSONDecoder()
     static let encoder = JSONEncoder()
     
@@ -37,15 +43,15 @@ final class DataPersistenceManager {
         }
     }
     
-    static func createDocumentURL(withFileName fileName: String) -> URL {
+    static func createDocumentURL(withFileName fileName: String, fileType: FileType = .json) -> URL {
         let fileManager = FileManager.default
         let url = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return url.appendingPathComponent(fileName).appendingPathExtension("json")
+        return url.appendingPathComponent(fileName).appendingPathExtension(fileType.rawValue)
     }
     
-    static func delete(_ filename: String) throws {
+    static func delete(_ filename: String, fileType: FileType = .json) throws {
         let fileManager = FileManager.default
-        let url = createDocumentURL(withFileName: filename)
+        let url = createDocumentURL(withFileName: filename, fileType: fileType)
         return try fileManager.removeItem(at: url)
     }
     
