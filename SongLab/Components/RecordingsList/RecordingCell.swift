@@ -12,6 +12,7 @@ struct RecordingCell: View {
     // MARK: - API
     
     @Binding var currentlyPlaying: Recording?
+    @Binding var removeRecording: Recording?
     
     // MARK: - Variables
         
@@ -27,15 +28,17 @@ struct RecordingCell: View {
                         Text(recording.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
                             .font(.caption)
                     }
-                    HStack {
-                        Text(recording.date.formatted(date: .numeric, time: .omitted))
-                            .font(.caption)
-                        Text("\(recording.id)")
-                            .font(.caption)
-                    }
+                    Text(recording.date.formatted(date: .numeric, time: .omitted))
+                        .font(.caption)
                 }
                 
                 Spacer()
+                
+                Button {
+                    removeRecording = recording
+                } label: {
+                    Image(systemName: "trash")
+                }
                 
                 Button {
                     if let currentlyPlaying, currentlyPlaying == recording {
@@ -66,10 +69,10 @@ struct RecordingCell: View {
     
     RecordingCell(
         currentlyPlaying: .constant(nil),
+        removeRecording: .constant(nil),
         recording: Recording(
             name: "RecordingFixture",
             date: Date(),
-            url: URL(fileURLWithPath: "url"),
             length: .seconds(4),
             id: UUID()
             

@@ -11,8 +11,11 @@ struct RecordingsListView: View {
     
     // MARK: - API
 
-    init(recordingManager: RecordingManager) {
-        _viewModel = StateObject(wrappedValue: RecordingsListViewModel(recordingManager: recordingManager))
+    init(recordingManager: RecordingManager, playbackManager: PlaybackManager) {
+        _viewModel = StateObject(
+            wrappedValue: RecordingsListViewModel(
+                recordingManager: recordingManager, playbackManager: playbackManager
+            ))
     }
     
     // MARK: - Variables
@@ -30,7 +33,10 @@ struct RecordingsListView: View {
             ScrollView {
                 LazyVStack(alignment: .leading) {
                     ForEach(viewModel.recordings) { recording in
-                        RecordingCell(currentlyPlaying: $viewModel.currentlyPlaying, recording: recording)
+                        RecordingCell(
+                            currentlyPlaying: $viewModel.currentlyPlaying,
+                            removeRecording: $viewModel.removeRecording,
+                            recording: recording)
                             
                     }
                 }
@@ -40,5 +46,8 @@ struct RecordingsListView: View {
 }
 
 #Preview {
-    RecordingsListView(recordingManager: DefaultRecordingManager.shared)
+    RecordingsListView(
+        recordingManager: DefaultRecordingManager.shared,
+        playbackManager: DefaultPlaybackManager.shared
+    )
 }

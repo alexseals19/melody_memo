@@ -17,16 +17,25 @@ class RecordingsListViewModel: ObservableObject {
             if currentlyPlaying != nil {
                 startPlayback()
             } else {
-                recordingManager.stopPlayback()
+                playbackManager.stopPlayback()
             }
             
         }
     }
     
+    @Published var removeRecording: Recording? {
+        didSet {
+            if let recording = removeRecording {
+                recordingManager.removeRecording(with: recording.name)
+            }
+        }
+    }
+    
     @Published var recordings: [Recording] = []
     
-    init(recordingManager: RecordingManager) {
+    init(recordingManager: RecordingManager, playbackManager: PlaybackManager) {
         self.recordingManager = recordingManager
+        self.playbackManager = playbackManager
         recordings = self.recordingManager.getRecordings()
         self.recordingManager.delegate = self
     }
@@ -36,10 +45,11 @@ class RecordingsListViewModel: ObservableObject {
     // MARK: - Variables
     
     private var recordingManager: RecordingManager
+    private var playbackManager: PlaybackManager
     
     private func startPlayback() {
         if let recording = currentlyPlaying {
-            recordingManager.startPlayback(id: recording.id)
+            playbackManager.startPlayback(recording: recording)
         } else {}
     }
 }
