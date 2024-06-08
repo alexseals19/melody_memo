@@ -20,11 +20,11 @@ struct RecordButtonView: View {
     // MARK: - Variables
             
     @State private var stopButtonOpacity = 0.0
-    @State private var stopButtonDimensions: CGFloat = 55
-    @State private var stopButtonCornerRadius: CGFloat = 27.5
+    @State private var stopButtonDimensions: CGFloat = 65
+    @State private var stopButtonCornerRadius: CGFloat = 32.5
     @State private var reordButtonOpacity = 1.0
-    @State private var recordButtonDimensions: CGFloat = 55
-    @State private var recordButtonCornerRadius: CGFloat = 27.5
+    @State private var recordButtonDimensions: CGFloat = 65
+    @State private var recordButtonCornerRadius: CGFloat = 32.5
     
     @Namespace private var namespace
     
@@ -35,10 +35,10 @@ struct RecordButtonView: View {
             stopButtonOpacity = 0.15
             withAnimation(.linear) {
                 if isRecording {
-                    stopButtonDimensions = 55
+                    stopButtonDimensions = 65
                     stopButtonCornerRadius = 27.5
-                    recordButtonDimensions = 55
-                    recordButtonCornerRadius = 27.5
+                    recordButtonDimensions = 65
+                    recordButtonCornerRadius = 32.5
                     reordButtonOpacity = 1.0
                 } else {
                     stopButtonDimensions = 25

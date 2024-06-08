@@ -11,7 +11,7 @@ struct MetronomeView: View {
     
     //MARK: - API
     
-    @State var metronomeActive = false
+    @AppStorage("metronomeActive") var metronomeActive = false
     
     // MARK: - Variables
     

@@ -18,7 +18,9 @@ class TrackingToolbarViewModel: ObservableObject {
             if isRecording {
                 startTracking()
             } else {
-                stopTracking()
+                Task {
+                    await stopTracking()
+                }
             }
         }
     }
@@ -32,20 +34,16 @@ class TrackingToolbarViewModel: ObservableObject {
     private let recordingManager: RecordingManager
     
     // MARK: - Functions
-    
-    private func playRecording(_ recording: Recording) {
-        recordingManager.playRecording(id: recording.id)
-    }
-    
+   
     private func startTracking() {
         recordingManager.startTracking()
     }
     
-    private func stopTracking() {
-        recordingManager.stopTracking()
+    private func stopTracking() async {
+        await recordingManager.stopTracking()
     }
     
-    private func setUpSession(_ recording: Recording) async {
+    private func setUpSession(_ recording: Recording) {
         recordingManager.setUpSession()
     }
 }
