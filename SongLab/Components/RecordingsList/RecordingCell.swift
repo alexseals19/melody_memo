@@ -22,9 +22,17 @@ struct RecordingCell: View {
             Divider()
             HStack {
                 VStack(alignment: .leading) {
-                    Text(recording.name)
-                    Text(recording.date)
-                        .font(.caption)
+                    HStack() {
+                        Text(recording.name + " |")
+                        Text(recording.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
+                            .font(.caption)
+                    }
+                    HStack {
+                        Text(recording.date.formatted(date: .numeric, time: .omitted))
+                            .font(.caption)
+                        Text("\(recording.id)")
+                            .font(.caption)
+                    }
                 }
                 
                 Spacer()
@@ -38,8 +46,14 @@ struct RecordingCell: View {
                 } label: {
                     if let currentlyPlaying, currentlyPlaying == recording {
                         Image(systemName: "pause")
+                            .resizable()
+                            .frame(width: 12, height: 16)
+                            .padding(.trailing, 25)
                     } else {
                         Image(systemName: "play")
+                            .resizable()
+                            .frame(width: 16, height: 20)
+                            .padding(.trailing, 25)
                     }
                 }
                 .buttonStyle(.plain)
@@ -54,8 +68,11 @@ struct RecordingCell: View {
         currentlyPlaying: .constant(nil),
         recording: Recording(
             name: "RecordingFixture",
-            date: Date().formatted(date: .numeric, time: .omitted),
-            url: URL(fileURLWithPath: "url")
+            date: Date(),
+            url: URL(fileURLWithPath: "url"),
+            length: .seconds(4),
+            id: UUID()
+            
         )
     )
         .padding(.horizontal)

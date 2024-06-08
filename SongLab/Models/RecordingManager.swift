@@ -12,37 +12,43 @@ protocol RecordingManagerDelegate: AnyObject {
     func recordingManagerDidUpdate(recordings: [Recording])
 }
 
+@MainActor
 protocol RecordingManager {
     var delegate: RecordingManagerDelegate? { get set }
     func startTracking()
-    func stopTracking()
-    func playRecording(id: UUID)
+    func stopTracking() async
+    func startPlayback(id: UUID)
     func stopPlayback()
     func setUpSession()
     func getRecordings() -> [Recording]
 }
 
+@MainActor
 class DefaultRecordingManager: RecordingManager {
     
     // MARK: - API
     
-    static let shared = DefaultRecordingManager(session: AVAudioSession(), recorder: AVAudioRecorder(), player: AVAudioPlayer())
+    static let shared = DefaultRecordingManager(
+        session: AVAudioSession(),
+        recorder: AVAudioRecorder(),
+        player: AVAudioPlayer(),
+        currentRecordingName: URL(filePath: ""),
+        fileNameWithExtension: URL(filePath: ""),
+        dataPersistenceManager: DataPersistenceManager())
     
     weak var delegate: RecordingManagerDelegate?
     
     func startTracking() {
         do {
             let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let fileName = url.appendingPathComponent("Session " + "\(recordings.count + 1)")
+            currentRecordingName = url.appendingPathComponent("Session " + "\(recordings.count + 1).m4a")
             let settings = [
                 AVFormatIDKey: Int(kAudioFormatAppleLossless),
                 AVSampleRateKey: 32000,
-                AVNumberOfChannelsKey: 1,
+                AVNumberOfChannelsKey: 1
             ]
             
-            recordings.insert(Recording(name: fileName.lastPathComponent, date: Date().formatted(date: .numeric, time: .omitted), url: fileName), at: 0)
-            
-            recorder = try AVAudioRecorder(url: fileName, settings: settings)
+            recorder = try AVAudioRecorder(url: currentRecordingName, settings: settings)
             
             recorder.record()
         } catch {
@@ -50,20 +56,43 @@ class DefaultRecordingManager: RecordingManager {
         }
     }
     
-    func stopTracking() {
+    func stopTracking() async {
         self.recorder.stop()
+        do {
+            let audioAsset = AVURLAsset(url: currentRecordingName, options: nil)
+            let duration = try await audioAsset.load(.duration)
+            let durationInSeconds = CMTimeGetSeconds(duration)
+            let name = currentRecordingName.lastPathComponent.replacingOccurrences(of: ".m4a", with: "")
+            recordings.insert(Recording(
+                                name: name,
+                                date: Date(),
+                                url: currentRecordingName,
+                                length: .seconds(durationInSeconds),
+                                id: UUID()), at: 0)
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        do {
+            try DataPersistenceManager.save(recordings, to: "recordings")
+        } catch {
+            print(error.localizedDescription)
+        }
         delegate?.recordingManagerDidUpdate(recordings: recordings)
     }
     
-    func playRecording(id: UUID) {
+    func startPlayback(id: UUID) {
         do {
-            let recording = recordings.filter { $0.id == id }
+            if let recording = recordings.first(where: { $0.id == id }) {
+                print("\(recording.url)")
+                player = try AVAudioPlayer(contentsOf: recording.url)
+                player.play()
+            }
             
-            player = try AVAudioPlayer(contentsOf: recording[0].url)
             
-            player.play()
         } catch {
             print(error.localizedDescription)
+            print("Error is here")
         }
     }
     
@@ -74,8 +103,7 @@ class DefaultRecordingManager: RecordingManager {
     func setUpSession() {
         do {
             session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord)
-            try session.overrideOutputAudioPort(AVAudioSession.PortOverride.speaker)
+            try session.setCategory(.playAndRecord, mode: .default, options: [.allowBluetoothA2DP, .allowBluetooth, .defaultToSpeaker])
         } catch {
             print(error.localizedDescription)
         }
@@ -91,34 +119,36 @@ class DefaultRecordingManager: RecordingManager {
     private var recorder: AVAudioRecorder
     private var player: AVAudioPlayer
     private var isRecording = false
+    private var currentRecordingName: URL
+    private var fileNameWithExtension: URL
+    private var dataPersistenceManager: DataPersistenceManager
+    
     private var recordings: [Recording] = []
     
     // MARK: - Functions
     
-    private init(session: AVAudioSession, recorder: AVAudioRecorder, player: AVAudioPlayer) {
-        self.session = session
-        self.recorder = recorder
-        self.player = player
-        loadRecordingsFromDisk()
+    private init(
+        session: AVAudioSession,
+        recorder: AVAudioRecorder,
+        player: AVAudioPlayer,
+        currentRecordingName: URL,
+        fileNameWithExtension: URL,
+        dataPersistenceManager: DataPersistenceManager) {
+            self.session = session
+            self.recorder = recorder
+            self.player = player
+            self.currentRecordingName = currentRecordingName
+            self.fileNameWithExtension = fileNameWithExtension
+            self.dataPersistenceManager = dataPersistenceManager
+            loadRecordingsFromDisk()
     }
     
     private func loadRecordingsFromDisk() {
         do {
-            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let result = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .producesRelativePathURLs)
-                        
-            for i in result {
-                recordings.append(Recording(name: i.lastPathComponent, date: Date().formatted(date: .numeric, time: .omitted), url: i))
-            }
-            
-            recordings = recordings.sorted { (lhs: Recording, rhs: Recording) -> Bool in
-                return lhs.name > rhs.name
-            }
+            recordings = try DataPersistenceManager.retrieve([Recording].self, from: "recordings")
             
             delegate?.recordingManagerDidUpdate(recordings: recordings)
-        } catch {
-            print(error.localizedDescription)
-        }
+        } catch {}
     }
 }
 
@@ -128,9 +158,9 @@ class MockRecordingManager: RecordingManager {
     
     func startTracking() {}
     
-    func stopTracking() {}
+    func stopTracking() async {}
     
-    func playRecording(id: UUID) {}
+    func startPlayback(id: UUID) {}
     
     func stopPlayback() {}
     
