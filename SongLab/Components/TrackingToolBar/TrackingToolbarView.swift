@@ -11,8 +11,8 @@ struct TrackingToolbarView: View {
     
     //MARK: - API
     
-    init(recordingManager: RecordingManager) {
-        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(recordingManager: recordingManager))
+    init(audioManager: AudioManager) {
+        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager))
     }
     
     //MARK: - Variables
@@ -35,5 +35,5 @@ struct TrackingToolbarView: View {
 }
 
 #Preview {
-    TrackingToolbarView(recordingManager: MockRecordingManager())
+    TrackingToolbarView(audioManager: MockAudioManager())
 }
