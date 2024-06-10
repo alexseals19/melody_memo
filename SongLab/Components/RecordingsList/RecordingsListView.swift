@@ -11,11 +11,12 @@ struct RecordingsListView: View {
     
     // MARK: - API
 
-    init(recordingManager: RecordingManager, playbackManager: PlaybackManager) {
+    init(audioManager: AudioManager) {
         _viewModel = StateObject(
             wrappedValue: RecordingsListViewModel(
-                recordingManager: recordingManager, playbackManager: playbackManager
-            ))
+                audioManager: audioManager
+            )
+        )
     }
     
     // MARK: - Variables
@@ -36,8 +37,8 @@ struct RecordingsListView: View {
                         RecordingCell(
                             currentlyPlaying: $viewModel.currentlyPlaying,
                             removeRecording: $viewModel.removeRecording,
-                            recording: recording)
-                            
+                            recording: recording
+                        )
                     }
                 }
             }
@@ -47,7 +48,6 @@ struct RecordingsListView: View {
 
 #Preview {
     RecordingsListView(
-        recordingManager: DefaultRecordingManager.shared,
-        playbackManager: DefaultPlaybackManager.shared
+        audioManager: DefaultAudioManager.shared
     )
 }

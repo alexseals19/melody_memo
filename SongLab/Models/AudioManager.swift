@@ -1,5 +1,5 @@
 //
-//  RecordingManager.swift
+//  AudioManager.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/5/24.
@@ -8,39 +8,38 @@
 import Foundation
 import AVFoundation
 
-protocol RecordingManagerDelegate: AnyObject {
-    func recordingManagerDidUpdate(recordings: [Recording])
+protocol AudioManagerDelegate: AnyObject {
+    func audioManagerDidUpdate(recordings: [Recording])
 }
 
 @MainActor
-protocol RecordingManager {
-    var delegate: RecordingManagerDelegate? { get set }
+protocol AudioManager {
+    var delegate: AudioManagerDelegate? { get set }
     func startTracking()
     func stopTracking() async
     func startPlayback(recording: Recording)
     func stopPlayback()
-    func removeRecording(with name: String)
     func getRecordings() -> [Recording]
+    func removeRecording(with name: String)
 }
 
 @MainActor
-class DefaultRecordingManager: RecordingManager {
+class DefaultAudioManager: AudioManager {
     
     // MARK: - API
     
-    static let shared = DefaultRecordingManager(
-        recordSession: AVAudioSession(),
+    static let shared = DefaultAudioManager(
+        audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
-        player: AVAudioPlayer(),
+        players: [AVAudioPlayerNode](),
         engine: AVAudioEngine(),
-        mixerNode: AVAudioMixerNode(),
-        file: AVAudioFile(),
-        dataPersistenceManager: DataPersistenceManager())
+        playbackEngine: AVAudioEngine(),
+        mixerNode: AVAudioMixerNode()
+    )
     
-    weak var delegate: RecordingManagerDelegate?
+    weak var delegate: AudioManagerDelegate?
     
     func startTracking() {
-        
         do {
             currentFileName = "Session\(recordings.count + 1)"
             
@@ -56,24 +55,21 @@ class DefaultRecordingManager: RecordingManager {
                 AVSampleRateKey: 32000,
                 AVNumberOfChannelsKey: 1
             ]
-            guard let inputs = recordSession.availableInputs else {
+            guard let inputs = audioSession.availableInputs else {
                 assertionFailure("inputs")
                 return
             }
-            try recordSession.setPreferredInput(inputs[0])
+            try audioSession.setPreferredInput(inputs[0])
             recorder = try AVAudioRecorder(url: url, settings: settings)
             
+            startPlayback(recording: recordings[0])
+            
             recorder.record()
-        } catch {
-            print(error.localizedDescription)
-        }
         
 //        do {
 //            let tapNode: AVAudioNode = mixerNode
 //            let format = tapNode.outputFormat(forBus: 0)
-//            
-//            print("\(format.settings)")
-//            
+//                        
 //            currentFileName = "Session\(recordings.count + 1)"
 //            
 //            guard let currentFileName else {
@@ -84,29 +80,28 @@ class DefaultRecordingManager: RecordingManager {
 //            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
 //            file = try AVAudioFile(forWriting: url, settings: format.settings)
 //            tapNode.removeTap(onBus: 0)
-//            guard let inputs = recordSession.inputDataSources else {
-//                assertionFailure("inputs")
+//            
+//            guard let inputs = recordSession.availableInputs else {
+//                assertionFailure("No available inputs")
 //                return
 //            }
-//            try recordSession.setInputDataSource(inputs[0])
+//                            
 //            tapNode.installTap(onBus: 0, bufferSize: 1024, format: format, block: { (buffer, time ) in
 //                try? self.file.write(from: buffer)
 //            })
 //            
 //            try engine.start()
-//            recorder.record()
-//        } catch {
-//            print(error.localizedDescription)
-//        }
+        } catch {
+            print(error.localizedDescription)
+        }
     }
     
     func stopTracking() async {
 //        engine.inputNode.removeTap(onBus: 0)
 //        engine.stop()
         
-        
-        self.recorder.stop()
-        
+        recorder.stop()
+    
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
             return
@@ -127,38 +122,60 @@ class DefaultRecordingManager: RecordingManager {
                 ),
                 at: 0
             )
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        do {
+            
             try DataPersistenceManager.save(recordings, to: "recordings")
         } catch {
             print(error.localizedDescription)
         }
-        delegate?.recordingManagerDidUpdate(recordings: recordings)
+        
+        delegate?.audioManagerDidUpdate(recordings: recordings)
     }
     
     func startPlayback(recording: Recording) {
-        print(recordSession.availableInputs)
+            
+        setUpPlayers()
         
-        let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
+        var audioFiles: [AVAudioFile] = []
+        
+        for recording in recordings {
+            let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
+            do {
+                audioFiles.append(try AVAudioFile(forReading: url))
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        
+        for player in players {
+            configurePlayback(player: player)
+        }
+        
         do {
-//            guard let inputs = recordSession. else {
-//                assertionFailure("inputs")
-//                return
-//            }
-            try recordSession.overrideOutputAudioPort(.none)
-            player = try AVAudioPlayer(contentsOf: url)
-            player.play()
+            playbackEngine.prepare()
+            try playbackEngine.start()
+            
+            for index in 0..<players.count {
+                players[index].scheduleFile(audioFiles[index], at: nil)
+                
+            }
+            for player in players {
+                player.play()
+            }
         } catch {
-            print("\(url)")
             print(error.localizedDescription)
         }
     }
     
     func stopPlayback() {
-        player.stop()
+        for player in players {
+            player.stop()
+        }
+        players.removeAll()
+        playbackEngine.stop()
+    }
+    
+    func getRecordings() -> [Recording] {
+        return recordings
     }
     
     func removeRecording(with name: String) {
@@ -170,67 +187,71 @@ class DefaultRecordingManager: RecordingManager {
         } catch {
             print(error.localizedDescription)
         }
-        delegate?.recordingManagerDidUpdate(recordings: recordings)
-    }
-    
-    func getRecordings() -> [Recording] {
-        return recordings
+        delegate?.audioManagerDidUpdate(recordings: recordings)
     }
     
     // MARK: - Variables
     
-    private var recordSession: AVAudioSession
+    private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
-    private var player: AVAudioPlayer
+    private var players: [AVAudioPlayerNode]
     private var engine: AVAudioEngine
+    private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
-    private var file: AVAudioFile
-    private var isRecording = false
     private var currentFileName: String?
-    private var dataPersistenceManager: DataPersistenceManager
     
     private var recordings: [Recording] = []
     
     // MARK: - Functions
     
     private init(
-        recordSession: AVAudioSession,
+        audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
-        player: AVAudioPlayer,
+        players: [AVAudioPlayerNode],
         engine: AVAudioEngine,
-        mixerNode: AVAudioMixerNode,
-        file: AVAudioFile,
-        dataPersistenceManager: DataPersistenceManager) {
-            self.recordSession = recordSession
+        playbackEngine: AVAudioEngine,
+        mixerNode: AVAudioMixerNode) {
+            self.audioSession = audioSession
             self.recorder = recorder
-            self.player = player
+            self.players = players
             self.engine = engine
+            self.playbackEngine = playbackEngine
             self.mixerNode = mixerNode
-            self.file = file
-            self.dataPersistenceManager = dataPersistenceManager
             loadRecordingsFromDisk()
             setUpSession()
             setUpEngine()
+            setupNotifications()
+    }
+    
+    private func setUpPlayers() {
+        for _ in recordings {
+            players.append(AVAudioPlayerNode())
+        }
     }
     
     private func setUpSession() {
         do {
-            recordSession = AVAudioSession.sharedInstance()
-            try recordSession.setCategory(.multiRoute)
-//            print(recordSession.availableInputs)
-            guard let inputs = recordSession.availableInputs else {
-                assertionFailure("inputs")
+            audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, options: [.allowBluetoothA2DP, .defaultToSpeaker])
+           
+            try audioSession.setSupportsMultichannelContent(true)
+            try audioSession.setActive(true)
+            
+            guard let inputs = audioSession.availableInputs else {
+                assertionFailure("failed to retrieve inputs")
                 return
             }
-            try recordSession.setPreferredInput(inputs[0])
-//            try recordSession.overrideOutputAudioPort(.speaker)
-            try recordSession.setSupportsMultichannelContent(true)
-            try recordSession.setActive(true)
-            
+            try audioSession.setPreferredInput(inputs[0])
         } catch {
             print(error.localizedDescription)
-            print("Recording")
         }
+    }
+    
+    private func configurePlayback(player: AVAudioPlayerNode) {
+
+        playbackEngine.attach(player)
+        
+        playbackEngine.connect(player, to: playbackEngine.mainMixerNode, format: nil)
     }
     
     private func setUpEngine() {
@@ -249,22 +270,42 @@ class DefaultRecordingManager: RecordingManager {
         engine.connect(inputNode, to: mixerNode, format: inputFormat)
         
         let mainMixerNode = engine.mainMixerNode
-        let mixerFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: inputFormat.sampleRate, channels: 2, interleaved: false)
+        let mixerFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: inputFormat.sampleRate, channels: 1, interleaved: false)
         engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
     }
     
     private func loadRecordingsFromDisk() {
         do {
             recordings = try DataPersistenceManager.retrieve([Recording].self, from: "recordings")
-            
-            delegate?.recordingManagerDidUpdate(recordings: recordings)
+            delegate?.audioManagerDidUpdate(recordings: recordings)
         } catch {}
+    }
+    
+    private func setupNotifications() {
+        let nc = NotificationCenter.default
+        nc.addObserver(self,
+                       selector: #selector(handleRouteChange),
+                       name: AVAudioSession.routeChangeNotification,
+                       object: nil)
+    }
+
+    @objc func handleRouteChange(notification: Notification) {
+        // To be implemented.
+        guard let inputs = audioSession.availableInputs else {
+            assertionFailure("failed to retrieve inputs")
+            return
+        }
+        do {
+            try audioSession.setPreferredInput(inputs[0])
+        } catch {
+            print(error.localizedDescription)
+        }
     }
 }
 
-class MockRecordingManager: RecordingManager {
+class MockAudioManager: AudioManager {
     
-    weak var delegate: RecordingManagerDelegate?
+    weak var delegate: AudioManagerDelegate?
     
     func startTracking() {}
     
@@ -274,7 +315,8 @@ class MockRecordingManager: RecordingManager {
     
     func stopPlayback() {}
     
+    func getRecordings() -> [Recording] {return []}
+    
     func removeRecording(with name: String) {}
             
-    func getRecordings() -> [Recording] {return []}
 }

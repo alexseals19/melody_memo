@@ -15,47 +15,41 @@ class RecordingsListViewModel: ObservableObject {
     @Published var currentlyPlaying: Recording? {
         didSet {
             if currentlyPlaying != nil {
-                startPlayback()
+                guard let recording = currentlyPlaying else {
+                    assertionFailure("Could not set recording")
+                    return
+                }
+                audioManager.startPlayback(recording: recording)
             } else {
-                playbackManager.stopPlayback()
+                audioManager.stopPlayback()
             }
-            
         }
     }
     
     @Published var removeRecording: Recording? {
         didSet {
             if let recording = removeRecording {
-                recordingManager.removeRecording(with: recording.name)
+                audioManager.removeRecording(with: recording.name)
             }
         }
     }
     
     @Published var recordings: [Recording] = []
     
-    init(recordingManager: RecordingManager, playbackManager: PlaybackManager) {
-        self.recordingManager = recordingManager
-        self.playbackManager = playbackManager
-        recordings = self.recordingManager.getRecordings()
-        self.recordingManager.delegate = self
+    init(audioManager: AudioManager) {
+        self.audioManager = audioManager
+        recordings = self.audioManager.getRecordings()
+        self.audioManager.delegate = self
     }
-    
-    public func doSomethingPublic() {}
-    
+        
     // MARK: - Variables
     
-    private var recordingManager: RecordingManager
-    private var playbackManager: PlaybackManager
+    private var audioManager: AudioManager
     
-    private func startPlayback() {
-        if let recording = currentlyPlaying {
-            playbackManager.startPlayback(recording: recording)
-        } else {}
-    }
 }
 
-extension RecordingsListViewModel: RecordingManagerDelegate {
-    func recordingManagerDidUpdate(recordings: [Recording]) {
+extension RecordingsListViewModel: AudioManagerDelegate {
+    func audioManagerDidUpdate(recordings: [Recording]) {
         self.recordings = recordings
     }
 }

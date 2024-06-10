@@ -16,30 +16,23 @@ class TrackingToolbarViewModel: ObservableObject {
     @Published var isRecording = false {
         didSet {
             if isRecording {
-                startTracking()
+                audioManager.startTracking()
             } else {
                 Task {
-                    await stopTracking()
+                    await audioManager.stopTracking()
                 }
             }
         }
     }
     
-    init(recordingManager: RecordingManager) {
-        self.recordingManager = recordingManager
+    init(audioManager: AudioManager) {
+        self.audioManager = audioManager
     }
     
     // MARK: - Variables
     
-    private let recordingManager: RecordingManager
+    private let audioManager: AudioManager
     
     // MARK: - Functions
-   
-    private func startTracking() {
-        recordingManager.startTracking()
-    }
     
-    private func stopTracking() async {
-        await recordingManager.stopTracking()
-    }
 }
