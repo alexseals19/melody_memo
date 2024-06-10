@@ -31,6 +31,7 @@ class DefaultAudioManager: AudioManager {
     static let shared = DefaultAudioManager(
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
+        player: AVAudioPlayerNode(),
         players: [AVAudioPlayerNode](),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
@@ -61,35 +62,33 @@ class DefaultAudioManager: AudioManager {
             }
             try audioSession.setPreferredInput(inputs[0])
             recorder = try AVAudioRecorder(url: url, settings: settings)
-            
-            startPlayback(recording: recordings[0])
-            
+                        
             recorder.record()
         
 //        do {
 //            let tapNode: AVAudioNode = mixerNode
 //            let format = tapNode.outputFormat(forBus: 0)
-//                        
+//
 //            currentFileName = "Session\(recordings.count + 1)"
-//            
+//
 //            guard let currentFileName else {
 //                assertionFailure("currentFileName is nil.")
 //                return
 //            }
-//            
+//
 //            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
 //            file = try AVAudioFile(forWriting: url, settings: format.settings)
 //            tapNode.removeTap(onBus: 0)
-//            
+//
 //            guard let inputs = recordSession.availableInputs else {
 //                assertionFailure("No available inputs")
 //                return
 //            }
-//                            
+//
 //            tapNode.installTap(onBus: 0, bufferSize: 1024, format: format, block: { (buffer, time ) in
 //                try? self.file.write(from: buffer)
 //            })
-//            
+//
 //            try engine.start()
         } catch {
             print(error.localizedDescription)
@@ -132,45 +131,25 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startPlayback(recording: Recording) {
-            
-        setUpPlayers()
-        
-        var audioFiles: [AVAudioFile] = []
-        
-        for recording in recordings {
-            let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
-            do {
-                audioFiles.append(try AVAudioFile(forReading: url))
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
-        
-        for player in players {
-            configurePlayback(player: player)
-        }
-        
         do {
+            configurePlayback(player: player)
+            
             playbackEngine.prepare()
             try playbackEngine.start()
             
-            for index in 0..<players.count {
-                players[index].scheduleFile(audioFiles[index], at: nil)
-                
-            }
-            for player in players {
-                player.play()
-            }
+            let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
+            let audioFile = try AVAudioFile(forReading: url)
+            
+            player.scheduleFile(audioFile, at: nil)
+        
+            player.play()
         } catch {
             print(error.localizedDescription)
         }
     }
     
     func stopPlayback() {
-        for player in players {
-            player.stop()
-        }
-        players.removeAll()
+        player.stop()
         playbackEngine.stop()
     }
     
@@ -194,6 +173,7 @@ class DefaultAudioManager: AudioManager {
     
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
+    private var player: AVAudioPlayerNode
     private var players: [AVAudioPlayerNode]
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
@@ -207,12 +187,14 @@ class DefaultAudioManager: AudioManager {
     private init(
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
+        player: AVAudioPlayerNode,
         players: [AVAudioPlayerNode],
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
         mixerNode: AVAudioMixerNode) {
             self.audioSession = audioSession
             self.recorder = recorder
+            self.player = player
             self.players = players
             self.engine = engine
             self.playbackEngine = playbackEngine
@@ -320,3 +302,4 @@ class MockAudioManager: AudioManager {
     func removeRecording(with name: String) {}
             
 }
+
