@@ -11,10 +11,11 @@ struct RecordingsListView: View {
     
     // MARK: - API
 
-    init(audioManager: AudioManager) {
+    init(audioManager: AudioManager, recordingManager: RecordingManager) {
         _viewModel = StateObject(
             wrappedValue: RecordingsListViewModel(
-                audioManager: audioManager
+                audioManager: audioManager,
+                recordingManager: recordingManager
             )
         )
     }
@@ -48,6 +49,7 @@ struct RecordingsListView: View {
 
 #Preview {
     RecordingsListView(
-        audioManager: DefaultAudioManager.shared
+        audioManager: MockAudioManager(),
+        recordingManager: MockRecordingManager()
     )
 }
