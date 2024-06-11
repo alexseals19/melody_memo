@@ -8,19 +8,12 @@
 import Foundation
 import AVFoundation
 
-protocol AudioManagerDelegate: AnyObject {
-    func audioManagerDidUpdate(recordings: [Recording])
-}
-
 @MainActor
 protocol AudioManager {
-    var delegate: AudioManagerDelegate? { get set }
     func startTracking()
     func stopTracking() async
     func startPlayback(recording: Recording)
     func stopPlayback()
-    func getRecordings() -> [Recording]
-    func removeRecording(with name: String)
 }
 
 @MainActor
@@ -32,17 +25,14 @@ class DefaultAudioManager: AudioManager {
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
         player: AVAudioPlayerNode(),
-        players: [AVAudioPlayerNode](),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
         mixerNode: AVAudioMixerNode()
     )
-    
-    weak var delegate: AudioManagerDelegate?
-    
+        
     func startTracking() {
         do {
-            currentFileName = "Session\(recordings.count + 1)"
+            currentFileName = "Session\(DefaultRecordingManager.shared.recordings.value.count + 1)"
             
             guard let currentFileName else {
                 assertionFailure("currentFileName is nil.")
@@ -64,40 +54,14 @@ class DefaultAudioManager: AudioManager {
             recorder = try AVAudioRecorder(url: url, settings: settings)
                         
             recorder.record()
-        
-//        do {
-//            let tapNode: AVAudioNode = mixerNode
-//            let format = tapNode.outputFormat(forBus: 0)
-//
-//            currentFileName = "Session\(recordings.count + 1)"
-//
-//            guard let currentFileName else {
-//                assertionFailure("currentFileName is nil.")
-//                return
-//            }
-//
-//            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
-//            file = try AVAudioFile(forWriting: url, settings: format.settings)
-//            tapNode.removeTap(onBus: 0)
-//
-//            guard let inputs = recordSession.availableInputs else {
-//                assertionFailure("No available inputs")
-//                return
-//            }
-//
-//            tapNode.installTap(onBus: 0, bufferSize: 1024, format: format, block: { (buffer, time ) in
-//                try? self.file.write(from: buffer)
-//            })
-//
-//            try engine.start()
         } catch {
             print(error.localizedDescription)
         }
     }
     
     func stopTracking() async {
-//        engine.inputNode.removeTap(onBus: 0)
-//        engine.stop()
+        
+        defer { currentFileName = nil }
         
         recorder.stop()
     
@@ -112,22 +76,16 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
-            recordings.insert(
-                Recording(
-                    name: currentFileName,
-                    date: Date(),
-                    length: .seconds(durationInSeconds),
-                    id: UUID()
-                ),
-                at: 0
+            let recording = Recording(
+                name: currentFileName,
+                date: Date(),
+                length: .seconds(durationInSeconds),
+                id: UUID()
             )
-            
-            try DataPersistenceManager.save(recordings, to: "recordings")
+            try DefaultRecordingManager.shared.saveRecording(recording)
         } catch {
             print(error.localizedDescription)
         }
-        
-        delegate?.audioManagerDidUpdate(recordings: recordings)
     }
     
     func startPlayback(recording: Recording) {
@@ -153,62 +111,34 @@ class DefaultAudioManager: AudioManager {
         playbackEngine.stop()
     }
     
-    func getRecordings() -> [Recording] {
-        return recordings
-    }
-    
-    func removeRecording(with name: String) {
-        do {
-            try DataPersistenceManager.delete(name, fileType: .caf)
-            if let index = recordings.firstIndex(where: { $0.name == name }) {
-                recordings.remove(at: index)
-            }
-        } catch {
-            print(error.localizedDescription)
-        }
-        delegate?.audioManagerDidUpdate(recordings: recordings)
-    }
-    
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
     private var player: AVAudioPlayerNode
-    private var players: [AVAudioPlayerNode]
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
-    
-    private var recordings: [Recording] = []
-    
+        
     // MARK: - Functions
     
     private init(
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
         player: AVAudioPlayerNode,
-        players: [AVAudioPlayerNode],
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
         mixerNode: AVAudioMixerNode) {
             self.audioSession = audioSession
             self.recorder = recorder
             self.player = player
-            self.players = players
             self.engine = engine
             self.playbackEngine = playbackEngine
             self.mixerNode = mixerNode
-            loadRecordingsFromDisk()
             setUpSession()
             setUpEngine()
             setupNotifications()
-    }
-    
-    private func setUpPlayers() {
-        for _ in recordings {
-            players.append(AVAudioPlayerNode())
-        }
     }
     
     private func setUpSession() {
@@ -230,9 +160,7 @@ class DefaultAudioManager: AudioManager {
     }
     
     private func configurePlayback(player: AVAudioPlayerNode) {
-
         playbackEngine.attach(player)
-        
         playbackEngine.connect(player, to: playbackEngine.mainMixerNode, format: nil)
     }
     
@@ -256,13 +184,6 @@ class DefaultAudioManager: AudioManager {
         engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
     }
     
-    private func loadRecordingsFromDisk() {
-        do {
-            recordings = try DataPersistenceManager.retrieve([Recording].self, from: "recordings")
-            delegate?.audioManagerDidUpdate(recordings: recordings)
-        } catch {}
-    }
-    
     private func setupNotifications() {
         let nc = NotificationCenter.default
         nc.addObserver(self,
@@ -284,22 +205,3 @@ class DefaultAudioManager: AudioManager {
         }
     }
 }
-
-class MockAudioManager: AudioManager {
-    
-    weak var delegate: AudioManagerDelegate?
-    
-    func startTracking() {}
-    
-    func stopTracking() async {}
-    
-    func startPlayback(recording: Recording) {}
-    
-    func stopPlayback() {}
-    
-    func getRecordings() -> [Recording] {return []}
-    
-    func removeRecording(with name: String) {}
-            
-}
-

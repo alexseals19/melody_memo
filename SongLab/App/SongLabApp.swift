@@ -11,7 +11,10 @@ import SwiftUI
 struct SongLabApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView(audioManager: DefaultAudioManager.shared)
+            HomeView(
+                audioManager: DefaultAudioManager.shared,
+                recordingManager: DefaultRecordingManager.shared
+            )
         }
     }
 }

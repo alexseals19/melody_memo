@@ -5,6 +5,7 @@
 //  Created by Alex Seals on 6/4/24.
 //
 
+import Combine
 import Foundation
 
 @MainActor
@@ -29,27 +30,26 @@ class RecordingsListViewModel: ObservableObject {
     @Published var removeRecording: Recording? {
         didSet {
             if let recording = removeRecording {
-                audioManager.removeRecording(with: recording.name)
+                do {
+                    try recordingManager.removeRecording(recording)
+                } catch {
+                    // TODO: Handle error
+                }
             }
         }
     }
     
     @Published var recordings: [Recording] = []
     
-    init(audioManager: AudioManager) {
+    init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
-        recordings = self.audioManager.getRecordings()
-        self.audioManager.delegate = self
+        self.recordingManager = recordingManager
+        recordingManager.recordings
+            .assign(to: &$recordings)
     }
         
     // MARK: - Variables
     
-    private var audioManager: AudioManager
-    
-}
-
-extension RecordingsListViewModel: AudioManagerDelegate {
-    func audioManagerDidUpdate(recordings: [Recording]) {
-        self.recordings = recordings
-    }
+    private let audioManager: AudioManager
+    private let recordingManager: RecordingManager
 }

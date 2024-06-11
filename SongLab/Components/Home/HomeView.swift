@@ -9,15 +9,18 @@ import SwiftUI
 
 struct HomeView: View {
     
-    init(audioManager: AudioManager) {
+    // MARK: API
+    
+    init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
+        self.recordingManager = recordingManager
     }
     
-    private let audioManager: AudioManager
+    // MARK: - Body
     
     var body: some View {
         VStack {
-            RecordingsListView(audioManager: audioManager)
+            RecordingsListView(audioManager: audioManager, recordingManager: recordingManager)
             Divider()
             Divider()
             TrackingToolbarView(audioManager: audioManager)
@@ -26,10 +29,14 @@ struct HomeView: View {
         }
         .padding()
     }
+    
+    private let audioManager: AudioManager
+    private let recordingManager: RecordingManager
 }
 
 #Preview {
     HomeView(
-        audioManager: DefaultAudioManager.shared
+        audioManager: MockAudioManager(),
+        recordingManager: MockRecordingManager()
     )
 }
