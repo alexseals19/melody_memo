@@ -26,7 +26,7 @@ struct TrackingToolbarView: View {
             MetronomeView()
                 .padding(.leading)
             Spacer()
-            RecordButtonView(isRecording: $viewModel.isRecording)
+            RecordButtonView(isRecording: viewModel.isRecording, recordButtonAction: viewModel.recordButtonAction)
             Spacer()
             TrackingSettingsView()
                 .padding(.trailing)

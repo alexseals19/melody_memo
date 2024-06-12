@@ -11,8 +11,9 @@
 		4521F4512C18B10200246189 /* MockRecordingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4521F4502C18B10200246189 /* MockRecordingManager.swift */; };
 		4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4521F4522C18B11000246189 /* MockAudioManager.swift */; };
 		991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */; };
-		991F56D72C0D361B00CC88BA /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D62C0D361B00CC88BA /* Recording.swift */; };
+		991F56D72C0D361B00CC88BA /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D62C0D361B00CC88BA /* Session.swift */; };
 		991F56D92C0D3B1E00CC88BA /* RecordingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */; };
+		99A078462C1A01EC008EE21B /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078452C1A01EC008EE21B /* Track.swift */; };
 		99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */; };
 		99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* RecordingsListView.swift */; };
 		99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */; };
@@ -33,8 +34,9 @@
 		4521F4502C18B10200246189 /* MockRecordingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRecordingManager.swift; sourceTree = "<group>"; };
 		4521F4522C18B11000246189 /* MockAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAudioManager.swift; sourceTree = "<group>"; };
 		991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButtonView.swift; sourceTree = "<group>"; };
-		991F56D62C0D361B00CC88BA /* Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
+		991F56D62C0D361B00CC88BA /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCell.swift; sourceTree = "<group>"; };
+		99A078452C1A01EC008EE21B /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
 		99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPersistenceManager.swift; sourceTree = "<group>"; };
 		99C364EA2C0F61AE00873213 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
 		99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListViewModel.swift; sourceTree = "<group>"; };
@@ -90,7 +92,8 @@
 		991F56D52C0D360A00CC88BA /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				991F56D62C0D361B00CC88BA /* Recording.swift */,
+				991F56D62C0D361B00CC88BA /* Session.swift */,
+				99A078452C1A01EC008EE21B /* Track.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -275,6 +278,7 @@
 				99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */,
 				99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */,
 				99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */,
+				99A078462C1A01EC008EE21B /* Track.swift in Sources */,
 				99FEF52A2C112442004E1031 /* TrackingToolbarViewModel.swift in Sources */,
 				99C364F02C0F642B00873213 /* RecordingFixtures.swift in Sources */,
 				4521F4512C18B10200246189 /* MockRecordingManager.swift in Sources */,
@@ -282,7 +286,7 @@
 				991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */,
 				99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */,
 				99F9EE532B6EC9DE003308D2 /* SongLabApp.swift in Sources */,
-				991F56D72C0D361B00CC88BA /* Recording.swift in Sources */,
+				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
 				99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,

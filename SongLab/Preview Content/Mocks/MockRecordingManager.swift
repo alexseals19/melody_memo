@@ -10,13 +10,15 @@ import Foundation
 
 class MockRecordingManager: RecordingManager {
     
-    var recordings: CurrentValueSubject<[Recording], Never>
+    var sessions: CurrentValueSubject<[Session], Never>
     
-    func removeRecording(_ recording: Recording) throws {}
+    func removeSession(_ session: Session) throws {}
     
-    func saveRecording(_ recording: Recording) throws {}
+    func removeTrack(_ track: Track) throws {}
+    
+    func saveRecording(_ recording: Session) throws {}
     
     init() {
-        recordings = CurrentValueSubject([])
+        sessions = CurrentValueSubject([])
     }
 }

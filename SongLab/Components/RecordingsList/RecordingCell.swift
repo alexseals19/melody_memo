@@ -11,12 +11,28 @@ struct RecordingCell: View {
         
     // MARK: - API
     
-    @Binding var currentlyPlaying: Recording?
-    @Binding var removeRecording: Recording?
+    @Binding var currentlyPlaying: Session?
+    var audioIsPlaying: Bool
+    
+    init(
+        currentlyPlaying: Binding<Session?>,
+        audioIsPlaying: Bool,
+        session: Session,
+        trashButtonAction: @escaping (_: Session) -> Void
+    ) {
+        _currentlyPlaying = currentlyPlaying
+        self.audioIsPlaying = audioIsPlaying
+        self.session = session
+        self.trashButtonAction = trashButtonAction
+    }
     
     // MARK: - Variables
         
-    var recording: Recording
+    var session: Session
+        
+    let trashButtonAction: (_ session: Session) -> Void
+    
+    // MARK: - Body
     
     var body: some View {
         VStack {
@@ -24,30 +40,30 @@ struct RecordingCell: View {
             HStack {
                 VStack(alignment: .leading) {
                     HStack() {
-                        Text(recording.name + " |")
-                        Text(recording.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
+                        Text(session.name + " |")
+                        Text(session.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
                             .font(.caption)
                     }
-                    Text(recording.date.formatted(date: .numeric, time: .omitted))
+                    Text(session.date.formatted(date: .numeric, time: .omitted))
                         .font(.caption)
                 }
                 
                 Spacer()
                 
                 Button {
-                    removeRecording = recording
+                    trashButtonAction(session)
                 } label: {
                     Image(systemName: "trash")
                 }
                 
                 Button {
-                    if let currentlyPlaying, currentlyPlaying == recording {
+                    if audioIsPlaying, let currentlyPlaying, currentlyPlaying == session {
                         self.currentlyPlaying = nil
                     } else {
-                        currentlyPlaying = recording
+                        currentlyPlaying = session
                     }
                 } label: {
-                    if let currentlyPlaying, currentlyPlaying == recording {
+                    if audioIsPlaying, let currentlyPlaying, currentlyPlaying == session {
                         Image(systemName: "pause")
                             .resizable()
                             .frame(width: 12, height: 16)
@@ -69,14 +85,15 @@ struct RecordingCell: View {
     
     RecordingCell(
         currentlyPlaying: .constant(nil),
-        removeRecording: .constant(nil),
-        recording: Recording(
+        audioIsPlaying: false,
+        session: Session(
             name: "RecordingFixture",
             date: Date(),
             length: .seconds(4),
+            tracks: [],
             id: UUID()
-            
-        )
+        ),
+        trashButtonAction: { _ in }
     )
         .padding(.horizontal)
 }

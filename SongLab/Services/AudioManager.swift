@@ -5,18 +5,21 @@
 //  Created by Alex Seals on 6/5/24.
 //
 
+import Combine
 import Foundation
 import AVFoundation
 
-@MainActor
+
 protocol AudioManager {
+    var audioIsPlaying: CurrentValueSubject<Bool, Never> { get }
+    var isRecording: CurrentValueSubject<Bool, Never> { get }
     func startTracking()
     func stopTracking() async
-    func startPlayback(recording: Recording)
+    func startPlayback(recording: Session)
     func stopPlayback()
 }
 
-@MainActor
+
 class DefaultAudioManager: AudioManager {
     
     // MARK: - API
@@ -29,10 +32,13 @@ class DefaultAudioManager: AudioManager {
         playbackEngine: AVAudioEngine(),
         mixerNode: AVAudioMixerNode()
     )
+    
+    var audioIsPlaying: CurrentValueSubject<Bool, Never>
+    var isRecording: CurrentValueSubject<Bool, Never>
         
     func startTracking() {
         do {
-            currentFileName = "Session\(DefaultRecordingManager.shared.recordings.value.count + 1)"
+            currentFileName = "Session\(DefaultRecordingManager.shared.sessions.value.count + 1)"
             
             guard let currentFileName else {
                 assertionFailure("currentFileName is nil.")
@@ -53,6 +59,8 @@ class DefaultAudioManager: AudioManager {
             try audioSession.setPreferredInput(inputs[0])
             recorder = try AVAudioRecorder(url: url, settings: settings)
                         
+            isRecording.send(true)
+            
             recorder.record()
         } catch {
             print(error.localizedDescription)
@@ -62,6 +70,10 @@ class DefaultAudioManager: AudioManager {
     func stopTracking() async {
         
         defer { currentFileName = nil }
+        
+        Task { @MainActor in
+            isRecording.send(false)
+        }
         
         recorder.stop()
     
@@ -76,30 +88,55 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
-            let recording = Recording(
-                name: currentFileName,
+            let session = Session(
+                name: "Session \(DefaultRecordingManager.shared.sessions.value.count + 1)",
                 date: Date(),
                 length: .seconds(durationInSeconds),
+                tracks: [Track(name: currentFileName, date: Date(), length: .seconds(durationInSeconds), id: UUID())],
                 id: UUID()
             )
-            try DefaultRecordingManager.shared.saveRecording(recording)
+            try DefaultRecordingManager.shared.saveRecording(session)
         } catch {
             print(error.localizedDescription)
         }
     }
     
-    func startPlayback(recording: Recording) {
+    func startPlayback(recording: Session) {
+        
+        if player.isPlaying {
+            bufferInterrupt = true
+        } else {
+            bufferInterrupt = false
+        }
+        
+        audioIsPlaying.send(true)
+        
         do {
-            configurePlayback(player: player)
+            let url = DataPersistenceManager.createDocumentURL(withFileName: recording.tracks[0].name, fileType: .caf)
+            let audioFile = try AVAudioFile(forReading: url)
+
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: audioFile.processingFormat, frameCapacity: AVAudioFrameCount(audioFile.length)) else {
+                assertionFailure("Could not assign buffer")
+                return
+            }
             
+            try audioFile.read(into: buffer)
+            
+            playbackEngine.attach(player)
+            playbackEngine.connect(player, to: playbackEngine.mainMixerNode, format: audioFile.processingFormat)
             playbackEngine.prepare()
             try playbackEngine.start()
             
-            let url = DataPersistenceManager.createDocumentURL(withFileName: recording.name, fileType: .caf)
-            let audioFile = try AVAudioFile(forReading: url)
-            
-            player.scheduleFile(audioFile, at: nil)
-        
+            player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionCallbackType: .dataPlayedBack) { _ in
+                Task{ @MainActor in
+                    if !self.bufferInterrupt {
+                        self.player.stop()
+                        self.audioIsPlaying.send(false)
+                    }
+                    self.bufferInterrupt = false
+                }
+            }
+                        
             player.play()
         } catch {
             print(error.localizedDescription)
@@ -107,6 +144,7 @@ class DefaultAudioManager: AudioManager {
     }
     
     func stopPlayback() {
+        audioIsPlaying.send(false)
         player.stop()
         playbackEngine.stop()
     }
@@ -120,6 +158,7 @@ class DefaultAudioManager: AudioManager {
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
+    private var bufferInterrupt: Bool = false
         
     // MARK: - Functions
     
@@ -129,16 +168,19 @@ class DefaultAudioManager: AudioManager {
         player: AVAudioPlayerNode,
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
-        mixerNode: AVAudioMixerNode) {
-            self.audioSession = audioSession
-            self.recorder = recorder
-            self.player = player
-            self.engine = engine
-            self.playbackEngine = playbackEngine
-            self.mixerNode = mixerNode
-            setUpSession()
-            setUpEngine()
-            setupNotifications()
+        mixerNode: AVAudioMixerNode
+    ) {
+        audioIsPlaying = CurrentValueSubject(false)
+        isRecording = CurrentValueSubject(false)
+        self.audioSession = audioSession
+        self.recorder = recorder
+        self.player = player
+        self.engine = engine
+        self.playbackEngine = playbackEngine
+        self.mixerNode = mixerNode
+        setUpSession()
+        setUpEngine()
+        setupNotifications()
     }
     
     private func setUpSession() {
@@ -160,8 +202,7 @@ class DefaultAudioManager: AudioManager {
     }
     
     private func configurePlayback(player: AVAudioPlayerNode) {
-        playbackEngine.attach(player)
-        playbackEngine.connect(player, to: playbackEngine.mainMixerNode, format: nil)
+        
     }
     
     private func setUpEngine() {

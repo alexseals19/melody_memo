@@ -13,39 +13,39 @@ class RecordingsListViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var currentlyPlaying: Recording? {
+    @Published var currentlyPlaying: Session? {
         didSet {
             if currentlyPlaying != nil {
-                guard let recording = currentlyPlaying else {
+                guard let session = currentlyPlaying else {
                     assertionFailure("Could not set recording")
                     return
                 }
-                audioManager.startPlayback(recording: recording)
+                audioManager.startPlayback(recording: session)
             } else {
                 audioManager.stopPlayback()
             }
         }
     }
     
-    @Published var removeRecording: Recording? {
-        didSet {
-            if let recording = removeRecording {
-                do {
-                    try recordingManager.removeRecording(recording)
-                } catch {
-                    // TODO: Handle error
-                }
-            }
-        }
-    }
-    
-    @Published var recordings: [Recording] = []
+    @Published var sessions: [Session] = []
+    @Published var audioIsPlaying: Bool = false
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
-        recordingManager.recordings
-            .assign(to: &$recordings)
+        recordingManager.sessions
+            .assign(to: &$sessions)
+        audioManager.audioIsPlaying
+            .assign(to: &$audioIsPlaying)
+    }
+    
+    func trashButtonAction(_ session: Session) {
+        do {
+            try recordingManager.removeSession(session)
+        } catch {
+            // TODO: Handle Error
+        }
+        
     }
         
     // MARK: - Variables

@@ -7,19 +7,20 @@
 
 import Foundation
 
-extension Recording {
+extension Session {
     
-    static let recordingFixture: Self = Recording(
+    static let recordingFixture: Self = Session(
                                             name: "RecordingFixture",
                                             date: Date(),
                                             length: .seconds(4),
+                                            tracks: [],
                                             id: UUID())
     
     static let recordingsFixture: [Self] = {
-        var recs: [Recording] = []
+        var recs: [Session] = []
         let date = Date()
         for i in 0...50 {
-            recs.append(Recording(name: "my recording \(i)", date: date, length: .seconds(4), id: UUID()))
+            recs.append(Session(name: "my recording \(i)", date: date, length: .seconds(4), tracks: [], id: UUID()))
         }
         return recs
     }()

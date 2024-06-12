@@ -13,20 +13,13 @@ class TrackingToolbarViewModel: ObservableObject {
     //MARK: - API
     
     var metronomeActive = false
-    @Published var isRecording = false {
-        didSet {
-            if isRecording {
-                audioManager.startTracking()
-            } else {
-                Task {
-                    await audioManager.stopTracking()
-                }
-            }
-        }
-    }
+    @Published var isRecording: Bool = false
+        
     
     init(audioManager: AudioManager) {
         self.audioManager = audioManager
+        audioManager.isRecording
+            .assign(to: &$isRecording)
     }
     
     // MARK: - Variables
@@ -35,4 +28,13 @@ class TrackingToolbarViewModel: ObservableObject {
     
     // MARK: - Functions
     
+    func recordButtonAction() {
+        if isRecording {
+            Task{
+                await audioManager.stopTracking()
+            }
+        } else {
+            audioManager.startTracking()
+        }
+    }
 }

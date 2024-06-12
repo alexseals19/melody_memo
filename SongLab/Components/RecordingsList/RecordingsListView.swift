@@ -27,18 +27,19 @@ struct RecordingsListView: View {
     // MARK: - Body
     
     var body: some View {
-        if viewModel.recordings.isEmpty {
+        if viewModel.sessions.isEmpty {
             Spacer()
             Text("Create your first recording!")
             Spacer()
         } else {
             ScrollView {
                 LazyVStack(alignment: .leading) {
-                    ForEach(viewModel.recordings) { recording in
+                    ForEach(viewModel.sessions) { session in
                         RecordingCell(
                             currentlyPlaying: $viewModel.currentlyPlaying,
-                            removeRecording: $viewModel.removeRecording,
-                            recording: recording
+                            audioIsPlaying: viewModel.audioIsPlaying,
+                            session: session,
+                            trashButtonAction: viewModel.trashButtonAction
                         )
                     }
                 }
