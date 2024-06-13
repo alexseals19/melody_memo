@@ -36,5 +36,13 @@ struct TrackCell: View {
 }
 
 #Preview {
-    TrackCell(track: Track(name: "track 1", fileName: "", date: Date(), length: .seconds(2), id: UUID()))
+    TrackCell(
+        track: Track(
+            name: "track 1",
+            fileName: "",
+            date: Date(),
+            length: .seconds(2),
+            id: UUID()
+        )
+    )
 }

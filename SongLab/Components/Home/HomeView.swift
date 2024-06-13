@@ -20,6 +20,10 @@ struct HomeView: View {
         )
     }
     
+    // MARK: - Variables
+    
+    @StateObject private var viewModel: HomeViewModel
+    
     // MARK: - Body
     
     var body: some View {
@@ -31,17 +35,18 @@ struct HomeView: View {
             )
             VStack {
                 Spacer()
-                TrackingToolbarView(audioManager: viewModel.audioManager, isRecording: $viewModel.isRecording)
-                    .ignoresSafeArea()
-                    .background(
-                        .ultraThinMaterial
-                    )
-                    .background(Color.black.opacity(0.4))
+                TrackingToolbarView(
+                    audioManager: viewModel.audioManager,
+                    isRecording: $viewModel.isRecording
+                )
+                .ignoresSafeArea()
+                .background(
+                    .ultraThinMaterial
+                )
+                .background(Color.black.opacity(0.4))
             }
         }
     }
-    
-    @StateObject private var viewModel: HomeViewModel
 }
 
 #Preview {
