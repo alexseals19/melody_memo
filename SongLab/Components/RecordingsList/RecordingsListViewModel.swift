@@ -8,48 +8,54 @@
 import Combine
 import Foundation
 
+protocol RecordingsListViewModelDelegate: AnyObject {
+    
+}
+
 @MainActor
 class RecordingsListViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var currentlyPlaying: Session? {
-        didSet {
-            if currentlyPlaying != nil {
-                guard let session = currentlyPlaying else {
-                    assertionFailure("Could not set recording")
-                    return
-                }
-                audioManager.startPlayback(recording: session)
-            } else {
-                audioManager.stopPlayback()
-            }
-        }
-    }
-    
+    @Published var currentlyPlaying: Session?
     @Published var sessions: [Session] = []
-    @Published var audioIsPlaying: Bool = false
     
+    let recordingManager: RecordingManager
+        
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
         recordingManager.sessions
             .assign(to: &$sessions)
-        audioManager.audioIsPlaying
-            .assign(to: &$audioIsPlaying)
+        audioManager.currentlyPlaying
+            .assign(to: &$currentlyPlaying)
     }
     
-    func trashButtonAction(_ session: Session) {
+    func recordingCellPlayButtonTapped(for session: Session) {
+        audioManager.startPlayback(session: session)
+    }
+    
+    func recordingCellStopButtonTapped() {
+        audioManager.stopPlayback()
+    }
+    
+    func recordingCellTrashButtonTapped(for session: Session) {
         do {
             try recordingManager.removeSession(session)
         } catch {
             // TODO: Handle Error
         }
+    }
+    
+    func sessionDetailViewDidAppear(for session: Session) {
+        
+    }
+    
+    func sessionDetailViewDidDisappear() {
         
     }
         
     // MARK: - Variables
     
     private let audioManager: AudioManager
-    private let recordingManager: RecordingManager
 }

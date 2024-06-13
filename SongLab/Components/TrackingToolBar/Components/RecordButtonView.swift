@@ -11,17 +11,14 @@ struct RecordButtonView: View {
     
     //MARK: - API
     
-    var isRecording: Bool
+    @Binding var isRecording: Bool
     
-    init(isRecording: Bool,
-         recordButtonAction: @escaping () -> Void
-    ) {
-        self.isRecording = isRecording
-        self.recordButtonAction = recordButtonAction
+    init(isRecording: Binding<Bool>) {
+        _isRecording = isRecording
     }
     
     // MARK: - Variables
-            
+                
     @State private var stopButtonOpacity = 0.0
     @State private var stopButtonDimensions: CGFloat = 65
     @State private var stopButtonCornerRadius: CGFloat = 32.5
@@ -32,14 +29,12 @@ struct RecordButtonView: View {
     
     @Namespace private var namespace
     
-    let recordButtonAction: () -> Void
-    
     // MARK: - Body
         
     var body: some View {
         Button {
             stopButtonOpacity = 0.15
-            withAnimation(.linear) {
+            withAnimation(.easeInOut) {
                 if isRecording {
                     stopButtonDimensions = 65
                     stopButtonCornerRadius = 27.5
@@ -54,8 +49,7 @@ struct RecordButtonView: View {
                     reordButtonOpacity = 0.0
                 }
             }
-            recordButtonAction()
-            buttonToggle.toggle()
+            isRecording.toggle()
         } label: {
             buttonLabel
                 .frame(height: 55)
@@ -70,7 +64,8 @@ struct RecordButtonView: View {
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
                 .foregroundColor(.red)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
-            if buttonToggle {
+            
+            if isRecording {
                 HStack {
                     Spacer()
                         .frame(width: 140)
@@ -93,5 +88,5 @@ struct RecordButtonView: View {
 }
 
 #Preview {
-    RecordButtonView(isRecording: false, recordButtonAction: {})
+    RecordButtonView(isRecording: .constant(false))
 }

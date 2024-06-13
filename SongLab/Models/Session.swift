@@ -7,11 +7,11 @@
 
 import Foundation
 
-struct Session: Identifiable, Equatable, Codable {
+struct Session: Identifiable, Equatable, Codable, Hashable {
     let name: String
     let date: Date
     let length: Duration
-    let tracks: [Track]
+    var tracks: [Track]
     let id: UUID
     
     init(name: String, date: Date, length: Duration, tracks: [Track], id: UUID) {
@@ -20,5 +20,9 @@ struct Session: Identifiable, Equatable, Codable {
         self.length = length
         self.tracks = tracks
         self.id = id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }

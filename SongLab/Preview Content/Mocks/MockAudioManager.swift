@@ -10,7 +10,7 @@ import Foundation
 
 class MockAudioManager: AudioManager {
     
-    var audioIsPlaying: CurrentValueSubject<Bool, Never>
+    var currentlyPlaying: CurrentValueSubject<Session?, Never>
     
     var isRecording: CurrentValueSubject<Bool, Never>
     
@@ -18,12 +18,14 @@ class MockAudioManager: AudioManager {
     
     func stopTracking() async {}
     
-    func startPlayback(recording: Session) {}
+    func stopTracking(for _: Session) async {}
+    
+    func startPlayback(session: Session) {}
     
     func stopPlayback() {}
     
     init() {
-        audioIsPlaying = CurrentValueSubject(false)
+        currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
     }
 }
