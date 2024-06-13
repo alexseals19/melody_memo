@@ -46,14 +46,6 @@ class RecordingsListViewModel: ObservableObject {
             // TODO: Handle Error
         }
     }
-    
-    func sessionDetailViewDidAppear(for session: Session) {
-        
-    }
-    
-    func sessionDetailViewDidDisappear() {
-        
-    }
         
     // MARK: - Variables
     

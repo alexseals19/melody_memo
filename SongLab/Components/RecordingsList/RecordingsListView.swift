@@ -13,7 +13,11 @@ struct RecordingsListView: View {
     
     @Binding var selectedSession: Session?
 
-    init(audioManager: AudioManager, recordingManager: RecordingManager, selectedSession: Binding<Session?>) {
+    init(
+        audioManager: AudioManager,
+        recordingManager: RecordingManager,
+        selectedSession: Binding<Session?>
+    ) {
         _viewModel = StateObject(
             wrappedValue: RecordingsListViewModel(
                 audioManager: audioManager,
