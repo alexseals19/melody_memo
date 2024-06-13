@@ -27,23 +27,7 @@ struct SessionDetailView: View {
         
         VStack {
             HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    ZStack {
-                        Image(systemName: "chevron.left.circle.fill")
-                            .resizable()
-                            .frame(width: 26, height: 26)
-                            .opacity(0.1)
-                            
-                        Image(systemName: "chevron.left")
-                            .resizable()
-                            .frame(width: 8, height: 14)
-                            .padding(.trailing, 2)
-                    }
-                    .padding(15)
-                }
-                .foregroundColor(.primary)
+                backButton
                 Spacer()
                 Text(viewModel.session.name)
                     .font(.largeTitle)
@@ -67,6 +51,27 @@ struct SessionDetailView: View {
             self.opacity = 1.0
         }
     }
+    
+    var backButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            ZStack {
+                Image(systemName: "chevron.left.circle.fill")
+                    .resizable()
+                    .frame(width: 26, height: 26)
+                    .opacity(0.1)
+                    
+                Image(systemName: "chevron.left")
+                    .resizable()
+                    .frame(width: 8, height: 14)
+                    .padding(.trailing, 2)
+            }
+            .padding(15)
+        }
+        .foregroundColor(.primary)
+    }
+    
 }
 
 #Preview {

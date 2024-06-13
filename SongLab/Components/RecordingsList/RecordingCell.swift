@@ -27,8 +27,8 @@ struct RecordingCell: View {
     
     // MARK: - Variables
         
-    var session: Session
-    var currentlyPlaying: Session?
+    private var session: Session
+    private var currentlyPlaying: Session?
         
     let playButtonAction: (_ session: Session) -> Void
     let stopButtonAction: () -> Void
@@ -43,12 +43,12 @@ struct RecordingCell: View {
                 VStack(alignment: .leading) {
                     HStack() {
                         Text(session.name + " |")
-                        Text(session.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
+                        Text(session.lengthDisplayString)
                             .font(.caption)
                     }
                     .padding(.top, 7)
                     .padding(.bottom, 1)
-                    Text(session.date.formatted(date: .numeric, time: .omitted))
+                    Text(session.dateDisplayString)
                         .font(.caption)
                         .padding(.bottom, 7)
                 }
@@ -56,34 +56,42 @@ struct RecordingCell: View {
                 
                 Spacer()
                 
-                Button {
-                    trashButtonAction(session)
-                } label: {
-                    Image(systemName: "trash")
-                }
+                trashButton
+                playbackButton
                 
-                Button {
-                    if let currentlyPlaying, currentlyPlaying == session {
-                        stopButtonAction()
-                    } else {
-                        playButtonAction(session)
-                    }
-                } label: {
-                    if let currentlyPlaying, currentlyPlaying == session {
-                        Image(systemName: "pause")
-                            .resizable()
-                            .frame(width: 12, height: 16)
-                            .padding(.trailing, 15)
-                    } else {
-                        Image(systemName: "play")
-                            .resizable()
-                            .frame(width: 16, height: 20)
-                            .padding(.trailing, 15)
-                    }
-                }
-                .buttonStyle(.plain)
             }
             Divider()
+        }
+        .foregroundColor(.primary)
+    }
+    
+    var trashButton: some View {
+        Button {
+            trashButtonAction(session)
+        } label: {
+            Image(systemName: "trash")
+        }
+    }
+    
+    var playbackButton: some View {
+        Button {
+            if let currentlyPlaying, currentlyPlaying == session {
+                stopButtonAction()
+            } else {
+                playButtonAction(session)
+            }
+        } label: {
+            if let currentlyPlaying, currentlyPlaying == session {
+                Image(systemName: "pause")
+                    .resizable()
+                    .frame(width: 12, height: 16)
+                    .padding(.trailing, 15)
+            } else {
+                Image(systemName: "play")
+                    .resizable()
+                    .frame(width: 16, height: 20)
+                    .padding(.trailing, 15)
+            }
         }
         .foregroundColor(.primary)
     }

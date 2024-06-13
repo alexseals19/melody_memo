@@ -22,11 +22,9 @@ struct TrackCell: View {
                 VStack(alignment: .leading) {
                     HStack() {
                         Text(track.name + " |")
-                        Text(track.length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2))))
+                        Text(track.lengthDisplayString)
                             .font(.caption)
                     }
-                    Text(track.date.formatted(date: .numeric, time: .omitted))
-                        .font(.caption)
                 }
                 Spacer()
             }
