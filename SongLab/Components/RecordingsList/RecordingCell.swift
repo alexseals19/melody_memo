@@ -30,9 +30,9 @@ struct RecordingCell: View {
     private var session: Session
     private var currentlyPlaying: Session?
         
-    let playButtonAction: (_ session: Session) -> Void
-    let stopButtonAction: () -> Void
-    let trashButtonAction: (_ session: Session) -> Void
+    private let playButtonAction: (_ session: Session) -> Void
+    private let stopButtonAction: () -> Void
+    private let trashButtonAction: (_ session: Session) -> Void
     
     // MARK: - Body
     
