@@ -12,7 +12,12 @@ struct SessionDetailView: View {
     //MARK: - API
         
     init(recordingManager: RecordingManager, session: Session) {
-        _viewModel = StateObject(wrappedValue: SessionDetailViewModel(recordingManager: recordingManager, session: session))
+        _viewModel = StateObject(
+            wrappedValue: SessionDetailViewModel(
+                recordingManager: recordingManager, 
+                session: session
+            )
+        )
     }
     
     //MARK: - Variables
@@ -75,5 +80,8 @@ struct SessionDetailView: View {
 }
 
 #Preview {
-    SessionDetailView(recordingManager: MockRecordingManager(), session: Session.recordingFixture)
+    SessionDetailView(
+        recordingManager: MockRecordingManager(),
+        session: Session.recordingFixture
+    )
 }
