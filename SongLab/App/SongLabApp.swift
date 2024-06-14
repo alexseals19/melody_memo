@@ -15,6 +15,7 @@ struct SongLabApp: App {
                 audioManager: DefaultAudioManager.shared,
                 recordingManager: DefaultRecordingManager.shared
             )
+//            .environment(\.colorScheme, .light)
         }
     }
 }

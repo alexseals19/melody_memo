@@ -13,18 +13,7 @@ class TrackingToolbarViewModel: ObservableObject {
     //MARK: - API
     
     var metronomeActive = false
-    @Published var isRecording = false {
-        didSet {
-            if isRecording {
-                audioManager.startTracking()
-            } else {
-                Task {
-                    await audioManager.stopTracking()
-                }
-            }
-        }
-    }
-    
+        
     init(audioManager: AudioManager) {
         self.audioManager = audioManager
     }
@@ -32,7 +21,4 @@ class TrackingToolbarViewModel: ObservableObject {
     // MARK: - Variables
     
     private let audioManager: AudioManager
-    
-    // MARK: - Functions
-    
 }

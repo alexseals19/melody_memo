@@ -8,48 +8,46 @@
 import Combine
 import Foundation
 
+protocol RecordingsListViewModelDelegate: AnyObject {
+    
+}
+
 @MainActor
 class RecordingsListViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var currentlyPlaying: Recording? {
-        didSet {
-            if currentlyPlaying != nil {
-                guard let recording = currentlyPlaying else {
-                    assertionFailure("Could not set recording")
-                    return
-                }
-                audioManager.startPlayback(recording: recording)
-            } else {
-                audioManager.stopPlayback()
-            }
-        }
-    }
+    @Published var currentlyPlaying: Session?
+    @Published var sessions: [Session] = []
     
-    @Published var removeRecording: Recording? {
-        didSet {
-            if let recording = removeRecording {
-                do {
-                    try recordingManager.removeRecording(recording)
-                } catch {
-                    // TODO: Handle error
-                }
-            }
-        }
-    }
-    
-    @Published var recordings: [Recording] = []
-    
+    let recordingManager: RecordingManager
+        
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
-        recordingManager.recordings
-            .assign(to: &$recordings)
+        recordingManager.sessions
+            .assign(to: &$sessions)
+        audioManager.currentlyPlaying
+            .assign(to: &$currentlyPlaying)
+    }
+    
+    nonisolated func recordingCellPlayButtonTapped(for session: Session) {
+        audioManager.startPlayback(session: session)
+    }
+    
+    nonisolated func recordingCellStopButtonTapped() {
+        audioManager.stopPlayback()
+    }
+    
+    nonisolated func recordingCellTrashButtonTapped(for session: Session) {
+        do {
+            try recordingManager.removeSession(session)
+        } catch {
+            // TODO: Handle Error
+        }
     }
         
     // MARK: - Variables
     
     private let audioManager: AudioManager
-    private let recordingManager: RecordingManager
 }

@@ -11,8 +11,11 @@ struct TrackingToolbarView: View {
     
     //MARK: - API
     
-    init(audioManager: AudioManager) {
+    @Binding var isRecording: Bool
+    
+    init(audioManager: AudioManager, isRecording: Binding<Bool>) {
         _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager))
+        _isRecording = isRecording
     }
     
     //MARK: - Variables
@@ -26,14 +29,16 @@ struct TrackingToolbarView: View {
             MetronomeView()
                 .padding(.leading)
             Spacer()
-            RecordButtonView(isRecording: $viewModel.isRecording)
+            RecordButtonView(isRecording: $isRecording)
             Spacer()
             TrackingSettingsView()
                 .padding(.trailing)
         }
+        .padding(.bottom, 5)
+        .padding(.top, 25)
     }
 }
 
 #Preview {
-    TrackingToolbarView(audioManager: MockAudioManager())
+    TrackingToolbarView(audioManager: MockAudioManager(), isRecording: .constant(false))
 }

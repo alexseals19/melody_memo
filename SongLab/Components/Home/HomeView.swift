@@ -12,26 +12,41 @@ struct HomeView: View {
     // MARK: API
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
-        self.audioManager = audioManager
-        self.recordingManager = recordingManager
+        _viewModel = StateObject(
+            wrappedValue: HomeViewModel(
+                audioManager: audioManager,
+                recordingManager: recordingManager
+            )
+        )
     }
+    
+    // MARK: - Variables
+    
+    @StateObject private var viewModel: HomeViewModel
     
     // MARK: - Body
     
     var body: some View {
-        VStack {
-            RecordingsListView(audioManager: audioManager, recordingManager: recordingManager)
-            Divider()
-            Divider()
-            TrackingToolbarView(audioManager: audioManager)
+        ZStack {
+            RecordingsListView(
+                audioManager: viewModel.audioManager,
+                recordingManager: viewModel.recordingManager,
+                selectedSession: $viewModel.selectedSession
+            )
+            VStack {
+                Spacer()
+                TrackingToolbarView(
+                    audioManager: viewModel.audioManager,
+                    isRecording: $viewModel.isRecording
+                )
                 .ignoresSafeArea()
-                .padding(.top)
+                .background(
+                    .ultraThinMaterial
+                )
+                .background(Color.black.opacity(0.4))
+            }
         }
-        .padding()
     }
-    
-    private let audioManager: AudioManager
-    private let recordingManager: RecordingManager
 }
 
 #Preview {

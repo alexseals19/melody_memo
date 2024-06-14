@@ -11,20 +11,21 @@ struct RecordButtonView: View {
     
     //MARK: - API
     
-    @Binding public var isRecording: Bool
+    @Binding var isRecording: Bool
     
     init(isRecording: Binding<Bool>) {
         _isRecording = isRecording
     }
     
     // MARK: - Variables
-            
+                
     @State private var stopButtonOpacity = 0.0
     @State private var stopButtonDimensions: CGFloat = 65
     @State private var stopButtonCornerRadius: CGFloat = 32.5
     @State private var reordButtonOpacity = 1.0
     @State private var recordButtonDimensions: CGFloat = 65
     @State private var recordButtonCornerRadius: CGFloat = 32.5
+    @State private var buttonToggle: Bool = false
     
     @Namespace private var namespace
     
@@ -33,7 +34,7 @@ struct RecordButtonView: View {
     var body: some View {
         Button {
             stopButtonOpacity = 0.15
-            withAnimation(.linear) {
+            withAnimation(.easeInOut) {
                 if isRecording {
                     stopButtonDimensions = 65
                     stopButtonCornerRadius = 27.5
@@ -63,6 +64,7 @@ struct RecordButtonView: View {
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
                 .foregroundColor(.red)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
+            
             if isRecording {
                 HStack {
                     Spacer()
