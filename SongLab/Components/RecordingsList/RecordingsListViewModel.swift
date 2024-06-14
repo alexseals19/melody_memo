@@ -31,15 +31,15 @@ class RecordingsListViewModel: ObservableObject {
             .assign(to: &$currentlyPlaying)
     }
     
-    func recordingCellPlayButtonTapped(for session: Session) {
+    nonisolated func recordingCellPlayButtonTapped(for session: Session) {
         audioManager.startPlayback(session: session)
     }
     
-    func recordingCellStopButtonTapped() {
+    nonisolated func recordingCellStopButtonTapped() {
         audioManager.stopPlayback()
     }
     
-    func recordingCellTrashButtonTapped(for session: Session) {
+    nonisolated func recordingCellTrashButtonTapped(for session: Session) {
         do {
             try recordingManager.removeSession(session)
         } catch {

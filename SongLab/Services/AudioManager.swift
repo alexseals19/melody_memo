@@ -93,7 +93,15 @@ class DefaultAudioManager: AudioManager {
                 name: "Session \(DefaultRecordingManager.shared.sessions.value.count + 1)",
                 date: Date(),
                 length: .seconds(durationInSeconds),
-                tracks: [Track(name: "Track 1", fileName: currentFileName, date: Date(), length: .seconds(durationInSeconds), id: UUID())],
+                tracks: [
+                    Track(
+                        name: "Track 1",
+                        fileName: currentFileName,
+                        date: Date(),
+                        length: .seconds(durationInSeconds),
+                        id: UUID()
+                    )
+                ],
                 id: UUID()
             )
             try DefaultRecordingManager.shared.saveSession(session)
@@ -118,7 +126,10 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
-        let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+        let url = DataPersistenceManager.createDocumentURL(
+            withFileName: currentFileName,
+            fileType: .caf
+        )
         
         do {
             let audioAsset = AVURLAsset(url: url, options: nil)
@@ -126,7 +137,16 @@ class DefaultAudioManager: AudioManager {
             let durationInSeconds = CMTimeGetSeconds(duration)
             let name = "Track \(session.tracks.count + 1)"
             
-            updatedSession.tracks.append(Track(name: name, fileName: currentFileName, date: Date(), length: .seconds(durationInSeconds), id: UUID()))
+            updatedSession.tracks.append(
+                Track(
+                    name: name,
+                    fileName: currentFileName,
+                    date: Date(),
+                    length: .seconds(durationInSeconds),
+                    id: UUID()
+                )
+            )
+            
             for i in updatedSession.tracks {
                 print(i.name)
             }
@@ -147,10 +167,17 @@ class DefaultAudioManager: AudioManager {
         currentlyPlaying.send(session)
         
         do {
-            let url = DataPersistenceManager.createDocumentURL(withFileName: session.tracks[0].fileName, fileType: .caf)
+            let url = DataPersistenceManager.createDocumentURL(
+                withFileName: session.tracks[0].fileName,
+                fileType: .caf
+            )
+            
             let audioFile = try AVAudioFile(forReading: url)
 
-            guard let buffer = AVAudioPCMBuffer(pcmFormat: audioFile.processingFormat, frameCapacity: AVAudioFrameCount(audioFile.length)) else {
+            guard let buffer = AVAudioPCMBuffer(
+                pcmFormat: audioFile.processingFormat,
+                frameCapacity: AVAudioFrameCount(audioFile.length)
+            ) else {
                 assertionFailure("Could not assign buffer")
                 return
             }
@@ -158,11 +185,18 @@ class DefaultAudioManager: AudioManager {
             try audioFile.read(into: buffer)
             
             playbackEngine.attach(player)
-            playbackEngine.connect(player, to: playbackEngine.mainMixerNode, format: audioFile.processingFormat)
+            playbackEngine.connect(player, 
+                                   to: playbackEngine.mainMixerNode,
+                                   format: audioFile.processingFormat)
+            
             playbackEngine.prepare()
             try playbackEngine.start()
             
-            player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionCallbackType: .dataPlayedBack) { _ in
+            player.scheduleBuffer(buffer, 
+                                  at: nil,
+                                  options: .interrupts,
+                                  completionCallbackType: .dataPlayedBack
+            ) { _ in
                 Task{ @MainActor in
                     if !self.bufferInterrupt {
                         self.stopPlayback()
@@ -221,7 +255,10 @@ class DefaultAudioManager: AudioManager {
     private func setUpSession() {
         do {
             audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, options: [.allowBluetoothA2DP, .defaultToSpeaker])
+            try audioSession.setCategory(
+                .playAndRecord,
+                options: [.allowBluetoothA2DP, .defaultToSpeaker]
+            )
            
             try audioSession.setSupportsMultichannelContent(true)
             try audioSession.setActive(true)
@@ -256,7 +293,13 @@ class DefaultAudioManager: AudioManager {
         engine.connect(inputNode, to: mixerNode, format: inputFormat)
         
         let mainMixerNode = engine.mainMixerNode
-        let mixerFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: inputFormat.sampleRate, channels: 1, interleaved: false)
+        let mixerFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: inputFormat.sampleRate,
+            channels: 1,
+            interleaved: false
+        )
+        
         engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
     }
     
