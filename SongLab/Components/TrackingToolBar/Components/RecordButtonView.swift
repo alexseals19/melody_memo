@@ -63,6 +63,7 @@ struct RecordButtonView: View {
                 .opacity(reordButtonOpacity)
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
                 .foregroundColor(.red)
+                .shadow(color: .black, radius: 20)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
             
             if isRecording {

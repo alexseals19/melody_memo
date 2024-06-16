@@ -55,6 +55,7 @@ struct SessionDetailView: View {
         .onAppear {
             self.opacity = 1.0
         }
+        .padding(.top, 15)
     }
     
     var backButton: some View {

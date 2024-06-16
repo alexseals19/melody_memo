@@ -31,19 +31,17 @@ struct HomeView: View {
             RecordingsListView(
                 audioManager: viewModel.audioManager,
                 recordingManager: viewModel.recordingManager,
-                selectedSession: $viewModel.selectedSession
+                selectedSession: $viewModel.selectedSession,
+                appTheme: $viewModel.appTheme
             )
             VStack {
+                HomeViewNavBarView(appTheme: $viewModel.appTheme)
                 Spacer()
                 TrackingToolbarView(
                     audioManager: viewModel.audioManager,
                     isRecording: $viewModel.isRecording
                 )
-                .ignoresSafeArea()
-                .background(
-                    .ultraThinMaterial
-                )
-                .background(Color.black.opacity(0.4))
+                
             }
         }
     }

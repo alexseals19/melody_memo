@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import SwiftUI
 
 @MainActor
 class HomeViewModel: ObservableObject {
@@ -14,6 +15,7 @@ class HomeViewModel: ObservableObject {
     //MARK: - API
     
     @Published var selectedSession: Session?
+    @Published var appTheme: String = "superglass"
     
     @Published var isRecording: Bool = false {
         didSet {
@@ -39,10 +41,11 @@ class HomeViewModel: ObservableObject {
         self.recordingManager = recordingManager
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
-            .assign(to: &$selectedSession)
+            .assign(to: &$selectedSession)        
     }
     
     // MARK: - Variables
+    
     
     // MARK: - Functions
     

@@ -19,6 +19,8 @@
 		99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784C2C1A5DE8008EE21B /* TrackCell.swift */; };
 		99A0784F2C1A5E11008EE21B /* MasterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784E2C1A5E11008EE21B /* MasterCell.swift */; };
 		99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078502C1A78D7008EE21B /* HomeViewModel.swift */; };
+		99A384C42C1CB72B00736BA8 /* CellSpacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C32C1CB72B00736BA8 /* CellSpacer.swift */; };
+		99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */; };
 		99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */; };
 		99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* RecordingsListView.swift */; };
 		99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */; };
@@ -47,6 +49,8 @@
 		99A0784C2C1A5DE8008EE21B /* TrackCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackCell.swift; sourceTree = "<group>"; };
 		99A0784E2C1A5E11008EE21B /* MasterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterCell.swift; sourceTree = "<group>"; };
 		99A078502C1A78D7008EE21B /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		99A384C32C1CB72B00736BA8 /* CellSpacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSpacer.swift; sourceTree = "<group>"; };
+		99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewNavBarView.swift; sourceTree = "<group>"; };
 		99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPersistenceManager.swift; sourceTree = "<group>"; };
 		99C364EA2C0F61AE00873213 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
 		99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListViewModel.swift; sourceTree = "<group>"; };
@@ -161,6 +165,7 @@
 			children = (
 				99F9EE542B6EC9DE003308D2 /* HomeView.swift */,
 				99A078502C1A78D7008EE21B /* HomeViewModel.swift */,
+				99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -171,6 +176,7 @@
 				99C364EA2C0F61AE00873213 /* RecordingsListView.swift */,
 				99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */,
 				991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */,
+				99A384C32C1CB72B00736BA8 /* CellSpacer.swift */,
 			);
 			path = RecordingsList;
 			sourceTree = "<group>";
@@ -305,6 +311,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				99F0F7312C110318001B22CE /* TrackingSettingsView.swift in Sources */,
+				99A384C42C1CB72B00736BA8 /* CellSpacer.swift in Sources */,
 				99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */,
 				99F0F72D2C10F8C3001B22CE /* MetronomeView.swift in Sources */,
 				99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */,
@@ -323,6 +330,7 @@
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
 				99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */,
+				99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */,
 				99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,
 				99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */,
@@ -474,7 +482,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSeals.SongLab;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.AlexSeals.Song-Lab";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -504,7 +512,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.AlexSeals.SongLab;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.AlexSeals.Song-Lab";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

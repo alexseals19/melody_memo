@@ -22,20 +22,37 @@ struct TrackingToolbarView: View {
     
     @StateObject private var viewModel: TrackingToolbarViewModel
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     //MARK: - Body
     
     var body: some View {
         HStack {
             MetronomeView()
                 .padding(.leading)
-            Spacer()
             RecordButtonView(isRecording: $isRecording)
-            Spacer()
+                .padding(.horizontal, 25)
             TrackingSettingsView()
                 .padding(.trailing)
         }
-        .padding(.bottom, 5)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 25.0)
+                    .foregroundStyle(.ultraThinMaterial.opacity(0.8))
+                    .frame(height: 90)
+                RoundedRectangle(cornerRadius: 25.0)
+                    .foregroundStyle(Color.black.opacity(0.3))
+                    .frame(height: 90)
+            }
+                
+        )
+        .animation(.spring, value: isRecording)
+        .offset(y: -20)
         .padding(.top, 25)
+    }
+    
+    var color: some View {
+        colorScheme == .dark ? Color.black : Color.clear
     }
 }
 

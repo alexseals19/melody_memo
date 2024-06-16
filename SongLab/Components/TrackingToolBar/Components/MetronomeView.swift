@@ -36,15 +36,15 @@ struct MetronomeView: View {
         Group {
             if metronomeActive {
                 VStack(spacing: -2) {
-                    Text("\(bpm)")
-                        .font(.caption)
-                        .opacity(0)
+//                    Text("\(bpm)")
+//                        .font(.caption)
+//                        .opacity(0)
                     Image(systemName: "metronome.fill")
                         .resizable()
                         .frame(width: 21.5, height: 20)
+                        .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
                     Text("\(bpm)")
                         .font(.caption)
-                        .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
                 }
             } else {
                 Image(systemName: "metronome")

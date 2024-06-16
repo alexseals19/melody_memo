@@ -20,7 +20,7 @@ extension Session {
         var recs: [Session] = []
         let date = Date()
         for i in 0...50 {
-            recs.append(Session(name: "my recording \(i)", date: date, length: .seconds(4), tracks: [], id: UUID()))
+            recs.append(Session(name: "Session \(i)", date: date, length: .seconds(4), tracks: [], id: UUID()))
         }
         return recs
     }()
