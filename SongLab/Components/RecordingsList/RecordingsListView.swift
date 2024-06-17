@@ -12,13 +12,13 @@ struct RecordingsListView: View {
     // MARK: - API
         
     @Binding var selectedSession: Session?
-    @Binding var appTheme: String
+    
+    @EnvironmentObject var appTheme: AppTheme
 
     init(
         audioManager: AudioManager,
         recordingManager: RecordingManager,
-        selectedSession: Binding<Session?>,
-        appTheme: Binding<String>
+        selectedSession: Binding<Session?>
     ) {
         _viewModel = StateObject(
             wrappedValue: RecordingsListViewModel(
@@ -27,7 +27,6 @@ struct RecordingsListView: View {
             )
         )
         _selectedSession = selectedSession
-        _appTheme = appTheme
     }
     
     // MARK: - Variables
@@ -38,35 +37,35 @@ struct RecordingsListView: View {
         viewModel.sessions.isEmpty
     }
         
-    private var backgroundOpacity: Double {
-        switch appTheme {
-        case "glass":
-            return 0.0
-        case "superglass":
-            return 0.0
-        case "opaque":
-            return 0.7
-        case "light":
-            return 0.0
-        default:
-            return 0.7
-        }
-    }
-    
-    private var materialOpacity: Double {
-        switch appTheme {
-        case "glass":
-            return 0.0
-        case "superglass":
-            return 0.0
-        case "opaque":
-            return 0.8
-        case "light":
-            return 0.0
-        default:
-            return 0.5
-        }
-    }
+//    private var backgroundOpacity: Double {
+//        switch appTheme {
+//        case "glass":
+//            return 0.0
+//        case "superglass":
+//            return 0.0
+//        case "opaque":
+//            return 0.7
+//        case "light":
+//            return 0.0
+//        default:
+//            return 0.7
+//        }
+//    }
+//    
+//    private var materialOpacity: Double {
+//        switch appTheme {
+//        case "glass":
+//            return 0.0
+//        case "superglass":
+//            return 0.0
+//        case "opaque":
+//            return 0.8
+//        case "light":
+//            return 0.0
+//        default:
+//            return 0.5
+//        }
+//    }
         
     // MARK: - Body
     
@@ -80,7 +79,6 @@ struct RecordingsListView: View {
                                 RecordingCell(
                                     currentlyPlaying: viewModel.currentlyPlaying,
                                     session: session,
-                                    appTheme: $appTheme,
                                     playButtonAction: viewModel.recordingCellPlayButtonTapped,
                                     stopButtonAction: viewModel.recordingCellStopButtonTapped,
                                     trashButtonAction: viewModel.recordingCellTrashButtonTapped
@@ -104,7 +102,7 @@ struct RecordingsListView: View {
                         )
                     }
                     .scrollDisabled(isScrollDisabled)
-                    .background(.ultraThinMaterial.opacity(materialOpacity))
+                    .background(.ultraThinMaterial.opacity(appTheme.theme.backgroundLayerOpacity))
                     .background(backgroundImage)
                     .ignoresSafeArea()
                 }
@@ -115,13 +113,13 @@ struct RecordingsListView: View {
     
     var backgroundImage: some View {
         Color.black
-            .opacity(backgroundOpacity)
+            .opacity(appTheme.theme.backgroundLayerOpacity)
             .background(
-                Image("calathea_wallpaperpsd")
+                appTheme.theme.backgroundImage
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
-                    .opacity(0.75)
+                    .opacity(appTheme.theme.backgroundImageOpacity)
             )
     }
 }
@@ -130,7 +128,6 @@ struct RecordingsListView: View {
     RecordingsListView(
         audioManager: MockAudioManager(),
         recordingManager: MockRecordingManager(),
-        selectedSession: .constant(nil),
-        appTheme: .constant("glass")
+        selectedSession: .constant(nil)
     )
 }

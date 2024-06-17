@@ -7,37 +7,27 @@
 
 import SwiftUI
 
-enum theme: Double {
-    case glassy = 0.8
-    case superGlassy = 0.51
-    case opaque = 0.5
-}
-
 struct RecordingCell: View {
     
     // MARK: - API
-    
-    @Binding var appTheme: String
-    
+        
     init(
         currentlyPlaying: Session?,
         session: Session,
-        appTheme: Binding<String>,
         playButtonAction: @escaping (_: Session) -> Void,
         stopButtonAction: @escaping () -> Void,
         trashButtonAction: @escaping (_: Session) -> Void
     ) {
         self.currentlyPlaying = currentlyPlaying
         self.session = session
-        _appTheme = appTheme
         self.playButtonAction = playButtonAction
         self.stopButtonAction = stopButtonAction
         self.trashButtonAction = trashButtonAction
     }
     
     // MARK: - Variables
-    
-    @Environment(\.colorScheme) private var colorScheme
+        
+    @EnvironmentObject var appTheme: AppTheme
     
     private var session: Session
     private var currentlyPlaying: Session?
@@ -45,25 +35,6 @@ struct RecordingCell: View {
     private let playButtonAction: (_ session: Session) -> Void
     private let stopButtonAction: () -> Void
     private let trashButtonAction: (_ session: Session) -> Void
-    
-    private var cellOpacity: Double {
-        colorScheme == .dark ? 0.6 : 1.0
-    }
-    
-    private var cellColor: Color {
-        switch appTheme {
-        case "glass":
-            return Color.black.opacity(0.8)
-        case "superglass":
-            return Color.black.opacity(0.5)
-        case "opaque":
-            return Color.black.opacity(0.5)
-        case "light":
-            return Color.white.opacity(0.5)
-        default:
-            return Color.black.opacity(0.5)
-        }
-    }
     
     private let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
     private let softImpact = UIImpactFeedbackGenerator(style: .soft)
@@ -171,7 +142,7 @@ struct RecordingCell: View {
                     }
                     .padding(.trailing, 80)
                     .background(
-                        cellColor
+                        appTheme.theme.cellColor
                     )
                     .gesture(drag)
                     .onDisappear { 
@@ -237,7 +208,7 @@ struct RecordingCell: View {
             .padding(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 20))
             
         }
-        .foregroundStyle(Gradient(colors: [.pink, .purple]))
+        .foregroundStyle(appTheme.theme.playbackControlColor)
     }
 }
 
@@ -246,7 +217,6 @@ struct RecordingCell: View {
     RecordingCell(
         currentlyPlaying: nil,
         session: Session.recordingFixture,
-        appTheme: .constant("glass"),
         playButtonAction: { _ in },
         stopButtonAction: {},
         trashButtonAction: { _ in }

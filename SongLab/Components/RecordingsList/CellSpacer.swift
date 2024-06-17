@@ -16,15 +16,7 @@ struct CellSpacer: View {
         
     // MARK: - Variables
     
-    @Environment(\.colorScheme) private var colorScheme
-    
-    private var cellOpacity: Double {
-        colorScheme == .dark ? 0.6 : 1.0
-    }
-    
-    private var cellColor: Color {
-        colorScheme == .dark ? Color.black.opacity(theme.superGlassy.rawValue) : Color.white.opacity(theme.superGlassy.rawValue)
-    }
+    @EnvironmentObject var appTheme: AppTheme
     
     private var height: Double {
         let height = (screenHeight - (Double(numberOfSessions) * (65.653320 + 1))) + 25
@@ -44,7 +36,7 @@ struct CellSpacer: View {
                 .frame(height: height)
                 .ignoresSafeArea()
                 .background(
-                    cellColor
+                    appTheme.theme.cellColor
                 )
                 .padding(.bottom, -height + 150)
             if numberOfSessions == 0 {

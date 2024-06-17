@@ -13,6 +13,8 @@ struct RecordButtonView: View {
     
     @Binding var isRecording: Bool
     
+    @EnvironmentObject var appTheme: AppTheme
+    
     init(isRecording: Binding<Bool>) {
         _isRecording = isRecording
     }
@@ -62,8 +64,8 @@ struct RecordButtonView: View {
                 .stroke(lineWidth: 4.0)
                 .opacity(reordButtonOpacity)
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
-                .foregroundColor(.red)
-                .shadow(color: .black, radius: 20)
+                .foregroundStyle(appTheme.theme.recordButtonColor)
+                .shadow(color: .pink, radius: appTheme.theme.shadowRadius)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
             
             if isRecording {

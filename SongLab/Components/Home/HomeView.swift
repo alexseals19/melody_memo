@@ -31,11 +31,10 @@ struct HomeView: View {
             RecordingsListView(
                 audioManager: viewModel.audioManager,
                 recordingManager: viewModel.recordingManager,
-                selectedSession: $viewModel.selectedSession,
-                appTheme: $viewModel.appTheme
+                selectedSession: $viewModel.selectedSession
             )
             VStack {
-                HomeViewNavBarView(appTheme: $viewModel.appTheme)
+                HomeViewNavBarView()
                 Spacer()
                 TrackingToolbarView(
                     audioManager: viewModel.audioManager,
@@ -44,6 +43,7 @@ struct HomeView: View {
                 
             }
         }
+        .environmentObject(viewModel.appTheme)
     }
 }
 

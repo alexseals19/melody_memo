@@ -11,25 +11,21 @@ struct HomeViewNavBarView: View {
     
     //MARK: - API
     
-    @Binding var appTheme: String
-    
     //MARK: - Variables
         
-    private var navBarColor: Color {
-        appTheme == "light" ? Color.clear : Color.black.opacity(0.5)
-    }
+    @EnvironmentObject private var appTheme: AppTheme
     
     //MARK: - Body
     
     var body: some View {
         Rectangle()
             .ignoresSafeArea()
-            .foregroundStyle(navBarColor)
+            .foregroundStyle(appTheme.theme.navBarColor)
             .background(.ultraThinMaterial)
             .frame(maxWidth: .infinity, maxHeight: 15.0)
     }
 }
 
 #Preview {
-    HomeViewNavBarView(appTheme: .constant("glass"))
+    HomeViewNavBarView()
 }

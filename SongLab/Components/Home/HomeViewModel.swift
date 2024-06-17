@@ -9,13 +9,16 @@ import Combine
 import Foundation
 import SwiftUI
 
+
+
 @MainActor
 class HomeViewModel: ObservableObject {
     
     //MARK: - API
     
+    let appTheme = AppTheme()
+    
     @Published var selectedSession: Session?
-    @Published var appTheme: String = "superglass"
     
     @Published var isRecording: Bool = false {
         didSet {
@@ -45,7 +48,6 @@ class HomeViewModel: ObservableObject {
     }
     
     // MARK: - Variables
-    
     
     // MARK: - Functions
     
