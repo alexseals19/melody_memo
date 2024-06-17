@@ -15,6 +15,8 @@ struct TrackingSettingsView: View {
     
     @EnvironmentObject private var appTheme: AppTheme
     
+    private let themeImages: [String] = ["basic", "artist"]
+    
     //MARK: - Body
     
     var body: some View {
@@ -32,14 +34,45 @@ struct TrackingSettingsView: View {
                     .padding(15)
                     .shadow(color: .white, radius: appTheme.theme.shadowRadius)
                 Spacer()
-                Picker("Theme", selection: $appTheme.theme) {
+                Text("App Theme")
+                    .font(.title2)
+                HStack {
                     ForEach(AppTheme.Theme.allCases) { theme in
-                        Text("\(theme)")
+                        VStack {
+                            Image(theme.rawValue)
+                                .resizable()
+                                .cornerRadius(15)
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 300)
+                            Text(theme.rawValue)
+                                .font(.caption)
+                            if theme == appTheme.theme {
+                                ZStack {
+                                    Circle()
+                                        .stroke(lineWidth: 2)
+                                        .frame(width: 24)
+                                        .aspectRatio(contentMode: .fit)
+                                    Circle()
+                                        .frame(width: 20)
+                                        .aspectRatio(contentMode: .fit)
+                                        .foregroundStyle(.primary)
+                                }
+                            } else {
+                                Circle()
+                                    .stroke(lineWidth: 2)
+                                    .frame(width: 24)
+                                    .aspectRatio(contentMode: .fit)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                        .onTapGesture {
+                            appTheme.theme = theme
+                        }
                     }
                 }
                 Spacer()
             }
-            .presentationDetents([.height(200)])
+            .presentationDetents([.height(500)])
         }
     }
 }

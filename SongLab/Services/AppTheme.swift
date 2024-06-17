@@ -13,8 +13,8 @@ class AppTheme: ObservableObject {
     @AppStorage("appTheme") var theme: Theme = .basic
     
     enum Theme: String, CaseIterable, Identifiable {
-        case basic = "Basic"
-        case artist = "Artist"
+        case basic = "basic"
+        case artist = "artist"
         
         var id: Self { self }
         
