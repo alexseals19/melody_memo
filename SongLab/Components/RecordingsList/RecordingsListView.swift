@@ -37,36 +37,6 @@ struct RecordingsListView: View {
         viewModel.sessions.isEmpty
     }
         
-//    private var backgroundOpacity: Double {
-//        switch appTheme {
-//        case "glass":
-//            return 0.0
-//        case "superglass":
-//            return 0.0
-//        case "opaque":
-//            return 0.7
-//        case "light":
-//            return 0.0
-//        default:
-//            return 0.7
-//        }
-//    }
-//    
-//    private var materialOpacity: Double {
-//        switch appTheme {
-//        case "glass":
-//            return 0.0
-//        case "superglass":
-//            return 0.0
-//        case "opaque":
-//            return 0.8
-//        case "light":
-//            return 0.0
-//        default:
-//            return 0.5
-//        }
-//    }
-        
     // MARK: - Body
     
     var body: some View {

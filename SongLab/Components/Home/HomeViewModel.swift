@@ -9,8 +9,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-
-
 @MainActor
 class HomeViewModel: ObservableObject {
     
@@ -21,7 +19,20 @@ class HomeViewModel: ObservableObject {
     @Published var isRecording: Bool = false {
         didSet {
             if isRecording {
-                audioManager.startTracking()
+                if let selectedSession {
+                    do {
+                        try audioManager.startTracking(for: selectedSession)
+                    } catch {
+                        //TODO
+                    }
+                } else {
+                    audioManager.stopPlayback()
+                    do {
+                        try audioManager.startTracking()
+                    } catch {
+                        //TODO
+                    }
+                }
             } else {
                 Task{
                     if let selectedSession {

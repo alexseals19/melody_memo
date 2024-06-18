@@ -14,7 +14,7 @@ struct RecordingCell: View {
     init(
         currentlyPlaying: Session?,
         session: Session,
-        playButtonAction: @escaping (_: Session) -> Void,
+        playButtonAction: @escaping (_: [Track], _: Session) -> Void,
         stopButtonAction: @escaping () -> Void,
         trashButtonAction: @escaping (_: Session) -> Void
     ) {
@@ -32,7 +32,7 @@ struct RecordingCell: View {
     private var session: Session
     private var currentlyPlaying: Session?
     
-    private let playButtonAction: (_ session: Session) -> Void
+    private let playButtonAction: (_: [Track],_ session: Session) -> Void
     private let stopButtonAction: () -> Void
     private let trashButtonAction: (_ session: Session) -> Void
     
@@ -190,7 +190,7 @@ struct RecordingCell: View {
             if let currentlyPlaying, currentlyPlaying == session {
                 stopButtonAction()
             } else {
-                playButtonAction(session)
+                playButtonAction(session.tracks, session)
             }
         } label: {
             Group {
@@ -217,7 +217,7 @@ struct RecordingCell: View {
     RecordingCell(
         currentlyPlaying: nil,
         session: Session.recordingFixture,
-        playButtonAction: { _ in },
+        playButtonAction: { _, _ in },
         stopButtonAction: {},
         trashButtonAction: { _ in }
     )

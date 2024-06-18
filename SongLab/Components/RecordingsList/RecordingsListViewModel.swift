@@ -31,8 +31,12 @@ class RecordingsListViewModel: ObservableObject {
             .assign(to: &$currentlyPlaying)
     }
     
-    nonisolated func recordingCellPlayButtonTapped(for session: Session) {
-        audioManager.startPlayback(session: session)
+    nonisolated func recordingCellPlayButtonTapped(for tracks: [Track], session: Session) {
+        do {
+            try audioManager.startPlayback(for: tracks, session: session)
+        } catch {
+            //TODO
+        }
     }
     
     nonisolated func recordingCellStopButtonTapped() {
