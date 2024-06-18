@@ -20,7 +20,7 @@ struct HomeViewNavBarView: View {
     var body: some View {
         Rectangle()
             .ignoresSafeArea()
-            .foregroundStyle(appTheme.theme.navBarColor)
+            .foregroundStyle(appTheme.navBarColor)
             .background(.ultraThinMaterial)
             .frame(maxWidth: .infinity, maxHeight: 15.0)
     }

@@ -142,7 +142,7 @@ struct RecordingCell: View {
                     }
                     .padding(.trailing, 80)
                     .background(
-                        appTheme.theme.cellColor
+                        appTheme.cellColor
                     )
                     .gesture(drag)
                     .onDisappear { 
@@ -208,7 +208,7 @@ struct RecordingCell: View {
             .padding(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 20))
             
         }
-        .foregroundStyle(appTheme.theme.playbackControlColor)
+        .foregroundStyle(appTheme.playbackControlColor)
     }
 }
 

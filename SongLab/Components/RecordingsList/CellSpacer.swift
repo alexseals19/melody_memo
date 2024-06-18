@@ -36,7 +36,7 @@ struct CellSpacer: View {
                 .frame(height: height)
                 .ignoresSafeArea()
                 .background(
-                    appTheme.theme.cellColor
+                    appTheme.cellColor
                 )
                 .padding(.bottom, -height + 150)
             if numberOfSessions == 0 {
