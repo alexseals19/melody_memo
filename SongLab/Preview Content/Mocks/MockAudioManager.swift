@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import AVFoundation
 
 class MockAudioManager: AudioManager {
     
@@ -16,12 +17,14 @@ class MockAudioManager: AudioManager {
     
     func startTracking() {}
     
+    func startTracking(for session: Session) throws {}
+        
     func stopTracking() async {}
     
     func stopTracking(for _: Session) async {}
-    
-    func startPlayback(session: Session) {}
-    
+        
+    func startPlayback(for tracks: [Track], session: Session) throws {}
+        
     func stopPlayback() {}
     
     init() {

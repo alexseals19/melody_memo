@@ -13,10 +13,11 @@ import AVFoundation
 protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
-    func startTracking()
+    func startTracking() throws
+    func startTracking(for session: Session) throws
     func stopTracking() async
     func stopTracking(for session: Session) async
-    func startPlayback(session: Session)
+    func startPlayback(for tracks: [Track], session: Session) throws
     func stopPlayback()
 }
 
@@ -28,7 +29,7 @@ class DefaultAudioManager: AudioManager {
     static let shared = DefaultAudioManager(
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
-        player: AVAudioPlayerNode(),
+        players: [AVAudioPlayerNode](),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
         mixerNode: AVAudioMixerNode()
@@ -37,37 +38,30 @@ class DefaultAudioManager: AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     
-    func startTracking() {
-        do {
-            currentFileName = "Track\(UUID())"
-            
-            guard let currentFileName else {
-                assertionFailure("currentFileName is nil.")
-                return
-            }
-            
-            let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
-            
-            let settings = [
-                AVFormatIDKey: Int(kAudioFormatAppleLossless),
-                AVSampleRateKey: 32000,
-                AVNumberOfChannelsKey: 1
-            ]
-            guard let inputs = audioSession.availableInputs else {
-                assertionFailure("inputs")
-                return
-            }
-            try audioSession.setPreferredInput(inputs[0])
-            recorder = try AVAudioRecorder(url: url, settings: settings)
-                        
-            isRecording.send(true)
-            
-            recorder.record()
-        } catch {
-            print(error.localizedDescription)
-        }
+    func startTracking() throws {
+        try setupRecorder()
+                    
+        isRecording.send(true)
+        
+        recorder.record()
     }
     
+    func startTracking(for session: Session) throws {
+        
+        let startTime = try setupPlayers(for: session.tracks, session: session)
+        try setupRecorder()
+        
+        isRecording.send(true)
+        
+        currentlyPlaying.send(session)
+        
+        for player in players {
+            player.play(at: startTime)
+        }
+            
+        recorder.record(atTime: CACurrentMediaTime() + 0.5)
+    }
+        
     func stopTracking() async {
         
         defer { currentFileName = nil }
@@ -120,6 +114,7 @@ class DefaultAudioManager: AudioManager {
         }
         
         recorder.stop()
+        stopPlayback()
     
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
@@ -147,82 +142,44 @@ class DefaultAudioManager: AudioManager {
                 )
             )
             
-            for i in updatedSession.tracks {
-                print(i.name)
+            if let track = updatedSession.tracks.last, track.length > updatedSession.length {
+                updatedSession.length = track.length
             }
+            
             try DefaultRecordingManager.shared.saveSession(updatedSession)
         } catch {
             print(error.localizedDescription)
         }
     }
     
-    func startPlayback(session: Session) {
+    func startPlayback(for tracks: [Track], session: Session) throws {
         
-        if player.isPlaying {
-            bufferInterrupt = true
-        } else {
-            bufferInterrupt = false
-        }
+        let startTime = try setupPlayers(for: tracks, session: session)
         
         currentlyPlaying.send(session)
         
-        do {
-            let url = DataPersistenceManager.createDocumentURL(
-                withFileName: session.tracks[0].fileName,
-                fileType: .caf
-            )
-            
-            let audioFile = try AVAudioFile(forReading: url)
-
-            guard let buffer = AVAudioPCMBuffer(
-                pcmFormat: audioFile.processingFormat,
-                frameCapacity: AVAudioFrameCount(audioFile.length)
-            ) else {
-                assertionFailure("Could not assign buffer")
-                return
-            }
-            
-            try audioFile.read(into: buffer)
-            
-            playbackEngine.attach(player)
-            playbackEngine.connect(player, 
-                                   to: playbackEngine.mainMixerNode,
-                                   format: audioFile.processingFormat)
-            
-            playbackEngine.prepare()
-            try playbackEngine.start()
-            
-            player.scheduleBuffer(buffer, 
-                                  at: nil,
-                                  options: .interrupts,
-                                  completionCallbackType: .dataPlayedBack
-            ) { _ in
-                Task{ @MainActor in
-                    if !self.bufferInterrupt {
-                        self.stopPlayback()
-                        self.currentlyPlaying.send(nil)
-                    }
-                    self.bufferInterrupt = false
-                }
-            }
-                        
-            player.play()
-        } catch {
-            print(error.localizedDescription)
+        for player in players {
+            player.play(at: startTime)
         }
     }
     
     func stopPlayback() {
-        currentlyPlaying.send(nil)
-        player.stop()
+        Task { @MainActor in
+            currentlyPlaying.send(nil)
+        }
+        
+        for player in players {
+            player.stop()
+        }
         playbackEngine.stop()
+        players.removeAll()
     }
     
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
-    private var player: AVAudioPlayerNode
+    private var players: [AVAudioPlayerNode]
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
@@ -234,7 +191,7 @@ class DefaultAudioManager: AudioManager {
     private init(
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
-        player: AVAudioPlayerNode,
+        players: [AVAudioPlayerNode],
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
         mixerNode: AVAudioMixerNode
@@ -243,7 +200,7 @@ class DefaultAudioManager: AudioManager {
         isRecording = CurrentValueSubject(false)
         self.audioSession = audioSession
         self.recorder = recorder
-        self.player = player
+        self.players = players
         self.engine = engine
         self.playbackEngine = playbackEngine
         self.mixerNode = mixerNode
@@ -273,8 +230,117 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func configurePlayback(player: AVAudioPlayerNode) {
+    private func setupPlayers(for tracks: [Track], session: Session) throws -> AVAudioTime {
+        let sortedTracks = tracks.sorted { (lhs: Track, rhs: Track) -> Bool in
+            return lhs.length < rhs.length
+        }
+                
+        if currentlyPlaying.value != nil {
+            bufferInterrupt = true
+            for player in players {
+                player.stop()
+            }
+        } else {
+            bufferInterrupt = false
+        }
         
+        players.removeAll()
+        for _ in tracks {
+            players.append(AVAudioPlayerNode())
+        }
+        
+        let url = DataPersistenceManager.createDocumentURL(
+            withFileName: sortedTracks[0].fileName,
+            fileType: .caf
+        )
+        
+        let sampleAudioFile = try AVAudioFile(forReading: url)
+    
+        let sampleRate = sampleAudioFile.processingFormat.sampleRate
+    
+        for player in players {
+            playbackEngine.attach(player)
+            playbackEngine.connect(player,
+                                   to: playbackEngine.mainMixerNode,
+                                   format: sampleAudioFile.processingFormat)
+        }
+        
+        playbackEngine.prepare()
+        try playbackEngine.start()
+        
+        let kStartDelayTime = 0.5
+        guard let renderTime = players[0].lastRenderTime else {
+            print("Could not get lastRenderTime")
+            return AVAudioTime(hostTime: mach_absolute_time())
+        }
+        let now: AVAudioFramePosition = renderTime.sampleTime
+        
+        let sampleTime = AVAudioFramePosition(Double(now) + (kStartDelayTime * sampleRate))
+        
+        let startTime = AVAudioTime(sampleTime: sampleTime, atRate: sampleRate)
+        
+        for index in 0 ..< players.count {
+            let lastPlayer = players.count - 1
+            let url = DataPersistenceManager.createDocumentURL(
+                withFileName: sortedTracks[index].fileName,
+                fileType: .caf
+            )
+            
+            let audioFile = try AVAudioFile(forReading: url)
+            
+            guard let buffer = AVAudioPCMBuffer(
+                pcmFormat: audioFile.processingFormat,
+                frameCapacity: AVAudioFrameCount(audioFile.length)
+            ) else {
+                assertionFailure("Could not assign buffer")
+                return AVAudioTime(hostTime: mach_absolute_time())
+            }
+            
+            try audioFile.read(into: buffer)
+
+            players[index].scheduleBuffer(buffer,
+                                  at: nil,
+                                  options: .interrupts,
+                                  completionCallbackType: .dataPlayedBack
+            ) { _ in
+                Task{ @MainActor in
+                    if index == lastPlayer {
+                        if !self.bufferInterrupt {
+                            self.stopPlayback()
+                            self.currentlyPlaying.send(nil)
+                        }
+                        self.bufferInterrupt = false
+                    }
+                }
+            }
+            players[index].prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
+        }
+        return startTime
+    }
+    
+    private func setupRecorder() throws {
+        currentFileName = "Track\(UUID())"
+        
+        guard let currentFileName else {
+            assertionFailure("currentFileName is nil.")
+            return
+        }
+        
+        let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+        
+        let settings = [
+            AVFormatIDKey: Int(kAudioFormatAppleLossless),
+            AVSampleRateKey: 32000,
+            AVNumberOfChannelsKey: 1
+        ]
+        guard let inputs = audioSession.availableInputs else {
+            assertionFailure("inputs")
+            return
+        }
+        try audioSession.setPreferredInput(inputs[0])
+        recorder = try AVAudioRecorder(url: url, settings: settings)
+        
+        recorder.prepareToRecord()
     }
     
     private func setUpEngine() {

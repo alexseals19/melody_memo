@@ -10,7 +10,7 @@ import Foundation
 struct Session: Identifiable, Equatable, Codable, Hashable {
     let name: String
     let date: Date
-    let length: Duration
+    var length: Duration
     var tracks: [Track]
     let id: UUID
     
