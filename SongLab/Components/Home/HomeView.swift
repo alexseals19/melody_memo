@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeView: View {
     
     // MARK: API
-    
+        
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         _viewModel = StateObject(
             wrappedValue: HomeViewModel(
@@ -38,12 +38,17 @@ struct HomeView: View {
                 Spacer()
                 TrackingToolbarView(
                     audioManager: viewModel.audioManager,
-                    isRecording: $viewModel.isRecording
+                    isRecording: $viewModel.isRecording,
+                    isSettingsPresented: $viewModel.isSettingsPresented
                 )
                 
             }
         }
+        .sheet(isPresented: $viewModel.isSettingsPresented) {
+            AppSettingsView()
+        }
         .environmentObject(viewModel.appTheme)
+        
     }
 }
 

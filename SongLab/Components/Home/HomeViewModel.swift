@@ -19,7 +19,7 @@ class HomeViewModel: ObservableObject {
     let appTheme = AppTheme()
     
     @Published var selectedSession: Session?
-    
+    @Published var isSettingsPresented: Bool = false
     @Published var isRecording: Bool = false {
         didSet {
             if isRecording {
