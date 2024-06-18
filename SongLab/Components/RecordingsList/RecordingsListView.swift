@@ -72,7 +72,7 @@ struct RecordingsListView: View {
                         )
                     }
                     .scrollDisabled(isScrollDisabled)
-                    .background(.ultraThinMaterial.opacity(appTheme.theme.backgroundLayerOpacity))
+                    .background(.ultraThinMaterial.opacity(appTheme.backgroundLayerOpacity))
                     .background(backgroundImage)
                     .ignoresSafeArea()
                 }
@@ -82,14 +82,14 @@ struct RecordingsListView: View {
     }
     
     var backgroundImage: some View {
-        Color.black
-            .opacity(appTheme.theme.backgroundLayerOpacity)
+        appTheme.backgroundShade
+            .opacity(appTheme.backgroundLayerOpacity)
             .background(
-                appTheme.theme.backgroundImage
+                appTheme.backgroundImage
                     .resizable()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
-                    .opacity(appTheme.theme.backgroundImageOpacity)
+                    .opacity(appTheme.backgroundImageOpacity)
             )
     }
 }

@@ -9,9 +9,9 @@ import SwiftUI
 
 @main
 struct SongLabApp: App {
-    
-    let appTheme = AppTheme()
-    
+        
+    var appTheme = AppTheme()
+
     var body: some Scene {
         WindowGroup {
             HomeView(
