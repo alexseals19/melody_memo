@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeView: View {
     
     // MARK: API
-    
+        
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         _viewModel = StateObject(
             wrappedValue: HomeViewModel(
@@ -34,18 +34,19 @@ struct HomeView: View {
                 selectedSession: $viewModel.selectedSession
             )
             VStack {
+                HomeViewNavBarView()
                 Spacer()
                 TrackingToolbarView(
                     audioManager: viewModel.audioManager,
-                    isRecording: $viewModel.isRecording
+                    isRecording: $viewModel.isRecording,
+                    isSettingsPresented: $viewModel.isSettingsPresented
                 )
-                .ignoresSafeArea()
-                .background(
-                    .ultraThinMaterial
-                )
-                .background(Color.black.opacity(0.4))
+                
             }
         }
+        .sheet(isPresented: $viewModel.isSettingsPresented) {
+            AppSettingsView()
+        }        
     }
 }
 

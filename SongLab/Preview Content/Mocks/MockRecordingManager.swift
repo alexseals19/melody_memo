@@ -19,6 +19,6 @@ class MockRecordingManager: RecordingManager {
     func saveSession(_ recording: Session) throws {}
         
     init() {
-        sessions = CurrentValueSubject([])
+        sessions = CurrentValueSubject(Session.recordingsFixture)
     }
 }
