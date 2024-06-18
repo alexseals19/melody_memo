@@ -9,13 +9,10 @@ import Combine
 import Foundation
 
 class MockRecordingManager: RecordingManager {
-    
     var sessions: CurrentValueSubject<[Session], Never>
         
     func removeSession(_ session: Session) throws {}
-    
     func removeTrack(_ track: Track) throws {}
-    
     func saveSession(_ recording: Session) throws {}
         
     init() {

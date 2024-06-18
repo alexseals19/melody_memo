@@ -40,25 +40,20 @@ class DefaultAudioManager: AudioManager {
     
     func startTracking() throws {
         try setupRecorder()
-                    
         isRecording.send(true)
-        
         recorder.record()
     }
     
     func startTracking(for session: Session) throws {
-        
         let startTime = try setupPlayers(for: session.tracks, session: session)
         try setupRecorder()
         
         isRecording.send(true)
-        
         currentlyPlaying.send(session)
         
         for player in players {
             player.play(at: startTime)
         }
-            
         recorder.record(atTime: CACurrentMediaTime() + 0.5)
     }
         
@@ -77,7 +72,10 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
-        let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+        let url = DataPersistenceManager.createDocumentURL(
+            withFileName: currentFileName,
+            fileType: .caf
+        )
         
         do {
             let audioAsset = AVURLAsset(url: url, options: nil)
@@ -326,7 +324,10 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
-        let url = DataPersistenceManager.createDocumentURL(withFileName: currentFileName, fileType: .caf)
+        let url = DataPersistenceManager.createDocumentURL(
+            withFileName: currentFileName,
+            fileType: .caf
+        )
         
         let settings = [
             AVFormatIDKey: Int(kAudioFormatAppleLossless),
