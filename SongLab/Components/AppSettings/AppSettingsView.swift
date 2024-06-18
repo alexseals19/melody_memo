@@ -9,9 +9,13 @@ import SwiftUI
 
 struct AppSettingsView: View {
     
+    //MARK: - Variables
+    
     @EnvironmentObject private var appTheme: AppTheme
 
     private let themeImages: [String] = ["basic", "artist"]
+    
+    //MARK: - Body
     
     var body: some View {
         VStack {

@@ -46,9 +46,7 @@ struct HomeView: View {
         }
         .sheet(isPresented: $viewModel.isSettingsPresented) {
             AppSettingsView()
-        }
-        .environmentObject(viewModel.appTheme)
-        
+        }        
     }
 }
 

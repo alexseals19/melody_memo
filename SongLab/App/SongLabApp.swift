@@ -9,13 +9,16 @@ import SwiftUI
 
 @main
 struct SongLabApp: App {
+    
+    let appTheme = AppTheme()
+    
     var body: some Scene {
         WindowGroup {
             HomeView(
                 audioManager: DefaultAudioManager.shared,
                 recordingManager: DefaultRecordingManager.shared
             )
-//            .environment(\.colorScheme, .light)
+            .environmentObject(appTheme)
         }
     }
 }

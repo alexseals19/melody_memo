@@ -16,8 +16,6 @@ class HomeViewModel: ObservableObject {
     
     //MARK: - API
     
-    let appTheme = AppTheme()
-    
     @Published var selectedSession: Session?
     @Published var isSettingsPresented: Bool = false
     @Published var isRecording: Bool = false {
