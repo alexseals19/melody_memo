@@ -30,6 +30,7 @@ class DefaultAudioManager: AudioManager {
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
         players: [AVAudioPlayerNode](),
+        metronome: AVAudioPlayerNode(),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
         mixerNode: AVAudioMixerNode()
@@ -173,16 +174,22 @@ class DefaultAudioManager: AudioManager {
         players.removeAll()
     }
     
+    
+    
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
     private var players: [AVAudioPlayerNode]
+    private var metronome: AVAudioPlayerNode
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
     private var bufferInterrupt: Bool = false
+    private var beats: [AVAudioPlayerNode] = []
+    private var metronomeActive: Bool = true
+    private var firstBeat: Bool = true
         
     // MARK: - Functions
     
@@ -190,6 +197,7 @@ class DefaultAudioManager: AudioManager {
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
         players: [AVAudioPlayerNode],
+        metronome: AVAudioPlayerNode,
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
         mixerNode: AVAudioMixerNode
@@ -199,6 +207,7 @@ class DefaultAudioManager: AudioManager {
         self.audioSession = audioSession
         self.recorder = recorder
         self.players = players
+        self.metronome = metronome
         self.engine = engine
         self.playbackEngine = playbackEngine
         self.mixerNode = mixerNode

@@ -11,14 +11,13 @@ struct MetronomeView: View {
     
     //MARK: - API
     
-    @AppStorage("metronomeActive") var metronomeActive = false
+    @AppStorage("bpm") var bpm: Int = 120
+    @AppStorage("metronomeActive") var metronomeActive: Bool = false
     
     // MARK: - Variables
     
-    @State private var bpm = 120
-    
     @Namespace private var namespace
-    
+            
     //MARK: - Body
     
     var body: some View {
@@ -36,9 +35,6 @@ struct MetronomeView: View {
         Group {
             if metronomeActive {
                 VStack(spacing: -2) {
-//                    Text("\(bpm)")
-//                        .font(.caption)
-//                        .opacity(0)
                     Image(systemName: "metronome.fill")
                         .resizable()
                         .frame(width: 21.5, height: 20)

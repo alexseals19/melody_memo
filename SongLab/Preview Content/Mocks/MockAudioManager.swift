@@ -19,6 +19,8 @@ class MockAudioManager: AudioManager {
     func stopTracking(for _: Session) async {}
     func startPlayback(for tracks: [Track], session: Session) throws {}
     func stopPlayback() {}
+    func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
+    func stopMetronome() {}
     
     init() {
         currentlyPlaying = CurrentValueSubject(nil)

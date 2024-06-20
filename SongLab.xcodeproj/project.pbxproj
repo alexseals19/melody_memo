@@ -27,6 +27,10 @@
 		99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* RecordingsListView.swift */; };
 		99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */; };
 		99C364F02C0F642B00873213 /* RecordingFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EF2C0F642B00873213 /* RecordingFixtures.swift */; };
+		99DBF3762C225D2A002B6419 /* metrolow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3742C225D2A002B6419 /* metrolow.wav */; };
+		99DBF3772C225D2A002B6419 /* metrohigh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3752C225D2A002B6419 /* metrohigh.wav */; };
+		99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF3782C235F3D002B6419 /* Metronome.swift */; };
+		99DBF37B2C236FED002B6419 /* AppSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF37A2C236FED002B6419 /* AppSettingsViewModel.swift */; };
 		99F0F72D2C10F8C3001B22CE /* MetronomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */; };
 		99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */; };
 		99F0F7332C112055001B22CE /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F7322C112055001B22CE /* AudioManager.swift */; };
@@ -58,6 +62,10 @@
 		99C364EA2C0F61AE00873213 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
 		99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListViewModel.swift; sourceTree = "<group>"; };
 		99C364EF2C0F642B00873213 /* RecordingFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFixtures.swift; sourceTree = "<group>"; };
+		99DBF3742C225D2A002B6419 /* metrolow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrolow.wav; sourceTree = "<group>"; };
+		99DBF3752C225D2A002B6419 /* metrohigh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrohigh.wav; sourceTree = "<group>"; };
+		99DBF3782C235F3D002B6419 /* Metronome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metronome.swift; sourceTree = "<group>"; };
+		99DBF37A2C236FED002B6419 /* AppSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsViewModel.swift; sourceTree = "<group>"; };
 		99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeView.swift; sourceTree = "<group>"; };
 		99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingToolbarView.swift; sourceTree = "<group>"; };
 		99F0F7322C112055001B22CE /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -136,10 +144,12 @@
 		99AD35C62C1355B70055CC2A /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				99DBF3712C22417B002B6419 /* Sounds */,
 				99F0F7322C112055001B22CE /* AudioManager.swift */,
 				4521F44B2C189EE400246189 /* RecordingManager.swift */,
 				99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */,
 				99B21E052C20A488004D5669 /* AppTheme.swift */,
+				99DBF3782C235F3D002B6419 /* Metronome.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -148,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				99B21E082C21043F004D5669 /* AppSettingsView.swift */,
+				99DBF37A2C236FED002B6419 /* AppSettingsViewModel.swift */,
 			);
 			path = AppSettings;
 			sourceTree = "<group>";
@@ -191,6 +202,15 @@
 				99A384C32C1CB72B00736BA8 /* CellSpacer.swift */,
 			);
 			path = RecordingsList;
+			sourceTree = "<group>";
+		};
+		99DBF3712C22417B002B6419 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				99DBF3752C225D2A002B6419 /* metrohigh.wav */,
+				99DBF3742C225D2A002B6419 /* metrolow.wav */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 		99F0F72B2C10F8A1001B22CE /* TrackingToolBar */ = {
@@ -309,7 +329,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99DBF3772C225D2A002B6419 /* metrohigh.wav in Resources */,
 				99F9EE5A2B6EC9E0003308D2 /* Preview Assets.xcassets in Resources */,
+				99DBF3762C225D2A002B6419 /* metrolow.wav in Resources */,
 				99F9EE572B6EC9E0003308D2 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -339,6 +361,7 @@
 				99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */,
 				99F9EE532B6EC9DE003308D2 /* SongLabApp.swift in Sources */,
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
+				99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
 				99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */,
 				99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */,
@@ -347,6 +370,7 @@
 				99B21E062C20A488004D5669 /* AppTheme.swift in Sources */,
 				99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */,
 				991F56D92C0D3B1E00CC88BA /* RecordingCell.swift in Sources */,
+				99DBF37B2C236FED002B6419 /* AppSettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

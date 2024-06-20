@@ -10,11 +10,14 @@ import SwiftUI
 struct TrackingToolbarView: View {
     
     //MARK: - API
-    
     @Binding var isSettingsPresented: Bool
     @Binding var isRecording: Bool
     
-    init(audioManager: AudioManager, isRecording: Binding<Bool>, isSettingsPresented: Binding<Bool>) {
+    init(
+        audioManager: AudioManager,
+        isRecording: Binding<Bool>,
+        isSettingsPresented: Binding<Bool>
+    ) {
         _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager))
         _isRecording = isRecording
         _isSettingsPresented = isSettingsPresented
@@ -23,9 +26,7 @@ struct TrackingToolbarView: View {
     //MARK: - Variables
     
     @StateObject private var viewModel: TrackingToolbarViewModel
-    
-    @Environment(\.colorScheme) private var colorScheme
-    
+        
     //MARK: - Body
     
     var body: some View {
@@ -63,11 +64,12 @@ struct TrackingToolbarView: View {
         
     }
     
-    var color: some View {
-        colorScheme == .dark ? Color.black : Color.clear
-    }
 }
 
 #Preview {
-    TrackingToolbarView(audioManager: MockAudioManager(), isRecording: .constant(false), isSettingsPresented: .constant(false))
+    TrackingToolbarView(
+        audioManager: MockAudioManager(), 
+        isRecording: .constant(false),
+        isSettingsPresented: .constant(false)
+        )
 }

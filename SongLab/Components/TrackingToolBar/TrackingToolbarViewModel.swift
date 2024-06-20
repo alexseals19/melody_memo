@@ -6,14 +6,13 @@
 //
 
 import Foundation
+import SwiftUI
 
 @MainActor
 class TrackingToolbarViewModel: ObservableObject {
     
     //MARK: - API
     
-    var metronomeActive = false
-        
     init(audioManager: AudioManager) {
         self.audioManager = audioManager
     }
