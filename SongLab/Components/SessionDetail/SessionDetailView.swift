@@ -77,7 +77,6 @@ struct SessionDetailView: View {
         }
         .foregroundColor(.primary)
     }
-    
 }
 
 #Preview {

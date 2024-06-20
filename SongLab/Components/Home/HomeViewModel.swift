@@ -13,6 +13,7 @@ import SwiftUI
 class HomeViewModel: ObservableObject {
     
     //MARK: - API
+    @AppStorage("metronomeActive") var metronomeActive: Bool = false
     
     @Published var selectedSession: Session?
     @Published var isSettingsPresented: Bool = false
@@ -22,6 +23,7 @@ class HomeViewModel: ObservableObject {
                 if let selectedSession {
                     do {
                         try audioManager.startTracking(for: selectedSession)
+                        metronomeActive ? try metronome.playMetronome(timeSignature: 4, beat: 0) : nil
                     } catch {
                         //TODO
                     }
@@ -29,6 +31,7 @@ class HomeViewModel: ObservableObject {
                     audioManager.stopPlayback()
                     do {
                         try audioManager.startTracking()
+                        metronomeActive ? try metronome.playMetronome(timeSignature: 4, beat: 0) : nil
                     } catch {
                         //TODO
                     }
@@ -37,8 +40,10 @@ class HomeViewModel: ObservableObject {
                 Task{
                     if let selectedSession {
                         await audioManager.stopTracking(for: selectedSession)
+                        metronomeActive ? metronome.stopMetronome() : nil
                     } else {
                         await audioManager.stopTracking()
+                        metronomeActive ? metronome.stopMetronome() : nil
                     }
                 }
             }
@@ -47,13 +52,14 @@ class HomeViewModel: ObservableObject {
     
     let audioManager: AudioManager
     let recordingManager: RecordingManager
+    var metronome = Metronome()
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
-            .assign(to: &$selectedSession)        
+            .assign(to: &$selectedSession)  
     }
     
     // MARK: - Variables
