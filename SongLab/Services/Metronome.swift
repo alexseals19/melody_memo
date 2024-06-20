@@ -53,7 +53,9 @@ class Metronome: Observable {
             sampleIntervalTime = AVAudioFramePosition(Double(now) + beatOffset)
         } else {
             beatOffset = beatInterval * sampleRate
-            sampleIntervalTime = AVAudioFramePosition(Double(now) + beatOffset - Double(sampleAudioFile.length - sampleAudioFile.framePosition))
+            sampleIntervalTime = AVAudioFramePosition(
+                Double(now) + beatOffset - Double(sampleAudioFile.length - sampleAudioFile.framePosition)
+            )
         }
         
         let beatIntervalTime = AVAudioTime(sampleTime: sampleIntervalTime, atRate: sampleRate)
@@ -93,7 +95,10 @@ class Metronome: Observable {
         ) { _ in
             Task { @MainActor in
                 if self.metronomeActive {
-                    try self.playMetronome(timeSignature: timeSignature, beat: beat == timeSignature - 1 ? 0 : beat + 1)
+                    try self.playMetronome(
+                        timeSignature: timeSignature,
+                        beat: beat == timeSignature - 1 ? 0 : beat + 1
+                    )
                 } else {
                     self.engine.stop()
                     self.engine.detach(self.metronome)
