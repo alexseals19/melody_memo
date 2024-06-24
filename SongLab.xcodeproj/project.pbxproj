@@ -31,6 +31,7 @@
 		99DBF3772C225D2A002B6419 /* metrohigh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3752C225D2A002B6419 /* metrohigh.wav */; };
 		99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF3782C235F3D002B6419 /* Metronome.swift */; };
 		99DBF37B2C236FED002B6419 /* AppSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF37A2C236FED002B6419 /* AppSettingsViewModel.swift */; };
+		99DBF3802C24A2DE002B6419 /* PlaybackControlButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF37F2C24A2DE002B6419 /* PlaybackControlButton.swift */; };
 		99F0F72D2C10F8C3001B22CE /* MetronomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */; };
 		99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */; };
 		99F0F7332C112055001B22CE /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F7322C112055001B22CE /* AudioManager.swift */; };
@@ -66,6 +67,7 @@
 		99DBF3752C225D2A002B6419 /* metrohigh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrohigh.wav; sourceTree = "<group>"; };
 		99DBF3782C235F3D002B6419 /* Metronome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metronome.swift; sourceTree = "<group>"; };
 		99DBF37A2C236FED002B6419 /* AppSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsViewModel.swift; sourceTree = "<group>"; };
+		99DBF37F2C24A2DE002B6419 /* PlaybackControlButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackControlButton.swift; sourceTree = "<group>"; };
 		99F0F72C2C10F8C3001B22CE /* MetronomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeView.swift; sourceTree = "<group>"; };
 		99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingToolbarView.swift; sourceTree = "<group>"; };
 		99F0F7322C112055001B22CE /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				99B21E072C210411004D5669 /* AppSettings */,
+				99DBF37C2C24A243002B6419 /* CellComponents */,
 				99C364E82C0F617F00873213 /* Home */,
 				99C364E92C0F619500873213 /* RecordingsList */,
 				99A078482C1A083E008EE21B /* SessionDetail */,
@@ -211,6 +214,14 @@
 				99DBF3742C225D2A002B6419 /* metrolow.wav */,
 			);
 			path = Sounds;
+			sourceTree = "<group>";
+		};
+		99DBF37C2C24A243002B6419 /* CellComponents */ = {
+			isa = PBXGroup;
+			children = (
+				99DBF37F2C24A2DE002B6419 /* PlaybackControlButton.swift */,
+			);
+			path = CellComponents;
 			sourceTree = "<group>";
 		};
 		99F0F72B2C10F8A1001B22CE /* TrackingToolBar */ = {
@@ -366,6 +377,7 @@
 				99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */,
 				99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */,
 				99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */,
+				99DBF3802C24A2DE002B6419 /* PlaybackControlButton.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,
 				99B21E062C20A488004D5669 /* AppTheme.swift in Sources */,
 				99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */,

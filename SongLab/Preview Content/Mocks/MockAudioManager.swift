@@ -17,10 +17,12 @@ class MockAudioManager: AudioManager {
     func startTracking(for session: Session) throws {}
     func stopTracking() async {}
     func stopTracking(for _: Session) async {}
-    func startPlayback(for tracks: [Track], session: Session) throws {}
+    func startPlayback(for session: Session) throws {}
     func stopPlayback() {}
     func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
     func stopMetronome() {}
+    func toggleMute(for tracks: [Track]) {}
+    func setTrackVolume(for track: Track) {}
     
     init() {
         currentlyPlaying = CurrentValueSubject(nil)

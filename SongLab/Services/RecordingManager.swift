@@ -27,7 +27,7 @@ final class DefaultRecordingManager: RecordingManager {
         Task { @MainActor in
             var updatedRecordings = sessions.value
             updatedRecordings.removeAll { $0.id == session.id }
-            for track in session.tracks {
+            for track in session.tracks.values {
                 try DataPersistenceManager.delete(track.fileName, fileType: .caf)
             }
             try DataPersistenceManager.save(updatedRecordings, to: "sessions")
@@ -56,6 +56,7 @@ final class DefaultRecordingManager: RecordingManager {
                     return lhs.date > rhs.date
                 }
             )
+            print("\(session.name) saved")
         }
     }
     
@@ -72,6 +73,11 @@ final class DefaultRecordingManager: RecordingManager {
     private init() {
         do {
             sessions = CurrentValueSubject(try DataPersistenceManager.retrieve([Session].self, from: "sessions"))
+            sessions.send(sessions.value.sorted { (lhs: Session, rhs: Session) -> Bool in
+                return lhs.date > rhs.date
+            }
+            )
+            
         } catch {
             sessions = CurrentValueSubject([])
         }

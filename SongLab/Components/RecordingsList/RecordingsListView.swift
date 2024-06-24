@@ -61,7 +61,11 @@ struct RecordingsListView: View {
                         .navigationDestination(
                             for: Session.self,
                             destination: { session in
-                                SessionDetailView(recordingManager: viewModel.recordingManager, session: session)
+                                SessionDetailView(
+                                    recordingManager: viewModel.recordingManager,
+                                    audioManager: viewModel.audioManager,
+                                    session: session
+                                )
                                     .onAppear {
                                         selectedSession = session
                                     }

@@ -10,6 +10,11 @@ import Foundation
 import AVFoundation
 
 
+struct AudioPlayer {
+    var player = AVAudioPlayerNode()
+    var track: Track
+}
+
 protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
@@ -17,8 +22,10 @@ protocol AudioManager {
     func startTracking(for session: Session) throws
     func stopTracking() async
     func stopTracking(for session: Session) async
-    func startPlayback(for tracks: [Track], session: Session) throws
+    func startPlayback(for session: Session) throws
     func stopPlayback()
+    func toggleMute(for tracks: [Track])
+    func setTrackVolume(for track: Track)
 }
 
 
@@ -29,7 +36,7 @@ class DefaultAudioManager: AudioManager {
     static let shared = DefaultAudioManager(
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
-        players: [AVAudioPlayerNode](),
+        players: [AudioPlayer](),
         metronome: AVAudioPlayerNode(),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
@@ -46,14 +53,14 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startTracking(for session: Session) throws {
-        let startTime = try setupPlayers(for: session.tracks, session: session)
+        let startTime = try setupPlayers(for: session)
         try setupRecorder()
         
         isRecording.send(true)
         currentlyPlaying.send(session)
         
         for player in players {
-            player.play(at: startTime)
+            player.player.play(at: startTime)
         }
         recorder.record(atTime: CACurrentMediaTime() + 0.5)
     }
@@ -82,20 +89,23 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
+            let track = Track(
+                name: "Track 1",
+                fileName: currentFileName,
+                date: Date(),
+                length: .seconds(durationInSeconds),
+                id: UUID(),
+                volume: 1.0,
+                isMuted: false,
+                isSolo: false
+            )
             let session = Session(
                 name: "Session \(DefaultRecordingManager.shared.sessions.value.count + 1)",
                 date: Date(),
                 length: .seconds(durationInSeconds),
-                tracks: [
-                    Track(
-                        name: "Track 1",
-                        fileName: currentFileName,
-                        date: Date(),
-                        length: .seconds(durationInSeconds),
-                        id: UUID()
-                    )
-                ],
-                id: UUID()
+                tracks: [track.id : track],
+                id: UUID(),
+                isGlobalSoloActive: false
             )
             try DefaultRecordingManager.shared.saveSession(session)
         } catch {
@@ -130,18 +140,20 @@ class DefaultAudioManager: AudioManager {
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
             let name = "Track \(session.tracks.count + 1)"
-            
-            updatedSession.tracks.append(
-                Track(
-                    name: name,
-                    fileName: currentFileName,
-                    date: Date(),
-                    length: .seconds(durationInSeconds),
-                    id: UUID()
-                )
+            let track = Track(
+                name: name,
+                fileName: currentFileName,
+                date: Date(),
+                length: .seconds(durationInSeconds),
+                id: UUID(),
+                volume: 1.0,
+                isMuted: false,
+                isSolo: false
             )
             
-            if let track = updatedSession.tracks.last, track.length > updatedSession.length {
+            updatedSession.tracks[track.id] = track
+            
+            if track.length > updatedSession.length {
                 updatedSession.length = track.length
             }
             
@@ -151,15 +163,16 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    func startPlayback(for tracks: [Track], session: Session) throws {
+    func startPlayback(for session: Session) throws {
         
-        let startTime = try setupPlayers(for: tracks, session: session)
+        let startTime = try setupPlayers(for: session)
         
         currentlyPlaying.send(session)
         
         for player in players {
-            player.play(at: startTime)
+            player.player.play(at: startTime)
         }
+        
     }
     
     func stopPlayback() {
@@ -168,19 +181,37 @@ class DefaultAudioManager: AudioManager {
         }
         
         for player in players {
-            player.stop()
+            player.player.stop()
         }
         playbackEngine.stop()
         players.removeAll()
     }
     
+    func toggleMute(for tracks: [Track]) {
+        for track in tracks {
+            guard let newPlayer = players.first(where: { $0.track.id == track.id }) else {
+                return
+            }
+            if newPlayer.player.volume == 0.0 {
+                newPlayer.player.volume = track.volume
+            } else {
+                newPlayer.player.volume = 0.0
+            }
+        }
+    }
     
+    func setTrackVolume(for track: Track) {
+        guard let newPlayer = players.first(where: { $0.track.id == track.id }) else {
+            return
+        }
+        newPlayer.player.volume = track.volume
+    }
     
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
-    private var players: [AVAudioPlayerNode]
+    private var players: [AudioPlayer]
     private var metronome: AVAudioPlayerNode
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
@@ -196,7 +227,7 @@ class DefaultAudioManager: AudioManager {
     private init(
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
-        players: [AVAudioPlayerNode],
+        players: [AudioPlayer],
         metronome: AVAudioPlayerNode,
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
@@ -237,23 +268,23 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func setupPlayers(for tracks: [Track], session: Session) throws -> AVAudioTime {
-        let sortedTracks = tracks.sorted { (lhs: Track, rhs: Track) -> Bool in
+    private func setupPlayers(for session: Session) throws -> AVAudioTime {
+        let sortedTracks = session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
             return lhs.length < rhs.length
         }
                 
         if currentlyPlaying.value != nil {
             bufferInterrupt = true
             for player in players {
-                player.stop()
+                player.player.stop()
             }
         } else {
             bufferInterrupt = false
         }
         
         players.removeAll()
-        for _ in tracks {
-            players.append(AVAudioPlayerNode())
+        for track in sortedTracks {
+            players.append(AudioPlayer(track: track))
         }
         
         let url = DataPersistenceManager.createDocumentURL(
@@ -266,17 +297,17 @@ class DefaultAudioManager: AudioManager {
         let sampleRate = sampleAudioFile.processingFormat.sampleRate
     
         for player in players {
-            playbackEngine.attach(player)
-            playbackEngine.connect(player,
+            playbackEngine.attach(player.player)
+            playbackEngine.connect(player.player,
                                    to: playbackEngine.mainMixerNode,
                                    format: sampleAudioFile.processingFormat)
         }
-        
+
         playbackEngine.prepare()
         try playbackEngine.start()
         
         let kStartDelayTime = 0.5
-        guard let renderTime = players[0].lastRenderTime else {
+        guard let renderTime = players[0].player.lastRenderTime else {
             print("Could not get lastRenderTime")
             return AVAudioTime(hostTime: mach_absolute_time())
         }
@@ -286,10 +317,9 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = AVAudioTime(sampleTime: sampleTime, atRate: sampleRate)
         
-        for index in 0 ..< players.count {
-            let lastPlayer = players.count - 1
+        for player in players {
             let url = DataPersistenceManager.createDocumentURL(
-                withFileName: sortedTracks[index].fileName,
+                withFileName: player.track.fileName,
                 fileType: .caf
             )
             
@@ -305,13 +335,13 @@ class DefaultAudioManager: AudioManager {
             
             try audioFile.read(into: buffer)
 
-            players[index].scheduleBuffer(buffer,
+            player.player.scheduleBuffer(buffer,
                                   at: nil,
                                   options: .interrupts,
                                   completionCallbackType: .dataPlayedBack
             ) { _ in
                 Task{ @MainActor in
-                    if index == lastPlayer {
+                    if player.player == self.players.last?.player {
                         if !self.bufferInterrupt {
                             self.stopPlayback()
                             self.currentlyPlaying.send(nil)
@@ -320,7 +350,26 @@ class DefaultAudioManager: AudioManager {
                     }
                 }
             }
-            players[index].prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
+            player.player.prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
+            
+        }
+        if session.isGlobalSoloActive {
+            for player in players {
+                if player.track.isSolo {
+                    player.player.volume = player.track.volume
+                } else {
+                    player.player.volume = 0.0
+                }
+            }
+        } else {
+            for player in players {
+                print("\(player.track.name) \(player.track.isMuted)")
+                if player.track.isMuted {
+                    player.player.volume = 0.0
+                } else {
+                    player.player.volume = player.track.volume
+                }
+            }
         }
         return startTime
     }
