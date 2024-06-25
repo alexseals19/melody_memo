@@ -28,6 +28,8 @@ struct TrackCell: View {
     
     //MARK: - Variables
     
+    @EnvironmentObject private var appTheme: AppTheme
+    
     @State private var isShowingVolumeSlider: Bool = true
     @State private var sliderValue: Double
     
@@ -42,14 +44,12 @@ struct TrackCell: View {
         
     var body: some View {
         VStack {
-            Divider()
             HStack {
                 VStack(alignment: .leading) {
-                    HStack() {
-                        Text(track.name + " |")
-                        Text(track.lengthDisplayString)
-                            .font(.caption)
-                    }
+                    Text(track.name)
+                        .font(.title3)
+                    Text(track.lengthDisplayString)
+                        .font(.caption)
                 }
                 Spacer()
                 HStack {
@@ -58,6 +58,7 @@ struct TrackCell: View {
                     } label: {
                         if track.isSolo, isGlobalSoloActive {
                             TrackCellButtonImage("s.square.fill")
+                                .foregroundStyle(.purple)
                         } else {
                             TrackCellButtonImage("s.square")
                         }
@@ -68,6 +69,7 @@ struct TrackCell: View {
                     } label: {
                         if track.isMuted {
                             TrackCellButtonImage("m.square.fill")
+                                .foregroundStyle(.pink)
                         } else {
                             TrackCellButtonImage("m.square")
                         }
@@ -75,16 +77,24 @@ struct TrackCell: View {
                     
                 }
             }
-            .padding(.horizontal, 20)
             
-            Slider(value: $sliderValue)
-                .tint(.primary)
-                .padding(.horizontal, 20)
-                .onChange(of: sliderValue) {
-                    onTrackVolumeChange(track, sliderValue)
-                }
+            HStack {
+                Image(systemName: "dial.medium")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 26, height: 26)
+                Slider(value: $sliderValue)
+                    .tint(.primary)
+                    .padding(.trailing, 10)
+                    .onChange(of: sliderValue) {
+                        onTrackVolumeChange(track, sliderValue)
+                    }
+            }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
         .foregroundColor(.primary)
+        .background(appTheme.cellColor)
     }
 }
 

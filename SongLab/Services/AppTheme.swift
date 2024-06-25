@@ -89,7 +89,7 @@ class AppTheme: ObservableObject {
     var cellColor: Color {
         switch theme {
         case .basic:
-            return Color(UIColor.secondarySystemBackground).opacity(0.8)
+            return Color(UIColor.systemBackground).opacity(0.9)
         case .basicdark:
             return Color.black.opacity(0.8)
         case .artist:
@@ -115,20 +115,20 @@ class AppTheme: ObservableObject {
     var backgroundImage: Image {
         switch theme {
         case .basic:
-            return Image("calathea_wallpaperpsd")
+            return Image("swirl")
         case .basicdark:
-            return Image("calathea_wallpaperpsd")
+            return Image("swirl")
         case .artist:
             return Image("swirl")
         case .light:
-            return Image("calathea_wallpaperpsd")
+            return Image("swirl")
         }
     }
     
     var backgroundShade: Color {
         switch theme {
         case .basic:
-            return Color.primary
+            return Color(UIColor.secondarySystemBackground)
         case .basicdark:
             return Color.black
         case .artist:

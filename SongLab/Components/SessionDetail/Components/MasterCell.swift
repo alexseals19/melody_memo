@@ -26,6 +26,8 @@ struct MasterCell: View {
     
     //MARK: - Variables
     
+    @EnvironmentObject var appTheme: AppTheme
+    
     private var session: Session
     private var currentlyPlaying: Session?
         
@@ -37,7 +39,6 @@ struct MasterCell: View {
     
     var body: some View {
         VStack {
-            Divider()
             HStack {
                 VStack(alignment: .leading) {
                     HStack() {
@@ -52,6 +53,7 @@ struct MasterCell: View {
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
                                         .frame(width: 24, height: 24)
+                                        .foregroundStyle(.purple)
                                 } else {
                                     Image(systemName: "s.square")
                                         .resizable()
@@ -60,6 +62,7 @@ struct MasterCell: View {
                                 }
                             }
                         }
+                        .padding(.leading, 5)
                         Spacer()
                         PlaybackControl(
                             session: session,
@@ -72,7 +75,9 @@ struct MasterCell: View {
                 Spacer()
             }
         }
+        .padding(.vertical, 10)
         .foregroundColor(.primary)
+        .background(appTheme.cellColor)
     }
 }
 

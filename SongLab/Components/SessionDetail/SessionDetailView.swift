@@ -23,6 +23,8 @@ struct SessionDetailView: View {
     
     //MARK: - Variables
     
+    @EnvironmentObject var appTheme: AppTheme
+    
     @Environment(\.dismiss) var dismiss
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
@@ -31,7 +33,7 @@ struct SessionDetailView: View {
     
     var body: some View {
         
-        VStack {
+        VStack(spacing: 1.0) {
             HStack {
                 backButton
                 Spacer()
@@ -40,7 +42,7 @@ struct SessionDetailView: View {
                 Spacer()
                 backButton.opacity(0.0)
             }
-            Spacer()
+            .background(appTheme.cellColor)
             MasterCell(
                 session: viewModel.session,
                 currentlyPlaying: viewModel.currentlyPlaying,
@@ -48,20 +50,26 @@ struct SessionDetailView: View {
                 stopButtonAction: viewModel.trackCellStopButtonTapped,
                 globalSoloButtonAction: viewModel.masterCellSoloButtonTapped
             )
-            ScrollView {
-                LazyVStack(alignment: .leading) {
-                    ForEach(Array(viewModel.session.tracks.values)) { track in
-                        TrackCell(
-                            track: track,
-                            isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
-                            muteButtonAction: viewModel.trackCellMuteButtonTapped,
-                            soloButtonAction: viewModel.trackCellSoloButtonTapped,
-                            onTrackVolumeChange: viewModel.setTrackVolume
-                        )
+            GeometryReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 1.0) {
+                        ForEach(
+                            Array(viewModel.session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
+                            return lhs.date > rhs.date
+                        })) { track in
+                            TrackCell(
+                                track: track,
+                                isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
+                                muteButtonAction: viewModel.trackCellMuteButtonTapped,
+                                soloButtonAction: viewModel.trackCellSoloButtonTapped,
+                                onTrackVolumeChange: viewModel.setTrackVolume
+                            )
+                        }
+                        CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.session.tracks.count)
                     }
                 }
+                .animation(.spring, value: viewModel.session.tracks)
             }
-            .animation(.spring, value: viewModel.session.tracks)
             Spacer()
         }
         .navigationBarBackButtonHidden()
@@ -70,7 +78,20 @@ struct SessionDetailView: View {
         .onAppear {
             self.opacity = 1.0
         }
+        .ignoresSafeArea()
         .padding(.top, 15)
+        .background(
+            appTheme.backgroundShade
+                .opacity(appTheme.backgroundLayerOpacity)
+                .background(
+                    appTheme.backgroundImage
+                        .resizable()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                        .opacity(appTheme.backgroundImageOpacity)
+                )
+            
+        )
     }
     
     var backButton: some View {

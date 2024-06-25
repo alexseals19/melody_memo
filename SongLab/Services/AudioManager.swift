@@ -152,7 +152,7 @@ class DefaultAudioManager: AudioManager {
             )
             
             updatedSession.tracks[track.id] = track
-            
+           
             if track.length > updatedSession.length {
                 updatedSession.length = track.length
             }
