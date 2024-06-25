@@ -39,46 +39,41 @@ struct AppSettingsView: View {
                     .padding(15)
                     .shadow(color: .white, radius: appTheme.shadowRadius)
                 Spacer()
-                Text("BPM \(bpm)")
+                Text("BPM \(Int(bpm))")
                 Slider(value: $bpm, in: 1 ... 300)
                     .tint(.primary)
                     .padding(.horizontal, 20)
-                    
                 Text("App Theme")
                     .font(.title2)
-                ScrollView(.horizontal) {
-                    LazyHStack {
-                        ForEach(AppTheme.Theme.allCases) { theme in
-                            VStack {
-                                Image(theme.rawValue)
-                                    .resizable()
-                                    .cornerRadius(15)
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(height: 300)
-                                Text(theme.rawValue)
-                                    .font(.caption)
-                                if theme == appTheme.theme {
-                                    ZStack {
-                                        Circle()
-                                            .stroke(lineWidth: 2)
-                                            .frame(width: 24)
-                                            .aspectRatio(contentMode: .fit)
-                                        Circle()
-                                            .frame(width: 20)
-                                            .aspectRatio(contentMode: .fit)
-                                            .foregroundStyle(.primary)
-                                    }
-                                } else {
+                LazyHStack {
+                    ForEach(AppTheme.Theme.allCases) { theme in
+                        VStack {
+                            Image(theme.rawValue)
+                                .resizable()
+                                .cornerRadius(15)
+                                .aspectRatio(contentMode: .fit)
+                                .frame(height: 300)
+                            if theme == appTheme.theme {
+                                ZStack {
                                     Circle()
                                         .stroke(lineWidth: 2)
                                         .frame(width: 24)
                                         .aspectRatio(contentMode: .fit)
+                                    Circle()
+                                        .frame(width: 20)
+                                        .aspectRatio(contentMode: .fit)
+                                        .foregroundStyle(.primary)
                                 }
+                            } else {
+                                Circle()
+                                    .stroke(lineWidth: 2)
+                                    .frame(width: 24)
+                                    .aspectRatio(contentMode: .fit)
                             }
-                            .foregroundStyle(.primary)
-                            .onTapGesture {
-                                appTheme.theme = theme
-                            }
+                        }
+                        .foregroundStyle(.primary)
+                        .onTapGesture {
+                            appTheme.theme = theme
                         }
                     }
                 }

@@ -25,6 +25,8 @@ struct TrackingToolbarView: View {
     
     //MARK: - Variables
     
+    @EnvironmentObject private var appTheme: AppTheme
+    
     @StateObject private var viewModel: TrackingToolbarViewModel
         
     //MARK: - Body
@@ -41,10 +43,10 @@ struct TrackingToolbarView: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 25.0)
-                    .foregroundStyle(.ultraThinMaterial.opacity(0.8))
+                    .foregroundStyle(.ultraThinMaterial.opacity(appTheme.toolbarMaterialOpacity))
                     .frame(height: 90)
                 RoundedRectangle(cornerRadius: 25.0)
-                    .foregroundStyle(Color.black.opacity(0.3))
+                    .foregroundStyle(Color(UIColor.systemBackground).opacity(0.5))
                     .frame(height: 90)
             }
                 

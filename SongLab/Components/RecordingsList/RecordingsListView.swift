@@ -44,15 +44,20 @@ struct RecordingsListView: View {
             NavigationStack {
                 ZStack {
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 1) {
+                        LazyVStack(alignment: .leading, spacing: 0.0) {
                             ForEach(viewModel.sessions) { session in
-                                RecordingCell(
-                                    currentlyPlaying: viewModel.currentlyPlaying,
-                                    session: session,
-                                    playButtonAction: viewModel.recordingCellPlayButtonTapped,
-                                    stopButtonAction: viewModel.recordingCellStopButtonTapped,
-                                    trashButtonAction: viewModel.recordingCellTrashButtonTapped
-                                )
+                                VStack(spacing: 0.0) {
+                                    Rectangle()
+                                        .frame(maxWidth: .infinity, maxHeight: 1.0)
+                                        .foregroundStyle(appTheme.cellDividerColor)
+                                    RecordingCell(
+                                        currentlyPlaying: viewModel.currentlyPlaying,
+                                        session: session,
+                                        playButtonAction: viewModel.recordingCellPlayButtonTapped,
+                                        stopButtonAction: viewModel.recordingCellStopButtonTapped,
+                                        trashButtonAction: viewModel.recordingCellTrashButtonTapped
+                                    )
+                                }
                             }
                             CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
                         }
@@ -76,25 +81,11 @@ struct RecordingsListView: View {
                         )
                     }
                     .scrollDisabled(isScrollDisabled)
-                    .background(.ultraThinMaterial.opacity(appTheme.backgroundLayerOpacity))
-                    .background(backgroundImage)
+                    .background(appTheme.backgroundImage)
                     .ignoresSafeArea()
                 }
             }
         }
-        .animation(.spring, value: viewModel.sessions)
-    }
-    
-    var backgroundImage: some View {
-        appTheme.backgroundShade
-            .opacity(appTheme.backgroundLayerOpacity)
-            .background(
-                appTheme.backgroundImage
-                    .resizable()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .opacity(appTheme.backgroundImageOpacity)
-            )
     }
 }
 

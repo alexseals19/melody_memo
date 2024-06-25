@@ -26,6 +26,8 @@ struct MasterCell: View {
     
     //MARK: - Variables
     
+    @EnvironmentObject private var appTheme: AppTheme
+    
     private var session: Session
     private var currentlyPlaying: Session?
         
@@ -52,6 +54,7 @@ struct MasterCell: View {
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
                                         .frame(width: 24, height: 24)
+                                        .foregroundStyle(.purple)
                                 } else {
                                     Image(systemName: "s.square")
                                         .resizable()
@@ -60,6 +63,7 @@ struct MasterCell: View {
                                 }
                             }
                         }
+                        .padding(.leading, 5)
                         Spacer()
                         PlaybackControlButtonView(
                             session: session,
@@ -71,8 +75,12 @@ struct MasterCell: View {
                 }
                 Spacer()
             }
+            Divider()
         }
+        .padding(.vertical, 10)
         .foregroundColor(.primary)
+        .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
+        .background(appTheme.cellColor)
     }
 }
 

@@ -141,9 +141,9 @@ struct RecordingCell: View {
                         Spacer()
                     }
                     .padding(.trailing, 80)
-                    .background(
-                        appTheme.cellColor
-                    )
+                    .foregroundStyle(.primary)
+                    .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
+                    .background(appTheme.cellColor)
                     .gesture(drag)
                     .onDisappear { 
                         offset = .zero

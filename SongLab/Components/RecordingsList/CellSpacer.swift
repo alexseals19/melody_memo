@@ -35,9 +35,8 @@ struct CellSpacer: View {
                 .frame(maxWidth: .infinity, minHeight: 150)
                 .frame(height: height)
                 .ignoresSafeArea()
-                .background(
-                    appTheme.cellColor
-                )
+                .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
+                .background(appTheme.cellColor)
                 .padding(.bottom, -height + 150)
             if numberOfSessions == 0 {
                 Text("Create your first recording!")
