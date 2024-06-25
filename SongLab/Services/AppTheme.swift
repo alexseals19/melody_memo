@@ -93,7 +93,7 @@ class AppTheme: ObservableObject {
         case .basicdark:
             return Color.black.opacity(0.8)
         case .artist:
-            return Color.black.opacity(0.5)
+            return Color.black.opacity(0.7)
         case .light:
             return Color.white.opacity(0.5)
         }

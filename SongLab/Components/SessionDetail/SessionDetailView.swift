@@ -11,10 +11,11 @@ struct SessionDetailView: View {
     
     //MARK: - API
         
-    init(recordingManager: RecordingManager, session: Session) {
+    init(recordingManager: RecordingManager, audioManager: AudioManager, session: Session) {
         _viewModel = StateObject(
             wrappedValue: SessionDetailViewModel(
-                recordingManager: recordingManager, 
+                recordingManager: recordingManager,
+                audioManager: audioManager,
                 session: session
             )
         )
@@ -37,16 +38,30 @@ struct SessionDetailView: View {
                 Text(viewModel.session.name)
                     .font(.largeTitle)
                 Spacer()
+                backButton.opacity(0.0)
             }
             Spacer()
-            MasterCell()
+            MasterCell(
+                session: viewModel.session,
+                currentlyPlaying: viewModel.currentlyPlaying,
+                playButtonAction: viewModel.trackCellPlayButtonTapped,
+                stopButtonAction: viewModel.trackCellStopButtonTapped,
+                globalSoloButtonAction: viewModel.masterCellSoloButtonTapped
+            )
             ScrollView {
                 LazyVStack(alignment: .leading) {
-                    ForEach(viewModel.session.tracks) { track in
-                        TrackCell(track: track)
+                    ForEach(Array(viewModel.session.tracks.values)) { track in
+                        TrackCell(
+                            track: track,
+                            isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
+                            muteButtonAction: viewModel.trackCellMuteButtonTapped,
+                            soloButtonAction: viewModel.trackCellSoloButtonTapped,
+                            onTrackVolumeChange: viewModel.setTrackVolume
+                        )
                     }
                 }
             }
+            .animation(.spring, value: viewModel.session.tracks)
             Spacer()
         }
         .navigationBarBackButtonHidden()
@@ -60,6 +75,7 @@ struct SessionDetailView: View {
     
     var backButton: some View {
         Button {
+            viewModel.saveSession()
             dismiss()
         } label: {
             ZStack {
@@ -82,6 +98,7 @@ struct SessionDetailView: View {
 #Preview {
     SessionDetailView(
         recordingManager: MockRecordingManager(),
+        audioManager: MockAudioManager(),
         session: Session.recordingFixture
     )
 }

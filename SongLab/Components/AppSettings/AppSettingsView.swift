@@ -11,7 +11,7 @@ struct AppSettingsView: View {
     
     //MARK: - API
     
-    @AppStorage("bpm") var bpm: Int = 120
+    @AppStorage("bpm") var bpm: Double = 120
         
     init(metronome: Metronome) {
         _viewModel = StateObject(
@@ -40,12 +40,10 @@ struct AppSettingsView: View {
                     .shadow(color: .white, radius: appTheme.shadowRadius)
                 Spacer()
                 Text("BPM \(bpm)")
-                Slider(value: $sliderValue, in: 1 ... 300)
+                Slider(value: $bpm, in: 1 ... 300)
                     .tint(.primary)
                     .padding(.horizontal, 20)
-                    .onChange(of: sliderValue) {
-                        bpm = Int(sliderValue)
-                    }
+                    
                 Text("App Theme")
                     .font(.title2)
                 ScrollView(.horizontal) {

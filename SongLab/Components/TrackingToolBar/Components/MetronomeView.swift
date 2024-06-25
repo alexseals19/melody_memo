@@ -11,7 +11,7 @@ struct MetronomeView: View {
     
     //MARK: - API
     
-    @AppStorage("bpm") var bpm: Int = 120
+    @AppStorage("bpm") var bpm: Double = 120
     @AppStorage("metronomeActive") var metronomeActive: Bool = false
     
     // MARK: - Variables
@@ -39,7 +39,7 @@ struct MetronomeView: View {
                         .resizable()
                         .frame(width: 21.5, height: 20)
                         .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
-                    Text("\(bpm)")
+                    Text("\(Int(bpm))")
                         .font(.caption)
                 }
             } else {

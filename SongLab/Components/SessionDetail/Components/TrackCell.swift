@@ -9,12 +9,37 @@ import SwiftUI
 
 struct TrackCell: View {
     
-    init(track: Track) {
+    //MARK: - API
+        
+    init(
+        track: Track,
+        isGlobalSoloActive: Bool,
+        muteButtonAction: @escaping (_: Track) -> Void,
+        soloButtonAction: @escaping (_: Track) -> Void,
+        onTrackVolumeChange: @escaping (_: Track, _ : Double) -> Void
+    ) {
         self.track = track
+        self.isGlobalSoloActive = isGlobalSoloActive
+        self.muteButtonAction = muteButtonAction
+        self.soloButtonAction = soloButtonAction
+        self.onTrackVolumeChange = onTrackVolumeChange
+        self.sliderValue = Double(track.volume)
     }
     
-    private var track: Track
+    //MARK: - Variables
     
+    @State private var isShowingVolumeSlider: Bool = true
+    @State private var sliderValue: Double
+    
+    private var track: Track
+    private var isGlobalSoloActive: Bool
+    
+    private let muteButtonAction: (_: Track) -> Void
+    private let soloButtonAction: (_: Track) -> Void
+    private let onTrackVolumeChange: (_: Track, _ : Double) -> Void
+    
+    //MARK: - Body
+        
     var body: some View {
         VStack {
             Divider()
@@ -27,9 +52,54 @@ struct TrackCell: View {
                     }
                 }
                 Spacer()
+                HStack {
+                    Button {
+                        soloButtonAction(track)
+                    } label: {
+                        if track.isSolo, isGlobalSoloActive {
+                            TrackCellButtonImage("s.square.fill")
+                        } else {
+                            TrackCellButtonImage("s.square")
+                        }
+                    }
+                    
+                    Button {
+                        muteButtonAction(track)
+                    } label: {
+                        if track.isMuted {
+                            TrackCellButtonImage("m.square.fill")
+                        } else {
+                            TrackCellButtonImage("m.square")
+                        }
+                    }
+                    
+                }
             }
+            .padding(.horizontal, 20)
+            
+            Slider(value: $sliderValue)
+                .tint(.primary)
+                .padding(.horizontal, 20)
+                .onChange(of: sliderValue) {
+                    onTrackVolumeChange(track, sliderValue)
+                }
         }
         .foregroundColor(.primary)
+    }
+}
+
+struct TrackCellButtonImage: View {
+    let imageName: String
+    
+    init(_ imageName: String) {
+        self.imageName = imageName
+    }
+    
+    var body: some View {
+        Image(systemName: imageName)
+            .resizable()
+            .frame(width: 24, height: 24)
+            .aspectRatio(contentMode: .fit)
     }
 }
 
@@ -40,7 +110,14 @@ struct TrackCell: View {
             fileName: "",
             date: Date(),
             length: .seconds(2),
-            id: UUID()
-        )
+            id: UUID(),
+            volume: 1.0,
+            isMuted: false,
+            isSolo: false
+        ),
+        isGlobalSoloActive: false,
+        muteButtonAction: { _ in },
+        soloButtonAction: { _ in },
+        onTrackVolumeChange: { _ , _ in }
     )
 }

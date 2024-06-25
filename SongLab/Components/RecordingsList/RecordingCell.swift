@@ -14,7 +14,7 @@ struct RecordingCell: View {
     init(
         currentlyPlaying: Session?,
         session: Session,
-        playButtonAction: @escaping (_: [Track], _: Session) -> Void,
+        playButtonAction: @escaping (_: Session) -> Void,
         stopButtonAction: @escaping () -> Void,
         trashButtonAction: @escaping (_: Session) -> Void
     ) {
@@ -32,7 +32,7 @@ struct RecordingCell: View {
     private var session: Session
     private var currentlyPlaying: Session?
     
-    private let playButtonAction: (_: [Track],_ session: Session) -> Void
+    private let playButtonAction: (_ session: Session) -> Void
     private let stopButtonAction: () -> Void
     private let trashButtonAction: (_ session: Session) -> Void
     
@@ -153,7 +153,12 @@ struct RecordingCell: View {
                 
                 HStack {
                     Spacer()
-                    playbackButton
+                    PlaybackControlButtonView(
+                        session: session,
+                        currentlyPlaying: currentlyPlaying,
+                        playButtonAction: playButtonAction,
+                        stopButtonAction: stopButtonAction
+                    )
                 }
             }
             .offset(x: gestureOffset + offset)
@@ -184,32 +189,6 @@ struct RecordingCell: View {
         .clipped()
         .animation(.snappy(duration: animationDuration), value: trashButtonWidth)
     }
-    
-    var playbackButton: some View {
-        Button {
-            if let currentlyPlaying, currentlyPlaying == session {
-                stopButtonAction()
-            } else {
-                playButtonAction(session.tracks, session)
-            }
-        } label: {
-            Group {
-                if let currentlyPlaying, currentlyPlaying == session {
-                    Image(systemName: "pause")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } else {
-                    Image(systemName: "play")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                }
-            }
-            .frame(width: 24, height: 24)
-            .padding(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 20))
-            
-        }
-        .foregroundStyle(appTheme.playbackControlColor)
-    }
 }
 
 #Preview {
@@ -217,7 +196,7 @@ struct RecordingCell: View {
     RecordingCell(
         currentlyPlaying: nil,
         session: Session.recordingFixture,
-        playButtonAction: { _, _ in },
+        playButtonAction: {_ in },
         stopButtonAction: {},
         trashButtonAction: { _ in }
     )

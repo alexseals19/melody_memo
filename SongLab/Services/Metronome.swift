@@ -13,11 +13,11 @@ class Metronome: Observable {
     
     //MARK: - API
     
-    @AppStorage("bpm") var bpm: Int = 120
+    @AppStorage("bpm") var bpm: Double = 120
         
     func playMetronome(timeSignature: Int, beat: Int) throws {
         
-        let beatInterval: Double = 60 / Double(bpm)
+        let beatInterval: Double = 60 / bpm
         
         metronome = AVAudioPlayerNode()
         

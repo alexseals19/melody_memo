@@ -56,7 +56,12 @@ final class DataPersistenceManager {
     }
     
     static func saveData(name: String, data: Data) -> Bool {
-        guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
+        guard let directory = try? FileManager.default.url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: false
+        ) as NSURL else {
             return false
         }
         do {

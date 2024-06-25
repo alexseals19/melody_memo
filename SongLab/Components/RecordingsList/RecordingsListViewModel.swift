@@ -21,6 +21,7 @@ class RecordingsListViewModel: ObservableObject {
     @Published var sessions: [Session] = []
     
     let recordingManager: RecordingManager
+    let audioManager: AudioManager
         
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
@@ -31,9 +32,9 @@ class RecordingsListViewModel: ObservableObject {
             .assign(to: &$currentlyPlaying)
     }
     
-    nonisolated func recordingCellPlayButtonTapped(for tracks: [Track], session: Session) {
+    nonisolated func recordingCellPlayButtonTapped(for session: Session) {
         do {
-            try audioManager.startPlayback(for: tracks, session: session)
+            try audioManager.startPlayback(for: session)
         } catch {
             //TODO
         }
@@ -53,5 +54,5 @@ class RecordingsListViewModel: ObservableObject {
         
     // MARK: - Variables
     
-    private let audioManager: AudioManager
+    
 }
