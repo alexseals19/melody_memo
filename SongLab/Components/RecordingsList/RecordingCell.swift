@@ -153,7 +153,7 @@ struct RecordingCell: View {
                 
                 HStack {
                     Spacer()
-                    PlaybackControl(
+                    PlaybackControlButtonView(
                         session: session,
                         currentlyPlaying: currentlyPlaying,
                         playButtonAction: playButtonAction,

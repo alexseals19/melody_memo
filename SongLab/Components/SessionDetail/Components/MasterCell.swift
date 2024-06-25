@@ -61,7 +61,7 @@ struct MasterCell: View {
                             }
                         }
                         Spacer()
-                        PlaybackControl(
+                        PlaybackControlButtonView(
                             session: session,
                             currentlyPlaying: currentlyPlaying,
                             playButtonAction: playButtonAction,
@@ -76,12 +76,12 @@ struct MasterCell: View {
     }
 }
 
-//#Preview {
-//    MasterCell(
-//        session: Session.recordingFixture,
-//        currentlyPlaying: nil,
-//        playButtonAction: { _ in },
-//        stopButtonAction: {},
-//        globalSoloButtonAction: {}
-//    )
-//}
+#Preview {
+    MasterCell(
+        session: Session.recordingFixture,
+        currentlyPlaying: nil,
+        playButtonAction: { _ in },
+        stopButtonAction: {},
+        globalSoloButtonAction: {}
+    )
+}

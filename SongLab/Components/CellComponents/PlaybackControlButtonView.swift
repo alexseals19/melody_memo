@@ -1,5 +1,5 @@
 //
-//  PlaybackControl.swift
+//  PlaybackControlButtonView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/20/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PlaybackControl: View {
+struct PlaybackControlButtonView: View {
     
     //MARK: - API
     
@@ -62,7 +62,7 @@ struct PlaybackControl: View {
 }
 
 #Preview {
-    PlaybackControl(
+    PlaybackControlButtonView(
         session: Session.recordingFixture,
         currentlyPlaying: nil,
         playButtonAction: { _ in },
