@@ -12,9 +12,9 @@ import Combine
 class SessionDetailViewModel: ObservableObject {
     
     //MARK: - API
+    
     @Published var currentlyPlaying: Session?
     @Published var session: Session
-    @Published var soloTracks: [Track] = []
     
     let audioManager: AudioManager
             
@@ -27,11 +27,6 @@ class SessionDetailViewModel: ObservableObject {
             .assign(to: &$session)
         audioManager.currentlyPlaying
             .assign(to: &$currentlyPlaying)
-        for track in session.tracks.values {
-            if track.isSolo {
-                soloTracks.append(track)
-            }
-        }
     }
         
     func masterCellSoloButtonTapped() {
@@ -59,7 +54,9 @@ class SessionDetailViewModel: ObservableObject {
     func trackCellMuteButtonTapped(for track: Track) {
         session.tracks[track.id]?.isMuted.toggle()
         if currentlyPlaying != nil {
-            audioManager.toggleMute(for: Array(arrayLiteral: track))
+            if !session.isGlobalSoloActive {
+                audioManager.toggleMute(for: Array(arrayLiteral: track))
+            }
             currentlyPlaying = session
         }
         
@@ -67,28 +64,29 @@ class SessionDetailViewModel: ObservableObject {
     
     func trackCellSoloButtonTapped(for track: Track) {
         if !session.isGlobalSoloActive {
-            soloTracks.removeAll()
             for track in session.tracks.values {
                 session.tracks[track.id]?.isSolo = false
             }
         }
         session.tracks[track.id]?.isSolo.toggle()
-        if soloTracks.contains(where: { $0.id == track.id } ) {
-            soloTracks = soloTracks.filter( { $0.id != track.id } )
-            if soloTracks.isEmpty {
-                session.isGlobalSoloActive = false
-            }
-        } else {
-            guard let newTrack = session.tracks[track.id] else {
-                assertionFailure("Track does not exist.")
-                return
-            }
+        
+        guard let isSolo = session.tracks[track.id]?.isSolo else {
+            assertionFailure("Unable to locate track with id: \(track.id).")
+            return
+        }
+                
+        if isSolo {
             if track.isMuted {
                 trackCellMuteButtonTapped(for: track)
             }
-            soloTracks.append(newTrack)
             session.isGlobalSoloActive = true
+        } else {
+            let otherSoloTracks = session.tracks.filter { $0.key != track.id && $0.value.isSolo }
+            if otherSoloTracks.isEmpty {
+                session.isGlobalSoloActive = false
+            }
         }
+        
         if currentlyPlaying != nil {
             let tracksToMute = session.tracks.values.filter( { $0.isSolo == false } )
             audioManager.toggleMute(for: tracksToMute)

@@ -16,7 +16,7 @@ struct CellSpacer: View {
         
     // MARK: - Variables
     
-    @EnvironmentObject var appTheme: AppTheme
+    @EnvironmentObject private var appTheme: AppTheme
     
     private var height: Double {
         let height = (screenHeight - (Double(numberOfSessions) * (65.653320 + 1))) + 25
@@ -35,9 +35,8 @@ struct CellSpacer: View {
                 .frame(maxWidth: .infinity, minHeight: 150)
                 .frame(height: height)
                 .ignoresSafeArea()
-                .background(
-                    appTheme.cellColor
-                )
+                .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
+                .background(appTheme.cellColor)
                 .padding(.bottom, -height + 150)
             if numberOfSessions == 0 {
                 Text("Create your first recording!")

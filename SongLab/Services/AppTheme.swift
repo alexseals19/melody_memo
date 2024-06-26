@@ -14,49 +14,17 @@ class AppTheme: ObservableObject {
 
     enum Theme: String, CaseIterable, Identifiable {
         case basic = "basic"
-        case basicdark = "basicdark"
         case artist = "artist"
-        case light = "light"
         
         var id: Self { self }
-    }
-    
-    var backgroundLayerOpacity: Double {
-        switch theme {
-        case .basic:
-            return 0.4
-        case .basicdark:
-            return 0.7
-        case .artist:
-            return 0.0
-        case .light:
-            return 0.0
-        }
-    }
-    
-    var backgroundMaterialOpacity: Double {
-        switch theme {
-        case .basic:
-            return 0.6
-        case .basicdark:
-            return 0.6
-        case .artist:
-            return 0.0
-        case .light:
-            return 0.0
-        }
     }
     
     var recordButtonColor: Gradient {
         switch theme {
         case .basic:
             return Gradient(colors: [.red])
-        case .basicdark:
-            return Gradient(colors: [.red])
         case .artist:
             return Gradient(colors: [.pink, .purple])
-        case .light:
-            return Gradient(colors: [.red])
         }
     }
     
@@ -64,12 +32,8 @@ class AppTheme: ObservableObject {
         switch theme {
         case .basic:
             return 0.0
-        case .basicdark:
-            return 0.0
         case .artist:
             return 10.0
-        case .light:
-            return 0.0
         }
     }
     
@@ -77,77 +41,86 @@ class AppTheme: ObservableObject {
         switch theme {
         case .basic:
             return Gradient(colors: [.primary])
-        case .basicdark:
-            return Gradient(colors: [.primary])
         case .artist:
             return Gradient(colors: [.pink, .purple])
-        case .light:
-            return Gradient(colors: [.primary])
         }
     }
     
     var cellColor: Color {
         switch theme {
         case .basic:
-            return Color(UIColor.secondarySystemBackground).opacity(0.8)
-        case .basicdark:
-            return Color.black.opacity(0.8)
+            return Color.clear
         case .artist:
-            return Color.black.opacity(0.7)
-        case .light:
-            return Color.white.opacity(0.5)
+            return Color(UIColor.systemBackground).opacity(0.7)
+        }
+    }
+    
+    var cellMaterialOpacity: Double {
+        switch theme {
+        case .basic:
+            return 1.0
+        case .artist:
+            return 0.0
+        }
+    }
+    
+    var cellDividerColor: Color {
+        switch theme {
+        case .basic:
+            return Color(UIColor.systemBackground).opacity(1.0)
+        case .artist:
+            return Color.clear
         }
     }
     
     var navBarColor: Color {
         switch theme {
         case .basic:
-            return Color(UIColor.secondarySystemBackground).opacity(0.5)
-        case .basicdark:
-            return Color.black.opacity(0.5)
-        case .artist:
-            return Color.black.opacity(0.5)
-        case .light:
             return Color.clear
+        case .artist:
+            return Color(UIColor.systemBackground).opacity(0.5)
         }
     }
     
-    var backgroundImage: Image {
+    var backgroundImage: some View {
         switch theme {
         case .basic:
-            return Image("calathea_wallpaperpsd")
-        case .basicdark:
-            return Image("calathea_wallpaperpsd")
+            return Image("swirl")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .opacity(0.5)
+                .background(Color(UIColor.systemBackground).opacity(1.0))
         case .artist:
             return Image("swirl")
-        case .light:
-            return Image("calathea_wallpaperpsd")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .opacity(0.3)
+                .background(Color.black)
         }
     }
     
-    var backgroundShade: Color {
+    var cellBackground: some View {
         switch theme {
         case .basic:
-            return Color.primary
-        case .basicdark:
-            return Color.black
-        case .artist:
-            return Color.black
-        case .light:
             return Color.clear
+                .background(.ultraThinMaterial.opacity(1.0))
+                .background(Color.clear)
+                
+        case .artist:
+            return Color.clear
+                .background(.ultraThinMaterial.opacity(0.0))
+                .background(Color(UIColor.systemBackground).opacity(0.7))
         }
     }
     
-    var backgroundImageOpacity: Double {
+    var toolbarMaterialOpacity: Double {
         switch theme {
         case .basic:
-            return 0.3
-        case .basicdark:
-            return 0.75
+            return 1.0
         case .artist:
-            return 0.3
-        case .light:
-            return 0.3
+            return 0.99
         }
     }
 }
