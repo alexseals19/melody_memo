@@ -23,11 +23,18 @@ struct SessionDetailView: View {
     
     //MARK: - Variables
     
-    @EnvironmentObject var appTheme: AppTheme
+    @EnvironmentObject private var appTheme: AppTheme
     
     @Environment(\.dismiss) var dismiss
+    
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
+    
+    private var tracks: [Track] {
+        viewModel.session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
+            return lhs.date > rhs.date
+        }
+    }
     
     //MARK: - Body
     
@@ -42,8 +49,7 @@ struct SessionDetailView: View {
                 Spacer()
                 backButton.opacity(0.0)
             }
-            .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
-            .background(appTheme.cellColor)
+            .background(appTheme.cellBackground)
             
             MasterCell(
                 session: viewModel.session,
@@ -55,13 +61,7 @@ struct SessionDetailView: View {
             GeometryReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0.0) {
-                        ForEach(
-                            Array(
-                                viewModel.session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
-                                    return lhs.date > rhs.date
-                                }
-                            )
-                        ) { track in
+                        ForEach(tracks) { track in
                             VStack(spacing: 0.0) {
                                 Rectangle()
                                     .frame(maxWidth: .infinity, maxHeight: 1.0)
@@ -75,7 +75,10 @@ struct SessionDetailView: View {
                                 )
                             }
                         }
-                        CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.session.tracks.count)
+                        CellSpacer(
+                            screenHeight: proxy.size.height,
+                            numberOfSessions: viewModel.session.tracks.count
+                        )
                     }
                     .animation(.spring, value: viewModel.session.tracks)
                 }

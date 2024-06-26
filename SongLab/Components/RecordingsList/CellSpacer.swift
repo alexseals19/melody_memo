@@ -16,7 +16,7 @@ struct CellSpacer: View {
         
     // MARK: - Variables
     
-    @EnvironmentObject var appTheme: AppTheme
+    @EnvironmentObject private var appTheme: AppTheme
     
     private var height: Double {
         let height = (screenHeight - (Double(numberOfSessions) * (65.653320 + 1))) + 25

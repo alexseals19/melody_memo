@@ -79,8 +79,7 @@ struct MasterCell: View {
         }
         .padding(.vertical, 10)
         .foregroundColor(.primary)
-        .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
-        .background(appTheme.cellColor)
+        .background(appTheme.cellBackground)
     }
 }
 

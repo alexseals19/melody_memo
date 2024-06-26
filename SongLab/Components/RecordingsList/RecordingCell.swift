@@ -27,7 +27,7 @@ struct RecordingCell: View {
     
     // MARK: - Variables
         
-    @EnvironmentObject var appTheme: AppTheme
+    @EnvironmentObject private var appTheme: AppTheme
     
     private var session: Session
     private var currentlyPlaying: Session?
@@ -142,8 +142,7 @@ struct RecordingCell: View {
                     }
                     .padding(.trailing, 80)
                     .foregroundStyle(.primary)
-                    .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
-                    .background(appTheme.cellColor)
+                    .background(appTheme.cellBackground)
                     .gesture(drag)
                     .onDisappear { 
                         offset = .zero
@@ -192,7 +191,6 @@ struct RecordingCell: View {
 }
 
 #Preview {
-    
     RecordingCell(
         currentlyPlaying: nil,
         session: Session.recordingFixture,
@@ -200,5 +198,4 @@ struct RecordingCell: View {
         stopButtonAction: {},
         trashButtonAction: { _ in }
     )
-    .padding(.horizontal)
 }

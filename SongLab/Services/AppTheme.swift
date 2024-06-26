@@ -101,6 +101,20 @@ class AppTheme: ObservableObject {
         }
     }
     
+    var cellBackground: some View {
+        switch theme {
+        case .basic:
+            return Color.clear
+                .background(.ultraThinMaterial.opacity(1.0))
+                .background(Color.clear)
+                
+        case .artist:
+            return Color.clear
+                .background(.ultraThinMaterial.opacity(0.0))
+                .background(Color(UIColor.systemBackground).opacity(0.7))
+        }
+    }
+    
     var toolbarMaterialOpacity: Double {
         switch theme {
         case .basic:

@@ -43,65 +43,57 @@ struct TrackCell: View {
     //MARK: - Body
         
     var body: some View {
-        VStack(spacing: 0.0) {
-            
-            VStack {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(track.name)
-                            .font(.title3)
-                        Text(track.lengthDisplayString)
-                            .font(.caption)
-                    }
-                    Spacer()
-                    HStack {
-                        Button {
-                            soloButtonAction(track)
-                        } label: {
-                            if track.isSolo, isGlobalSoloActive {
-                                TrackCellButtonImage("s.square.fill")
-                                    .foregroundStyle(.purple)
-                            } else {
-                                TrackCellButtonImage("s.square")
-                            }
-                        }
-                        
-                        Button {
-                            muteButtonAction(track)
-                        } label: {
-                            if track.isMuted {
-                                TrackCellButtonImage("m.square.fill")
-                                    .foregroundStyle(.pink)
-                            } else {
-                                TrackCellButtonImage("m.square")
-                            }
-                        }
-                        
-                    }
+        VStack {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(track.name)
+                        .font(.title3)
+                    Text(track.lengthDisplayString)
+                        .font(.caption)
                 }
-                Divider()
-                
+                Spacer()
                 HStack {
-                    Image(systemName: "dial.medium")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 26, height: 26)
-                    Slider(value: $sliderValue)
-                        .tint(.primary)
-                        .padding(.trailing, 10)
-                        .onChange(of: sliderValue) {
-                            onTrackVolumeChange(track, sliderValue)
+                    Button {
+                        soloButtonAction(track)
+                    } label: {
+                        if track.isSolo, isGlobalSoloActive {
+                            TrackCellButtonImage("s.square.fill")
+                                .foregroundStyle(.purple)
+                        } else {
+                            TrackCellButtonImage("s.square")
                         }
+                    }
+                    
+                    Button {
+                        muteButtonAction(track)
+                    } label: {
+                        if track.isMuted {
+                            TrackCellButtonImage("m.square.fill")
+                                .foregroundStyle(.pink)
+                        } else {
+                            TrackCellButtonImage("m.square")
+                        }
+                    }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-            .foregroundColor(.primary)
-            .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
-            .background(appTheme.cellColor)
-            
+            Divider()
+            HStack {
+                Image(systemName: "dial.medium")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 26, height: 26)
+                Slider(value: $sliderValue)
+                    .tint(.primary)
+                    .padding(.trailing, 10)
+                    .onChange(of: sliderValue) {
+                        onTrackVolumeChange(track, sliderValue)
+                    }
+            }
         }
-        
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .foregroundColor(.primary)
+        .background(appTheme.cellBackground)
     }
 }
 
