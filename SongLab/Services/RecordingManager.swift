@@ -56,7 +56,6 @@ final class DefaultRecordingManager: RecordingManager {
                     return lhs.date > rhs.date
                 }
             )
-            print("\(session.name) saved")
         }
     }
     

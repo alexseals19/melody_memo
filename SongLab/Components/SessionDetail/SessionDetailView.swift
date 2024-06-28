@@ -41,6 +41,9 @@ struct SessionDetailView: View {
     var body: some View {
         
         VStack(spacing: 0.0) {
+            Rectangle()
+                .frame(maxWidth: .infinity, maxHeight: 1.0)
+                .foregroundStyle(appTheme.cellDividerColor)
             HStack {
                 backButton
                 Spacer()
@@ -60,7 +63,7 @@ struct SessionDetailView: View {
             )
             GeometryReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0.0) {
+                    VStack(alignment: .leading, spacing: 0.0) {
                         ForEach(tracks) { track in
                             VStack(spacing: 0.0) {
                                 Rectangle()
@@ -69,6 +72,9 @@ struct SessionDetailView: View {
                                 TrackCell(
                                     track: track,
                                     isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
+                                    session: viewModel.session,
+                                    currentlyPlaying: viewModel.currentlyPlaying,
+                                    progress: viewModel.progress,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     onTrackVolumeChange: viewModel.setTrackVolume
@@ -92,7 +98,7 @@ struct SessionDetailView: View {
                 self.opacity = 1.0
             }
         }
-        .padding(.top, 74)
+        .offset(y: 75.0)
         .background(appTheme.backgroundImage)
         .ignoresSafeArea()
         
@@ -118,12 +124,4 @@ struct SessionDetailView: View {
         }
         .foregroundColor(.primary)
     }
-}
-
-#Preview {
-    SessionDetailView(
-        recordingManager: MockRecordingManager(),
-        audioManager: MockAudioManager(),
-        session: Session.recordingFixture
-    )
 }

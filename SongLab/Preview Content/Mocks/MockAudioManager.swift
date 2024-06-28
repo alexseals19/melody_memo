@@ -8,10 +8,12 @@
 import Combine
 import Foundation
 import AVFoundation
+import SwiftUI
 
 class MockAudioManager: AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
+    var playerProgress: CurrentValueSubject<Double, Never>
     
     func startTracking() {}
     func startTracking(for session: Session) throws {}
@@ -27,5 +29,6 @@ class MockAudioManager: AudioManager {
     init() {
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
+        playerProgress = CurrentValueSubject(0.0)
     }
 }

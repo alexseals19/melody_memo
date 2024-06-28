@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import SwiftUI
 
 protocol RecordingsListViewModelDelegate: AnyObject {
     
@@ -19,10 +20,11 @@ class RecordingsListViewModel: ObservableObject {
     
     @Published var currentlyPlaying: Session?
     @Published var sessions: [Session] = []
+    @Published var playerProgress: Double = 0.0
     
     let recordingManager: RecordingManager
     let audioManager: AudioManager
-        
+    
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
@@ -30,9 +32,11 @@ class RecordingsListViewModel: ObservableObject {
             .assign(to: &$sessions)
         audioManager.currentlyPlaying
             .assign(to: &$currentlyPlaying)
+        audioManager.playerProgress
+            .assign(to: &$playerProgress)
     }
     
-    nonisolated func recordingCellPlayButtonTapped(for session: Session) {
+    func recordingCellPlayButtonTapped(for session: Session) {
         do {
             try audioManager.startPlayback(for: session)
         } catch {
@@ -40,7 +44,7 @@ class RecordingsListViewModel: ObservableObject {
         }
     }
     
-    nonisolated func recordingCellStopButtonTapped() {
+    func recordingCellStopButtonTapped() {
         audioManager.stopPlayback()
     }
     
@@ -51,8 +55,9 @@ class RecordingsListViewModel: ObservableObject {
             // TODO: Handle Error
         }
     }
+    
+    
         
     // MARK: - Variables
-    
     
 }

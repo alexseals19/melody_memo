@@ -15,6 +15,7 @@ class SessionDetailViewModel: ObservableObject {
     
     @Published var currentlyPlaying: Session?
     @Published var session: Session
+    @Published var progress: Double = 0.0
     
     let audioManager: AudioManager
             
@@ -27,8 +28,10 @@ class SessionDetailViewModel: ObservableObject {
             .assign(to: &$session)
         audioManager.currentlyPlaying
             .assign(to: &$currentlyPlaying)
+        audioManager.playerProgress
+            .assign(to: &$progress)
     }
-        
+    
     func masterCellSoloButtonTapped() {
         session.isGlobalSoloActive.toggle()
         if session.isGlobalSoloActive {

@@ -8,16 +8,23 @@
 import Combine
 import Foundation
 import AVFoundation
-
+import SwiftUI
 
 struct AudioPlayer {
     var player = AVAudioPlayerNode()
     var track: Track
 }
 
+struct AudioPreviewModel: Hashable, Identifiable {
+    var magnitude: Float
+    var color: Color
+    var id = UUID()
+}
+
 protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
+    var playerProgress: CurrentValueSubject<Double, Never> { get }
     func startTracking() throws
     func startTracking(for session: Session) throws
     func stopTracking() async
@@ -40,11 +47,14 @@ class DefaultAudioManager: AudioManager {
         metronome: AVAudioPlayerNode(),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
-        mixerNode: AVAudioMixerNode()
+        mixerNode: AVAudioMixerNode(),
+        playbackStartTime: Date()
     )
     
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
+    var playerProgress: CurrentValueSubject<Double, Never>
+    var subscription: AnyCancellable?
     
     func startTracking() throws {
         try setupRecorder()
@@ -89,11 +99,23 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
+            let waveformLight = try await getImage(for: currentFileName, color: .white)
+            guard let waveformLightData = waveformLight.pngData() else {
+                assertionFailure("Could not get png data")
+                return
+            }
+            let waveformDark = try await getImage(for: currentFileName, color: .black)
+            guard let waveformDarkData = waveformDark.pngData() else {
+                assertionFailure("Could not get png data")
+                return
+            }
             let track = Track(
                 name: "Track 1",
                 fileName: currentFileName,
                 date: Date(),
-                length: .seconds(durationInSeconds),
+                length: Double(durationInSeconds),
+                waveformDark: waveformDarkData,
+                waveformLight: waveformLightData,
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
@@ -102,7 +124,7 @@ class DefaultAudioManager: AudioManager {
             let session = Session(
                 name: "Session \(DefaultRecordingManager.shared.sessions.value.count + 1)",
                 date: Date(),
-                length: .seconds(durationInSeconds),
+                length: Double(durationInSeconds),
                 tracks: [track.id : track],
                 id: UUID(),
                 isGlobalSoloActive: false
@@ -140,11 +162,23 @@ class DefaultAudioManager: AudioManager {
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
             let name = "Track \(session.tracks.count + 1)"
+            let waveformLight = try await getImage(for: currentFileName, color: .white)
+            guard let waveformLightData = waveformLight.pngData() else {
+                assertionFailure("Could not get png data")
+                return
+            }
+            let waveformDark = try await getImage(for: currentFileName, color: .black)
+            guard let waveformDarkData = waveformDark.pngData() else {
+                assertionFailure("Could not get png data")
+                return
+            }
             let track = Track(
                 name: name,
                 fileName: currentFileName,
                 date: Date(),
-                length: .seconds(durationInSeconds),
+                length: Double(durationInSeconds),
+                waveformDark: waveformDarkData,
+                waveformLight: waveformLightData,
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
@@ -164,15 +198,18 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startPlayback(for session: Session) throws {
-        
         let startTime = try setupPlayers(for: session)
         
         currentlyPlaying.send(session)
+        playerProgress.send(0.0)
         
         for player in players {
             player.player.play(at: startTime)
         }
         
+        Task {
+            await startTimer()
+        }
     }
     
     func stopPlayback() {
@@ -185,6 +222,9 @@ class DefaultAudioManager: AudioManager {
         }
         playbackEngine.stop()
         players.removeAll()
+        Task {
+            await stopProgress()
+        }
     }
     
     func toggleMute(for tracks: [Track]) {
@@ -207,6 +247,7 @@ class DefaultAudioManager: AudioManager {
         newPlayer.player.volume = track.volume
     }
     
+    
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
@@ -217,10 +258,17 @@ class DefaultAudioManager: AudioManager {
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
+    private var playbackStartTime: Date
+    
     private var bufferInterrupt: Bool = false
     private var beats: [AVAudioPlayerNode] = []
     private var metronomeActive: Bool = true
     private var firstBeat: Bool = true
+    private var audioLengthSamples: AVAudioFramePosition = 0
+    private var startDate: Date = Date()
+    
+    private let timer = Timer.publish(every: 0.0025, on: .main, in: .common).autoconnect()
+    
         
     // MARK: - Functions
     
@@ -231,10 +279,12 @@ class DefaultAudioManager: AudioManager {
         metronome: AVAudioPlayerNode,
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
-        mixerNode: AVAudioMixerNode
+        mixerNode: AVAudioMixerNode,
+        playbackStartTime: Date
     ) {
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
+        playerProgress = CurrentValueSubject(0.0)
         self.audioSession = audioSession
         self.recorder = recorder
         self.players = players
@@ -242,6 +292,7 @@ class DefaultAudioManager: AudioManager {
         self.engine = engine
         self.playbackEngine = playbackEngine
         self.mixerNode = mixerNode
+        self.playbackStartTime = playbackStartTime
         setUpSession()
         setUpEngine()
         setupNotifications()
@@ -274,12 +325,11 @@ class DefaultAudioManager: AudioManager {
         }
                 
         if currentlyPlaying.value != nil {
-            bufferInterrupt = true
+            playerProgress.send(0.0)
             for player in players {
                 player.player.stop()
+                playbackEngine.detach(player.player)
             }
-        } else {
-            bufferInterrupt = false
         }
         
         players.removeAll()
@@ -342,17 +392,13 @@ class DefaultAudioManager: AudioManager {
             ) { _ in
                 Task{ @MainActor in
                     if player.player == self.players.last?.player {
-                        if !self.bufferInterrupt {
-                            self.stopPlayback()
-                            self.currentlyPlaying.send(nil)
-                        }
-                        self.bufferInterrupt = false
+                        self.stopPlayback()
                     }
                 }
             }
             player.player.prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
-            
         }
+        
         if session.isGlobalSoloActive {
             for player in players {
                 if player.track.isSolo {
@@ -363,7 +409,6 @@ class DefaultAudioManager: AudioManager {
             }
         } else {
             for player in players {
-                print("\(player.track.name) \(player.track.isMuted)")
                 if player.track.isMuted {
                     player.player.volume = 0.0
                 } else {
@@ -371,6 +416,7 @@ class DefaultAudioManager: AudioManager {
                 }
             }
         }
+        
         return startTime
     }
     
@@ -428,6 +474,96 @@ class DefaultAudioManager: AudioManager {
         engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
     }
     
+    private func normalizeSoundLevel(level: Float) -> CGFloat {
+        let level = max(0.2, CGFloat(level) + 70) / 2
+        
+        return CGFloat(level * (40/20))
+    }
+    
+    @MainActor private func getImage(for fileName: String, color: Color) throws -> UIImage {
+        let samples = try getWaveform(for: fileName)
+        
+        let renderer = ImageRenderer(
+            content:
+                HStack(spacing: 1.0) {
+                    ForEach(samples) { sample in
+                        Capsule()
+                            .frame(width: 1, height: self.normalizeSoundLevel(level: sample.magnitude))
+                    }
+                    .foregroundStyle(color)
+                }
+        )
+        
+        guard let uiImage = renderer.uiImage else  {
+            return UIImage(imageLiteralResourceName: "")
+        }
+        
+        return uiImage
+    }
+    
+    private func getWaveform(for fileName: String) throws -> [AudioPreviewModel] {
+        let url = DataPersistenceManager.createDocumentURL(
+            withFileName: fileName,
+            fileType: .caf
+        )
+        
+        let audioFile = try AVAudioFile(forReading: url)
+        
+        guard let buffer = AVAudioPCMBuffer(
+            pcmFormat: audioFile.processingFormat,
+            frameCapacity: AVAudioFrameCount(audioFile.length)
+        ) else {
+            assertionFailure("Could not assign buffer")
+            return []
+        }
+        
+        try audioFile.read(into: buffer)
+        
+        guard let floatChannelData = buffer.floatChannelData else {
+            return []
+        }
+        
+        let frameLength = Int(buffer.frameLength)
+        
+        let samples = Array(UnsafeBufferPointer(start: floatChannelData[0], count: frameLength))
+        
+        var result = [AudioPreviewModel]()
+        
+        let chunked = samples.chunked(into: samples.count / Int(UIScreen.main.bounds.width - 300))
+        
+        for row in chunked {
+            var accumulator: Float = 0
+            let newRow = row.map { $0 * $0 }
+            accumulator = newRow.reduce(0, +)
+            let power: Float = accumulator / Float(row.count)
+            let decibles = 10 * log10f(power)
+            
+            result.append(AudioPreviewModel(magnitude: decibles, color: .gray))
+        }
+        
+        return result
+    }
+    
+    private func startTimer() async {
+        do {
+            try await Task.sleep(nanoseconds: 425_000_000)
+        } catch {}
+        startDate = Date()
+        subscription = timer.sink { date in
+            self.playerProgress.send(date.timeIntervalSince(self.startDate))
+        }
+    }
+    
+    private func stopProgress() async {
+        do {
+            try await Task.sleep(nanoseconds: 200_000_000)
+        } catch {}
+        subscription?.cancel()
+        Task { @MainActor in
+            playerProgress.send(0.0)
+        }
+    }
+    
     private func setupNotifications() {
         let nc = NotificationCenter.default
         nc.addObserver(self,
@@ -436,7 +572,7 @@ class DefaultAudioManager: AudioManager {
                        object: nil)
     }
 
-    @objc func handleRouteChange(notification: Notification) {
+    @objc private func handleRouteChange(notification: Notification) {
         // To be implemented.
         guard let inputs = audioSession.availableInputs else {
             assertionFailure("failed to retrieve inputs")
@@ -446,6 +582,14 @@ class DefaultAudioManager: AudioManager {
             try audioSession.setPreferredInput(inputs[0])
         } catch {
             print(error.localizedDescription)
+        }
+    }
+}
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
         }
     }
 }

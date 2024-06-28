@@ -30,18 +30,23 @@ struct CellSpacer: View {
     // MARK: - Body
     
     var body: some View {
-        ZStack {
-            Color.clear
-                .frame(maxWidth: .infinity, minHeight: 150)
-                .frame(height: height)
-                .ignoresSafeArea()
-                .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
-                .background(appTheme.cellColor)
-                .padding(.bottom, -height + 150)
-            if numberOfSessions == 0 {
-                Text("Create your first recording!")
-                    .font(.title)
-                    .offset(y: 300)
+        VStack(spacing: 0.0) {
+            Rectangle()
+                .frame(maxWidth: .infinity, maxHeight: 1.0)
+                .foregroundStyle(appTheme.cellDividerColor)
+            ZStack {
+                Color.clear
+                    .frame(maxWidth: .infinity, minHeight: 150)
+                    .frame(height: height)
+                    .ignoresSafeArea()
+                    .background(.ultraThinMaterial.opacity(appTheme.cellMaterialOpacity))
+                    .background(appTheme.cellColor)
+                    .padding(.bottom, -height + 225)
+                if numberOfSessions == 0 {
+                    Text("Create your first recording!")
+                        .font(.title)
+                        .offset(y: 300)
+                }
             }
         }
     }
