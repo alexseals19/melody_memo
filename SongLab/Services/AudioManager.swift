@@ -210,8 +210,6 @@ class DefaultAudioManager: AudioManager {
         Task {
             await startTimer()
         }
-        
-        
     }
     
     func stopPlayback() {
@@ -544,7 +542,6 @@ class DefaultAudioManager: AudioManager {
         }
         
         return result
-
     }
     
     private func startTimer() async {
