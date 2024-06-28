@@ -14,23 +14,26 @@ struct RecordingCell: View {
     init(
         currentlyPlaying: Session?,
         session: Session,
+        playerProgress: Double,
         playButtonAction: @escaping (_: Session) -> Void,
         stopButtonAction: @escaping () -> Void,
         trashButtonAction: @escaping (_: Session) -> Void
     ) {
         self.currentlyPlaying = currentlyPlaying
         self.session = session
+        self.playerProgress = playerProgress
         self.playButtonAction = playButtonAction
         self.stopButtonAction = stopButtonAction
         self.trashButtonAction = trashButtonAction
     }
     
     // MARK: - Variables
-        
+    
     @EnvironmentObject private var appTheme: AppTheme
     
     private var session: Session
     private var currentlyPlaying: Session?
+    private var playerProgress: Double
     
     private let playButtonAction: (_ session: Session) -> Void
     private let stopButtonAction: () -> Void
@@ -43,6 +46,15 @@ struct RecordingCell: View {
     @State private var offset: CGFloat = 0.0
     @State private var isLinkDisabled: Bool = false
     @State private var twoWayDrag: Bool = false
+    
+    @State private var progressViewWidth: CGFloat = 0.0
+    
+    private var opacity: Double {
+        if let currentlyPlaying, currentlyPlaying == session {
+            return 1.0
+        }
+        return 0.0
+    }
     
     private var trashButtonWidth: Double {
         if gestureOffset != 0 {
@@ -139,6 +151,12 @@ struct RecordingCell: View {
                         }
                         .padding(EdgeInsets(top: 8, leading: 10, bottom: 11, trailing: 0))
                         Spacer()
+
+                        if let currentlyPlaying, currentlyPlaying == session {
+                            ProgressView(value: min(playerProgress / session.length, 1.0))
+                                .progressViewStyle(LinearProgressViewStyle(tint: .primary))
+                                .transition(.scale(0.0, anchor: .trailing).animation(.linear(duration: 0.2)))
+                        }
                     }
                     .padding(.trailing, 80)
                     .foregroundStyle(.primary)
@@ -190,12 +208,12 @@ struct RecordingCell: View {
     }
 }
 
-#Preview {
-    RecordingCell(
-        currentlyPlaying: nil,
-        session: Session.recordingFixture,
-        playButtonAction: {_ in },
-        stopButtonAction: {},
-        trashButtonAction: { _ in }
-    )
-}
+//#Preview {
+//    RecordingCell(
+//        currentlyPlaying: nil,
+//        session: Session.recordingFixture,
+//        playButtonAction: {_ in },
+//        stopButtonAction: {},
+//        trashButtonAction: { _ in }
+//    )
+//}

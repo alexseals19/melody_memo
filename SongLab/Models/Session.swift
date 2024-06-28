@@ -11,14 +11,18 @@ struct Session: Identifiable, Codable, Hashable, Equatable {
     
     let name: String
     let date: Date
-    var length: Duration
+    var length: Double
     var tracks: [UUID: Track]
     let id: UUID
     
     var isGlobalSoloActive: Bool
     
     var lengthDisplayString: String {
-        length.formatted(.time(pattern: .minuteSecond(padMinuteToLength: 2)))
+        let lengthInSeconds = Int(length)
+        let minutes: Int = lengthInSeconds / 60
+        let seconds: Int = lengthInSeconds % 60
+        
+        return String(format: "%02d:%02d", minutes, seconds)
     }
     
     var dateDisplayString: String {
@@ -28,7 +32,7 @@ struct Session: Identifiable, Codable, Hashable, Equatable {
     init(
         name: String,
         date: Date,
-        length: Duration,
+        length: Double,
         tracks: [UUID: Track],
         id: UUID,
         isGlobalSoloActive: Bool

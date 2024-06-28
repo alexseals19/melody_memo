@@ -12,7 +12,7 @@ extension Session {
     static let recordingFixture: Session = Session(
                                             name: "RecordingFixture",
                                             date: Date(),
-                                            length: .seconds(4),
+                                            length: 4,
                                             tracks: [:],
                                             id: UUID(),
                                             isGlobalSoloActive: true)
@@ -21,7 +21,7 @@ extension Session {
         var recs: [Session] = []
         let date = Date()
         for i in 0...50 {
-            recs.append(Session(name: "Session \(i)", date: date, length: .seconds(4), tracks: [:], id: UUID(), isGlobalSoloActive: false))
+            recs.append(Session(name: "Session \(i)", date: date, length: 4, tracks: [:], id: UUID(), isGlobalSoloActive: false))
         }
         return recs
     }()

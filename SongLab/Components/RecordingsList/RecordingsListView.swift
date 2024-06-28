@@ -53,6 +53,7 @@ struct RecordingsListView: View {
                                     RecordingCell(
                                         currentlyPlaying: viewModel.currentlyPlaying,
                                         session: session,
+                                        playerProgress: viewModel.playerProgress,
                                         playButtonAction: viewModel.recordingCellPlayButtonTapped,
                                         stopButtonAction: viewModel.recordingCellStopButtonTapped,
                                         trashButtonAction: viewModel.recordingCellTrashButtonTapped
@@ -62,7 +63,7 @@ struct RecordingsListView: View {
                             CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
                         }
                         .animation(.spring, value: viewModel.sessions)
-                        .padding(.top, 74)
+                        .offset(y: 75.0)
                         .navigationDestination(
                             for: Session.self,
                             destination: { session in
