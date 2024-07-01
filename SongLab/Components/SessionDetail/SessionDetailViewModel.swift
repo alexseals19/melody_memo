@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 class SessionDetailViewModel: ObservableObject {
@@ -30,6 +31,16 @@ class SessionDetailViewModel: ObservableObject {
             .assign(to: &$currentlyPlaying)
         audioManager.playerProgress
             .assign(to: &$progress)
+        trackVolumeSubject
+            .debounce(for: 0.25, scheduler: RunLoop.main)
+            .sink { track in
+                self.session.tracks[track.id]?.volume = track.volume
+                if self.currentlyPlaying != nil {
+                    self.currentlyPlaying = self.session
+                }
+            }
+            .store(in: &cancellables)
+        
     }
     
     func masterCellSoloButtonTapped() {
@@ -117,18 +128,28 @@ class SessionDetailViewModel: ObservableObject {
         }
     }
     
-    func setTrackVolume(for track: Track, volume: Double) {
-        session.tracks[track.id]?.volume = Float(volume)
-        if let trackToAdjust = session.tracks[track.id], currentlyPlaying != nil {
-            audioManager.setTrackVolume(for: trackToAdjust)
-            currentlyPlaying = session
+    func setTrackVolume(for track: Track, volume: Float) {
+        var updatedTrack = track
+        updatedTrack.volume = volume
+        trackVolumeSubject.send(updatedTrack)
+        if currentlyPlaying != nil {
+            audioManager.setTrackVolume(for: updatedTrack)
         }
-        
+    }
+    
+    nonisolated func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
+        do {
+            return try audioManager.getImage(for: fileName, colorScheme: colorScheme)
+        } catch {}
+        return Image(systemName: "doc")
     }
     
     // MARK: - Variables
     
+    private var trackVolumeSubject = PassthroughSubject<Track, Never>()
+    private var cancellables = Set<AnyCancellable>()
     private var recordingManager: RecordingManager
+    
     
     // MARK: - Functions
 }

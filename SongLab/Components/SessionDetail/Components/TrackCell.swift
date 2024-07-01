@@ -21,7 +21,8 @@ struct TrackCell: View {
         progress: Double,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
-        onTrackVolumeChange: @escaping (_: Track, _ : Double) -> Void
+        onTrackVolumeChange: @escaping (_: Track, _ : Float) -> Void,
+        getWaveformImage: @escaping (_: String, _: ColorScheme) -> Image
     ) {
         self.track = track
         self.isGlobalSoloActive = isGlobalSoloActive
@@ -31,6 +32,7 @@ struct TrackCell: View {
         self.muteButtonAction = muteButtonAction
         self.soloButtonAction = soloButtonAction
         self.onTrackVolumeChange = onTrackVolumeChange
+        self.getWaveformImage = getWaveformImage
         self.sliderValue = Double(track.volume)
     }
     
@@ -43,21 +45,14 @@ struct TrackCell: View {
     @State private var sliderValue: Double
     @State private var waveformWidth: CGFloat = UIScreen.main.bounds.width - 205
     
+    @State private var waveform: Image = Image(systemName: "doc")
+    
     private var track: Track
     private var isGlobalSoloActive: Bool
     private var progress: Double
     
     private let session: Session
     private let currentlyPlaying: Session?
-    
-    private var waveform: Image {
-        if let image = UIImage(
-            data: colorScheme == .dark ? track.waveformLight : track.waveformDark
-        ) {
-            return Image(uiImage: image)
-        }
-        return Image("")
-    }
     
     private var progressPercentage: Double {
         if let currentlyPlaying, currentlyPlaying == session {
@@ -72,7 +67,8 @@ struct TrackCell: View {
     
     private let muteButtonAction: (_: Track) -> Void
     private let soloButtonAction: (_: Track) -> Void
-    private let onTrackVolumeChange: (_: Track, _ : Double) -> Void
+    private let onTrackVolumeChange: (_: Track, _ : Float) -> Void
+    private let getWaveformImage: (_: String, _: ColorScheme) -> Image
     
     //MARK: - Body
         
@@ -134,7 +130,8 @@ struct TrackCell: View {
                         .tint(.primary)
                         .padding(.trailing, 10)
                         .onChange(of: sliderValue) {
-                            onTrackVolumeChange(track, sliderValue)
+                            onTrackVolumeChange(track, Float(sliderValue))
+                            
                         }
                 }
             }
@@ -142,6 +139,7 @@ struct TrackCell: View {
             .padding(.vertical, 10)
             .foregroundColor(.primary)
             .background(appTheme.cellBackground)
+            
             Rectangle()
                 .frame(maxWidth: 1, maxHeight: 87)
                 .foregroundStyle(.red)
@@ -150,6 +148,9 @@ struct TrackCell: View {
                     self.currentlyPlaying != nil ? .none : .linear(duration: 0.5).delay(0.25),
                     value: offset
                 )
+        }
+        .onAppear {
+            waveform = getWaveformImage(track.fileName, colorScheme)
         }
     }
 }

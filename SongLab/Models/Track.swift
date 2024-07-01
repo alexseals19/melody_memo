@@ -13,8 +13,6 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
     let fileName: String
     let date: Date
     let length: Double
-    let waveformDark: Data
-    let waveformLight: Data
     let id: UUID
     
     var volume: Float
@@ -34,8 +32,6 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         fileName: String,
         date: Date,
         length: Double,
-        waveformDark: Data,
-        waveformLight: Data,
         id: UUID,
         volume: Float,
         isMuted: Bool,
@@ -45,8 +41,6 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         self.fileName = fileName
         self.date = date
         self.length = length
-        self.waveformDark = waveformDark
-        self.waveformLight = waveformLight
         self.id = id
         self.volume = volume
         self.isMuted = isMuted

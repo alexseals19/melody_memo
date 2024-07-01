@@ -25,6 +25,7 @@ class MockAudioManager: AudioManager {
     func stopMetronome() {}
     func toggleMute(for tracks: [Track]) {}
     func setTrackVolume(for track: Track) {}
+    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {Image(systemName: "doc")}
     
     init() {
         currentlyPlaying = CurrentValueSubject(nil)
