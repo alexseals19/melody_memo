@@ -77,7 +77,8 @@ struct SessionDetailView: View {
                                     progress: viewModel.progress,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
-                                    onTrackVolumeChange: viewModel.setTrackVolume
+                                    onTrackVolumeChange: viewModel.setTrackVolume,
+                                    getWaveformImage: viewModel.getWaveformImage
                                 )
                             }
                         }

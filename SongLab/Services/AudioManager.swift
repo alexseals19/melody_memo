@@ -33,6 +33,7 @@ protocol AudioManager {
     func stopPlayback()
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
+    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
 }
 
 
@@ -73,6 +74,9 @@ class DefaultAudioManager: AudioManager {
             player.player.play(at: startTime)
         }
         recorder.record(atTime: CACurrentMediaTime() + 0.5)
+        Task {
+            await startTimer()
+        }
     }
         
     func stopTracking() async {
@@ -99,23 +103,12 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
-            let waveformLight = try await getImage(for: currentFileName, color: .white)
-            guard let waveformLightData = waveformLight.pngData() else {
-                assertionFailure("Could not get png data")
-                return
-            }
-            let waveformDark = try await getImage(for: currentFileName, color: .black)
-            guard let waveformDarkData = waveformDark.pngData() else {
-                assertionFailure("Could not get png data")
-                return
-            }
+            
             let track = Track(
                 name: "Track 1",
                 fileName: currentFileName,
                 date: Date(),
                 length: Double(durationInSeconds),
-                waveformDark: waveformDarkData,
-                waveformLight: waveformLightData,
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
@@ -146,6 +139,7 @@ class DefaultAudioManager: AudioManager {
         
         recorder.stop()
         stopPlayback()
+        
     
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
@@ -162,23 +156,12 @@ class DefaultAudioManager: AudioManager {
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
             let name = "Track \(session.tracks.count + 1)"
-            let waveformLight = try await getImage(for: currentFileName, color: .white)
-            guard let waveformLightData = waveformLight.pngData() else {
-                assertionFailure("Could not get png data")
-                return
-            }
-            let waveformDark = try await getImage(for: currentFileName, color: .black)
-            guard let waveformDarkData = waveformDark.pngData() else {
-                assertionFailure("Could not get png data")
-                return
-            }
+            
             let track = Track(
                 name: name,
                 fileName: currentFileName,
                 date: Date(),
                 length: Double(durationInSeconds),
-                waveformDark: waveformDarkData,
-                waveformLight: waveformLightData,
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
@@ -247,6 +230,31 @@ class DefaultAudioManager: AudioManager {
         newPlayer.player.volume = track.volume
     }
     
+    @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {        
+        let samples = try getWaveform(for: fileName)
+        
+        var color: Color {
+            colorScheme == .dark ? .white : .black
+        }
+        
+        let renderer = ImageRenderer(
+            content:
+                HStack(spacing: 1.0) {
+                    ForEach(samples) { sample in
+                        Capsule()
+                            .frame(width: 1, height: self.normalizeSoundLevel(level: sample.magnitude))
+                    }
+                    .foregroundStyle(color)
+                }
+        )
+        
+        guard let uiImage = renderer.uiImage else  {
+            return Image(systemName: "doc")
+        }
+        
+        return Image(uiImage: uiImage)
+    }
+    
     
     // MARK: - Variables
     
@@ -267,7 +275,7 @@ class DefaultAudioManager: AudioManager {
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
     
-    private let timer = Timer.publish(every: 0.0025, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.025, on: .main, in: .common).autoconnect()
     
         
     // MARK: - Functions
@@ -478,27 +486,6 @@ class DefaultAudioManager: AudioManager {
         let level = max(0.2, CGFloat(level) + 70) / 2
         
         return CGFloat(level * (40/20))
-    }
-    
-    @MainActor private func getImage(for fileName: String, color: Color) throws -> UIImage {
-        let samples = try getWaveform(for: fileName)
-        
-        let renderer = ImageRenderer(
-            content:
-                HStack(spacing: 1.0) {
-                    ForEach(samples) { sample in
-                        Capsule()
-                            .frame(width: 1, height: self.normalizeSoundLevel(level: sample.magnitude))
-                    }
-                    .foregroundStyle(color)
-                }
-        )
-        
-        guard let uiImage = renderer.uiImage else  {
-            return UIImage(imageLiteralResourceName: "")
-        }
-        
-        return uiImage
     }
     
     private func getWaveform(for fileName: String) throws -> [AudioPreviewModel] {
