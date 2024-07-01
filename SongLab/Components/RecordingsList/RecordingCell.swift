@@ -148,6 +148,7 @@ struct RecordingCell: View {
                                 Text(session.dateDisplayString)
                                     .font(.caption2)
                             }
+                            .foregroundStyle(.secondary)
                         }
                         .padding(EdgeInsets(top: 8, leading: 10, bottom: 11, trailing: 0))
                         Spacer()

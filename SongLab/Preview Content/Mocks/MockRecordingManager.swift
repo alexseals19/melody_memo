@@ -12,7 +12,7 @@ class MockRecordingManager: RecordingManager {
     var sessions: CurrentValueSubject<[Session], Never>
         
     func removeSession(_ session: Session) throws {}
-    func removeTrack(_ track: Track) throws {}
+    func removeTrack(_ session: Session, _ track: Track) throws {}
     func saveSession(_ recording: Session) throws {}
         
     init() {

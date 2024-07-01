@@ -14,6 +14,7 @@ extension Session {
                                             date: Date(),
                                             length: 4,
                                             tracks: [:],
+                                            absoluteTrackCount: 0,
                                             id: UUID(),
                                             isGlobalSoloActive: true)
     
@@ -21,7 +22,17 @@ extension Session {
         var recs: [Session] = []
         let date = Date()
         for i in 0...50 {
-            recs.append(Session(name: "Session \(i)", date: date, length: 4, tracks: [:], id: UUID(), isGlobalSoloActive: false))
+            recs.append(
+                Session(
+                    name: "Session \(i)",
+                    date: date,
+                    length: 4,
+                    tracks: [:],
+                    absoluteTrackCount: 0,
+                    id: UUID(),
+                    isGlobalSoloActive: false
+                )
+            )
         }
         return recs
     }()

@@ -19,6 +19,13 @@ class SessionDetailViewModel: ObservableObject {
     @Published var progress: Double = 0.0
     
     let audioManager: AudioManager
+    var isSessionPlaying: Bool {
+        if let currentlyPlaying, currentlyPlaying == session {
+            return true
+        } else {
+            return false
+        }
+    }
             
     init(recordingManager: RecordingManager, audioManager: AudioManager, session: Session) {
         self.session = session
@@ -112,7 +119,15 @@ class SessionDetailViewModel: ObservableObject {
         audioManager.stopPlayback()
     }
     
-    func trackCellTrashButtonTapped(for session: Session) {
+    func trackCellTrashButtonTapped(for track: Track) {
+        do {
+            try recordingManager.removeTrack(session, track)
+        } catch {
+            // TODO: Handle Error
+        }
+    }
+    
+    func sessionTrashButtonTapped() {
         do {
             try recordingManager.removeSession(session)
         } catch {
@@ -141,7 +156,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             return try audioManager.getImage(for: fileName, colorScheme: colorScheme)
         } catch {}
-        return Image(systemName: "doc")
+        return Image(systemName: "waveform")
     }
     
     // MARK: - Variables

@@ -13,6 +13,7 @@ struct Session: Identifiable, Codable, Hashable, Equatable {
     let date: Date
     var length: Double
     var tracks: [UUID: Track]
+    var absoluteTrackCount: Int
     let id: UUID
     
     var isGlobalSoloActive: Bool
@@ -34,6 +35,7 @@ struct Session: Identifiable, Codable, Hashable, Equatable {
         date: Date,
         length: Double,
         tracks: [UUID: Track],
+        absoluteTrackCount: Int,
         id: UUID,
         isGlobalSoloActive: Bool
     ) {
@@ -41,6 +43,7 @@ struct Session: Identifiable, Codable, Hashable, Equatable {
         self.date = date
         self.length = length
         self.tracks = tracks
+        self.absoluteTrackCount = absoluteTrackCount
         self.id = id
         self.isGlobalSoloActive = isGlobalSoloActive
     }

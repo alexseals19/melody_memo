@@ -11,7 +11,7 @@ import Foundation
 protocol RecordingManager {
     var sessions: CurrentValueSubject<[Session], Never> { get }
     func removeSession(_ recording: Session) throws
-    func removeTrack(_ track: Track) throws
+    func removeTrack(_ session: Session, _ track: Track) throws
     func saveSession(_ recording: Session) throws
 }
 
@@ -22,6 +22,8 @@ final class DefaultRecordingManager: RecordingManager {
     static let shared = DefaultRecordingManager()
     
     var sessions: CurrentValueSubject<[Session], Never>
+    
+    var absoluteSessionCount: Int
     
     func removeSession(_ session: Session) throws {
         Task { @MainActor in
@@ -35,11 +37,18 @@ final class DefaultRecordingManager: RecordingManager {
         }
     }
     
-    func removeTrack(_ track: Track) throws {
+    func removeTrack(_ session: Session, _ track: Track) throws {
         Task { @MainActor in
+            
+            var updatedSession = session
+            updatedSession.tracks.removeValue(forKey: track.id)
+            
             var updatedRecordings = sessions.value
-            updatedRecordings.removeAll { $0.id == track.id }
-            try DataPersistenceManager.delete(track.name, fileType: .caf)
+            updatedRecordings.removeAll { $0.id == session.id }
+            updatedRecordings.append(updatedSession)
+            
+            try DataPersistenceManager.delete(track.fileName, fileType: .caf)
+            
             try DataPersistenceManager.save(updatedRecordings, to: "sessions")
             sessions.send(updatedRecordings)
         }
@@ -67,6 +76,13 @@ final class DefaultRecordingManager: RecordingManager {
         }
     }
     
+    func incrementAbsoluteSessionCount() {
+        absoluteSessionCount += 1
+        do {
+            try DataPersistenceManager.save(absoluteSessionCount, to: "session_count")
+        } catch {}
+    }
+    
     // MARK: - Functions
     
     private init() {
@@ -77,8 +93,16 @@ final class DefaultRecordingManager: RecordingManager {
             }
             )
             
+            absoluteSessionCount = try DataPersistenceManager.retrieve(Int.self, from: "session_count")
+            
         } catch {
             sessions = CurrentValueSubject([])
+            absoluteSessionCount = 0
         }
     }
+    
+    // MARK: - Variables
+    
+    
+        
 }
