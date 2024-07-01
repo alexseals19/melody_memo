@@ -16,23 +16,23 @@ struct TrackCell: View {
     init(
         track: Track,
         isGlobalSoloActive: Bool,
-        session: Session,
-        currentlyPlaying: Session?,
+        isSessionPlaying: Bool,
         progress: Double,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
         onTrackVolumeChange: @escaping (_: Track, _ : Float) -> Void,
-        getWaveformImage: @escaping (_: String, _: ColorScheme) -> Image
+        getWaveformImage: @escaping (_: String, _: ColorScheme) -> Image,
+        trashButtonAction: @escaping (_: Track) -> Void
     ) {
         self.track = track
         self.isGlobalSoloActive = isGlobalSoloActive
-        self.session = session
-        self.currentlyPlaying = currentlyPlaying
+        self.isSessionPlaying = isSessionPlaying
         self.progress = progress
         self.muteButtonAction = muteButtonAction
         self.soloButtonAction = soloButtonAction
         self.onTrackVolumeChange = onTrackVolumeChange
         self.getWaveformImage = getWaveformImage
+        self.trashButtonAction = trashButtonAction
         self.sliderValue = Double(track.volume)
     }
     
@@ -44,21 +44,16 @@ struct TrackCell: View {
     
     @State private var sliderValue: Double
     @State private var waveformWidth: CGFloat = UIScreen.main.bounds.width - 205
-    
-    @State private var waveform: Image = Image(systemName: "doc")
+    @State private var waveform: Image = Image(systemName: "waveform")
     
     private var track: Track
     private var isGlobalSoloActive: Bool
     private var progress: Double
     
-    private let session: Session
-    private let currentlyPlaying: Session?
+    private let isSessionPlaying: Bool
     
     private var progressPercentage: Double {
-        if let currentlyPlaying, currentlyPlaying == session {
-            return min(progress / track.length, 1.0)
-        }
-        return 0.0
+        isSessionPlaying ? min(progress / track.length, 1.0) : 0.0
     }
     
     private var offset: Double {
@@ -69,6 +64,7 @@ struct TrackCell: View {
     private let soloButtonAction: (_: Track) -> Void
     private let onTrackVolumeChange: (_: Track, _ : Float) -> Void
     private let getWaveformImage: (_: String, _: ColorScheme) -> Image
+    private let trashButtonAction: (_: Track) -> Void
     
     //MARK: - Body
         
@@ -83,6 +79,7 @@ struct TrackCell: View {
                                 .lineLimit(1)
                             Text(track.lengthDisplayString)
                                 .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
@@ -122,10 +119,7 @@ struct TrackCell: View {
                 }
                 Divider()
                 HStack {
-                    Image(systemName: "dial.medium")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 26, height: 26)
+                    TrackCellButtonImage("speaker.wave.2")
                     Slider(value: $sliderValue)
                         .tint(.primary)
                         .padding(.trailing, 10)
@@ -133,6 +127,13 @@ struct TrackCell: View {
                             onTrackVolumeChange(track, Float(sliderValue))
                             
                         }
+                    Button {
+                        trashButtonAction(track)
+                    } label: {
+                        TrackCellButtonImage("trash")
+                    }
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 10)
                 }
             }
             .padding(.horizontal, 20)
@@ -145,7 +146,7 @@ struct TrackCell: View {
                 .foregroundStyle(.red)
                 .offset(x: offset, y: -25)
                 .animation(
-                    self.currentlyPlaying != nil ? .none : .linear(duration: 0.5).delay(0.25),
+                    isSessionPlaying ? .none : .linear(duration: 0.5).delay(0.25),
                     value: offset
                 )
         }
@@ -165,7 +166,8 @@ struct TrackCellButtonImage: View {
     var body: some View {
         Image(systemName: imageName)
             .resizable()
-            .frame(width: 24, height: 24)
             .aspectRatio(contentMode: .fit)
+            .frame(width: 24, height: 24)
+            
     }
 }

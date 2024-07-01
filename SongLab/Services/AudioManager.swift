@@ -115,14 +115,16 @@ class DefaultAudioManager: AudioManager {
                 isSolo: false
             )
             let session = Session(
-                name: "Session \(DefaultRecordingManager.shared.sessions.value.count + 1)",
+                name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
                 date: Date(),
                 length: Double(durationInSeconds),
                 tracks: [track.id : track],
+                absoluteTrackCount: 1,
                 id: UUID(),
                 isGlobalSoloActive: false
             )
             try DefaultRecordingManager.shared.saveSession(session)
+            DefaultRecordingManager.shared.incrementAbsoluteSessionCount()
         } catch {
             print(error.localizedDescription)
         }
@@ -155,7 +157,7 @@ class DefaultAudioManager: AudioManager {
             let audioAsset = AVURLAsset(url: url, options: nil)
             let duration = try await audioAsset.load(.duration)
             let durationInSeconds = CMTimeGetSeconds(duration)
-            let name = "Track \(session.tracks.count + 1)"
+            let name = "Track \(session.absoluteTrackCount + 1)"
             
             let track = Track(
                 name: name,
@@ -169,6 +171,7 @@ class DefaultAudioManager: AudioManager {
             )
             
             updatedSession.tracks[track.id] = track
+            updatedSession.absoluteTrackCount += 1
             
             if track.length > updatedSession.length {
                 updatedSession.length = track.length

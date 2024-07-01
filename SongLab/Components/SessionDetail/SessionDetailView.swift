@@ -50,7 +50,17 @@ struct SessionDetailView: View {
                 Text(viewModel.session.name)
                     .font(.largeTitle)
                 Spacer()
-                backButton.opacity(0.0)
+                Button {
+                    viewModel.sessionTrashButtonTapped()
+                    dismiss()
+                } label: {
+                    Image(systemName: "trash")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                }
+                .foregroundStyle(.primary)
+                .padding(15)
             }
             .background(appTheme.cellBackground)
             
@@ -72,13 +82,13 @@ struct SessionDetailView: View {
                                 TrackCell(
                                     track: track,
                                     isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
-                                    session: viewModel.session,
-                                    currentlyPlaying: viewModel.currentlyPlaying,
+                                    isSessionPlaying: viewModel.isSessionPlaying,
                                     progress: viewModel.progress,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     onTrackVolumeChange: viewModel.setTrackVolume,
-                                    getWaveformImage: viewModel.getWaveformImage
+                                    getWaveformImage: viewModel.getWaveformImage,
+                                    trashButtonAction: viewModel.trackCellTrashButtonTapped
                                 )
                             }
                         }
@@ -93,16 +103,15 @@ struct SessionDetailView: View {
             Spacer()
         }
         .navigationBarBackButtonHidden()
+        .offset(y: 75.0)
+        .background(appTheme.backgroundImage)
         .opacity(opacity)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.5)) {
                 self.opacity = 1.0
             }
         }
-        .offset(y: 75.0)
-        .background(appTheme.backgroundImage)
         .ignoresSafeArea()
-        
     }
     
     var backButton: some View {
