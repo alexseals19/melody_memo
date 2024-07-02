@@ -53,17 +53,19 @@ struct MasterCell: View {
                                 Button {
                                     globalSoloButtonAction()
                                 } label: {
-                                    if session.isGlobalSoloActive {
-                                        Image(systemName: "s.square.fill")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 24, height: 24)
-                                            .foregroundStyle(.purple)
-                                    } else {
-                                        Image(systemName: "s.square")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 24, height: 24)
+                                    HStack {
+                                        if session.isGlobalSoloActive {
+                                            Image(systemName: "s.square.fill")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 24, height: 24)
+                                                .foregroundStyle(.purple)
+                                        } else {
+                                            Image(systemName: "s.square")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 24, height: 24)
+                                        }
                                     }
                                 }
                             }

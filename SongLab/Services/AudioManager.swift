@@ -112,7 +112,8 @@ class DefaultAudioManager: AudioManager {
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
-                isSolo: false
+                isSolo: false,
+                soloOverride: false
             )
             let session = Session(
                 name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
@@ -167,7 +168,8 @@ class DefaultAudioManager: AudioManager {
                 id: UUID(),
                 volume: 1.0,
                 isMuted: false,
-                isSolo: false
+                isSolo: false,
+                soloOverride: false
             )
             
             updatedSession.tracks[track.id] = track
@@ -413,7 +415,11 @@ class DefaultAudioManager: AudioManager {
         if session.isGlobalSoloActive {
             for player in players {
                 if player.track.isSolo {
-                    player.player.volume = player.track.volume
+                    if player.track.isMuted, !player.track.soloOverride {
+                        player.player.volume = 0.0
+                    } else {
+                        player.player.volume = player.track.volume
+                    }
                 } else {
                     player.player.volume = 0.0
                 }

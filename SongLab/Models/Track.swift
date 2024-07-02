@@ -18,6 +18,7 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
     var volume: Float
     var isMuted: Bool
     var isSolo: Bool
+    var soloOverride: Bool
     
     var lengthDisplayString: String {
         let lengthInSeconds = Int(length)
@@ -35,7 +36,8 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         id: UUID,
         volume: Float,
         isMuted: Bool,
-        isSolo: Bool
+        isSolo: Bool,
+        soloOverride: Bool
     ) {
         self.name = name
         self.fileName = fileName
@@ -45,6 +47,7 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         self.volume = volume
         self.isMuted = isMuted
         self.isSolo = isSolo
+        self.soloOverride = soloOverride
     }
 }
 

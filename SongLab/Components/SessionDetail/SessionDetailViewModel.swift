@@ -52,14 +52,16 @@ class SessionDetailViewModel: ObservableObject {
     
     func masterCellSoloButtonTapped() {
         session.isGlobalSoloActive.toggle()
-        if session.isGlobalSoloActive {
-            let tracksToMute = session.tracks.values.filter( { $0.isSolo == false } )
-            audioManager.toggleMute(for: tracksToMute)
-        } else {
-            let tracksToUnmute = session.tracks.values.filter( { $0.isSolo == false } )
-            audioManager.toggleMute(for: tracksToUnmute)
+        for track in session.tracks.values {
+            if track.soloOverride {
+                session.tracks[track.id]?.soloOverride.toggle()
+            } else if track.isMuted, track.isSolo, session.isGlobalSoloActive {
+                session.tracks[track.id]?.soloOverride.toggle()
+            }
         }
         if currentlyPlaying != nil {
+            let tracksToToggle = session.tracks.values.filter( { $0.isSolo == false } )
+            audioManager.toggleMute(for: tracksToToggle)
             currentlyPlaying = session
         }
     }
@@ -74,6 +76,9 @@ class SessionDetailViewModel: ObservableObject {
     
     func trackCellMuteButtonTapped(for track: Track) {
         session.tracks[track.id]?.isMuted.toggle()
+        if track.isMuted {
+            session.tracks[track.id]?.soloOverride = false
+        }
         if currentlyPlaying != nil {
             if !session.isGlobalSoloActive {
                 audioManager.toggleMute(for: Array(arrayLiteral: track))
@@ -84,27 +89,24 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func trackCellSoloButtonTapped(for track: Track) {
+        
         if !session.isGlobalSoloActive {
-            for track in session.tracks.values {
+            session.tracks[track.id]?.isSolo = true
+            let otherTracks = session.tracks.filter { $0.key != track.id }
+            for track in otherTracks.values {
                 session.tracks[track.id]?.isSolo = false
             }
-        }
-        session.tracks[track.id]?.isSolo.toggle()
-        
-        guard let isSolo = session.tracks[track.id]?.isSolo else {
-            assertionFailure("Unable to locate track with id: \(track.id).")
-            return
-        }
-                
-        if isSolo {
-            if track.isMuted {
-                trackCellMuteButtonTapped(for: track)
-            }
-            session.isGlobalSoloActive = true
+            masterCellSoloButtonTapped()
         } else {
-            let otherSoloTracks = session.tracks.filter { $0.key != track.id && $0.value.isSolo }
+            session.tracks[track.id]?.isSolo.toggle()
+            let otherSoloTracks = session.tracks.filter { $0.value.isSolo }
             if otherSoloTracks.isEmpty {
                 session.isGlobalSoloActive = false
+                session.tracks[track.id]?.soloOverride = false
+            } else if otherSoloTracks.contains(where: { $0.key == track.id } ), track.isMuted {
+                session.tracks[track.id]?.soloOverride = true
+            } else {
+                session.tracks[track.id]?.soloOverride = false
             }
         }
         

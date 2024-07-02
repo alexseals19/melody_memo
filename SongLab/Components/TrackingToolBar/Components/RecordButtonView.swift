@@ -27,7 +27,6 @@ struct RecordButtonView: View {
     @State private var reordButtonOpacity = 1.0
     @State private var recordButtonDimensions: CGFloat = 65
     @State private var recordButtonCornerRadius: CGFloat = 32.5
-    @State private var buttonToggle: Bool = false
     
     @Namespace private var namespace
     

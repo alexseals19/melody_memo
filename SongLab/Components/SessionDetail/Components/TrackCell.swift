@@ -45,6 +45,7 @@ struct TrackCell: View {
     @State private var sliderValue: Double
     @State private var waveformWidth: CGFloat = UIScreen.main.bounds.width - 205
     @State private var waveform: Image = Image(systemName: "waveform")
+    @State private var muteButtonOpacity: Double = 0.75
     
     private var track: Track
     private var isGlobalSoloActive: Bool
@@ -58,6 +59,14 @@ struct TrackCell: View {
     
     private var offset: Double {
         return (waveformWidth / -2.0) + (waveformWidth * progressPercentage)
+    }
+    
+    private var trackOpacity: Double {
+        if isGlobalSoloActive, !track.isSolo {
+            return 0.45
+        } else {
+            return 1.0
+        }
     }
     
     private let muteButtonAction: (_: Track) -> Void
@@ -87,8 +96,10 @@ struct TrackCell: View {
                     Spacer()
                     waveform
                         .resizable()
+                        .opacity(trackOpacity)
                         .aspectRatio(contentMode: .fit)
                         .frame(width: UIScreen.main.bounds.width - 205, height: 70)
+                        .animation(.linear(duration: 0.25), value: trackOpacity)
                         
                     Spacer()
                     HStack {
@@ -107,7 +118,21 @@ struct TrackCell: View {
                         Button {
                             muteButtonAction(track)
                         } label: {
-                            if track.isMuted {
+                            if track.isMuted, track.soloOverride {
+                                TrackCellButtonImage("m.square.fill")
+                                    .foregroundStyle(.pink)
+                                    .opacity(muteButtonOpacity)
+                                    .onAppear {
+                                        withAnimation(
+                                            .easeInOut(duration: 0.75)
+                                            .repeatForever(autoreverses: true)) {
+                                                muteButtonOpacity = 0.25
+                                            }
+                                    }
+                                    .onDisappear {
+                                        muteButtonOpacity = 0.75
+                                    }
+                            } else if track.isMuted {
                                 TrackCellButtonImage("m.square.fill")
                                     .foregroundStyle(.pink)
                             } else {
@@ -149,6 +174,8 @@ struct TrackCell: View {
                     isSessionPlaying ? .none : .linear(duration: 0.5).delay(0.25),
                     value: offset
                 )
+                .opacity(trackOpacity)
+                .animation(.linear(duration: 0.25), value: trackOpacity)
         }
         .onAppear {
             waveform = getWaveformImage(track.fileName, colorScheme)
