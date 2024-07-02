@@ -17,7 +17,7 @@ struct TrackCell: View {
         track: Track,
         isGlobalSoloActive: Bool,
         isSessionPlaying: Bool,
-        progress: Double,
+        trackTimer: Double,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
         onTrackVolumeChange: @escaping (_: Track, _ : Float) -> Void,
@@ -27,7 +27,7 @@ struct TrackCell: View {
         self.track = track
         self.isGlobalSoloActive = isGlobalSoloActive
         self.isSessionPlaying = isSessionPlaying
-        self.progress = progress
+        self.trackTimer = trackTimer
         self.muteButtonAction = muteButtonAction
         self.soloButtonAction = soloButtonAction
         self.onTrackVolumeChange = onTrackVolumeChange
@@ -49,12 +49,12 @@ struct TrackCell: View {
     
     private var track: Track
     private var isGlobalSoloActive: Bool
-    private var progress: Double
+    private var trackTimer: Double
     
     private let isSessionPlaying: Bool
     
     private var progressPercentage: Double {
-        isSessionPlaying ? min(progress / track.length, 1.0) : 0.0
+        isSessionPlaying ? min(trackTimer / track.length, 1.0) : 0.0
     }
     
     private var offset: Double {
@@ -150,7 +150,6 @@ struct TrackCell: View {
                         .padding(.trailing, 10)
                         .onChange(of: sliderValue) {
                             onTrackVolumeChange(track, Float(sliderValue))
-                            
                         }
                     Button {
                         trashButtonAction(track)

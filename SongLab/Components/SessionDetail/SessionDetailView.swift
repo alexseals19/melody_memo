@@ -83,7 +83,7 @@ struct SessionDetailView: View {
                                     track: track,
                                     isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
                                     isSessionPlaying: viewModel.isSessionPlaying,
-                                    progress: viewModel.progress,
+                                    trackTimer: viewModel.trackTimer,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     onTrackVolumeChange: viewModel.setTrackVolume,
