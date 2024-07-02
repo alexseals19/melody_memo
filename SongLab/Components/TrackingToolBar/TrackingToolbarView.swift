@@ -12,15 +12,20 @@ struct TrackingToolbarView: View {
     //MARK: - API
     @Binding var isSettingsPresented: Bool
     @Binding var isRecording: Bool
+    var inputSamples: [Float]?
     
     init(
         audioManager: AudioManager,
         isRecording: Binding<Bool>,
-        isSettingsPresented: Binding<Bool>
+        isSettingsPresented: Binding<Bool>,
+        inputSamples: [Float]?,
+        trackTimer: Double
     ) {
         _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager))
         _isRecording = isRecording
         _isSettingsPresented = isSettingsPresented
+        self.inputSamples = inputSamples
+        self.trackTimer = trackTimer
     }
     
     //MARK: - Variables
@@ -28,17 +33,33 @@ struct TrackingToolbarView: View {
     @EnvironmentObject private var appTheme: AppTheme
     
     @StateObject private var viewModel: TrackingToolbarViewModel
+    
+    private var trackTimer: Double
+    
+    private var timerDisplay: String {
+        let minutes: Int = Int(trackTimer) / 60
+        let seconds: Int = Int(trackTimer) % 60
+        let miliseconds: Int = Int(modf(trackTimer).1 * 100)
+        
+        return String(format: "%02d:%02d.%02d", minutes, seconds, miliseconds)
+    }
         
     //MARK: - Body
     
     var body: some View {
-        HStack {
-            MetronomeView()
-                .padding(.leading)
-            RecordButtonView(isRecording: $isRecording)
-                .padding(.horizontal, 25)
-            appSettingsButton
-                .padding(.trailing)
+        VStack {
+            HStack {
+                MetronomeView()
+                    .padding(.leading)
+                RecordButtonView(isRecording: $isRecording, inputLevel: inputSamples)
+                appSettingsButton
+                    .padding(.trailing)
+            }
+            if isRecording {
+                Text(timerDisplay)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .background(
             ZStack {
@@ -72,6 +93,8 @@ struct TrackingToolbarView: View {
     TrackingToolbarView(
         audioManager: MockAudioManager(), 
         isRecording: .constant(false),
-        isSettingsPresented: .constant(false)
+        isSettingsPresented: .constant(false),
+        inputSamples: nil,
+        trackTimer: 0.0
         )
 }

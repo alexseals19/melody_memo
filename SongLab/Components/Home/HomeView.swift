@@ -35,13 +35,15 @@ struct HomeView: View {
             )
             VStack {
                 HomeViewNavBarView()
+                
                 Spacer()
                 TrackingToolbarView(
                     audioManager: viewModel.audioManager,
                     isRecording: $viewModel.isRecording,
-                    isSettingsPresented: $viewModel.isSettingsPresented
+                    isSettingsPresented: $viewModel.isSettingsPresented,
+                    inputSamples: viewModel.inputSamples,
+                    trackTimer: viewModel.trackTimer
                 )
-                
             }
         }
         .sheet(isPresented: $viewModel.isSettingsPresented) {

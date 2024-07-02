@@ -16,7 +16,7 @@ class SessionDetailViewModel: ObservableObject {
     
     @Published var currentlyPlaying: Session?
     @Published var session: Session
-    @Published var progress: Double = 0.0
+    @Published var trackTimer: Double = 0.0
     
     let audioManager: AudioManager
     var isSessionPlaying: Bool {
@@ -37,7 +37,7 @@ class SessionDetailViewModel: ObservableObject {
         audioManager.currentlyPlaying
             .assign(to: &$currentlyPlaying)
         audioManager.playerProgress
-            .assign(to: &$progress)
+            .assign(to: &$trackTimer)
         trackVolumeSubject
             .debounce(for: 0.25, scheduler: RunLoop.main)
             .sink { track in
@@ -47,7 +47,6 @@ class SessionDetailViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
     }
     
     func masterCellSoloButtonTapped() {
@@ -154,7 +153,7 @@ class SessionDetailViewModel: ObservableObject {
         }
     }
     
-    nonisolated func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
+    func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
         do {
             return try audioManager.getImage(for: fileName, colorScheme: colorScheme)
         } catch {}

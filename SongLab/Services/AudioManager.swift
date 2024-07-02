@@ -21,10 +21,12 @@ struct AudioPreviewModel: Hashable, Identifiable {
     var id = UUID()
 }
 
+@MainActor
 protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
+    var inputSamples: CurrentValueSubject<[Float]?, Never> { get }
     func startTracking() throws
     func startTracking(for session: Session) throws
     func stopTracking() async
@@ -36,7 +38,7 @@ protocol AudioManager {
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
 }
 
-
+@MainActor
 class DefaultAudioManager: AudioManager {
     
     // MARK: - API
@@ -55,12 +57,16 @@ class DefaultAudioManager: AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
+    var inputSamples: CurrentValueSubject<[Float]?, Never>
     var subscription: AnyCancellable?
     
     func startTracking() throws {
         try setupRecorder()
         isRecording.send(true)
-        recorder.record()
+        Task {
+            await startMetering()
+        }
+        recorder.record(atTime: CACurrentMediaTime() + 0.5)
     }
     
     func startTracking(for session: Session) throws {
@@ -75,7 +81,7 @@ class DefaultAudioManager: AudioManager {
         }
         recorder.record(atTime: CACurrentMediaTime() + 0.5)
         Task {
-            await startTimer()
+            await startMetering()
         }
     }
         
@@ -84,6 +90,7 @@ class DefaultAudioManager: AudioManager {
         defer { currentFileName = nil }
         
         Task { @MainActor in
+            await stopMetering()
             isRecording.send(false)
         }
         
@@ -137,6 +144,7 @@ class DefaultAudioManager: AudioManager {
         var updatedSession = session
         
         Task { @MainActor in
+            await stopMetering()
             isRecording.send(false)
         }
         
@@ -211,7 +219,7 @@ class DefaultAudioManager: AudioManager {
         playbackEngine.stop()
         players.removeAll()
         Task {
-            await stopProgress()
+            await stopTimer()
         }
     }
     
@@ -280,7 +288,7 @@ class DefaultAudioManager: AudioManager {
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
     
-    private let timer = Timer.publish(every: 0.025, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     
         
     // MARK: - Functions
@@ -298,6 +306,7 @@ class DefaultAudioManager: AudioManager {
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
         playerProgress = CurrentValueSubject(0.0)
+        inputSamples = CurrentValueSubject(nil)
         self.audioSession = audioSession
         self.recorder = recorder
         self.players = players
@@ -463,6 +472,7 @@ class DefaultAudioManager: AudioManager {
         recorder = try AVAudioRecorder(url: url, settings: settings)
         
         recorder.prepareToRecord()
+        recorder.isMeteringEnabled = true
     }
     
     private func setUpEngine() {
@@ -540,6 +550,41 @@ class DefaultAudioManager: AudioManager {
         return result
     }
     
+    private func startMetering() async {
+        inputSamples.send([])
+        startDate = Date()
+        do {
+            try await Task.sleep(nanoseconds: 425_000_000)
+        } catch {}
+        subscription = timer.sink { date in
+            self.recorder.updateMeters()
+            guard var updatedSamples: [Float] = self.inputSamples.value else {
+                return
+            }
+            let power = self.recorder.averagePower(forChannel: 0)
+            if power > -80.0 {
+                updatedSamples.append(power)
+            } else {
+                updatedSamples.append(-80.0)
+            }
+            
+            if updatedSamples.count > 77 {
+                updatedSamples.removeFirst()
+            }
+            self.inputSamples.send(updatedSamples)
+            self.playerProgress.send(date.timeIntervalSince(self.startDate))
+        }
+    }
+    
+    private func stopMetering() async {
+        do {
+            try await Task.sleep(nanoseconds: 200_000_000)
+        } catch {}
+        subscription?.cancel()
+        inputSamples.send(nil)
+        playerProgress.send(0.0)
+    }
+    
     private func startTimer() async {
         do {
             try await Task.sleep(nanoseconds: 425_000_000)
@@ -550,14 +595,12 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func stopProgress() async {
+    private func stopTimer() async {
         do {
             try await Task.sleep(nanoseconds: 200_000_000)
         } catch {}
         subscription?.cancel()
-        Task { @MainActor in
-            playerProgress.send(0.0)
-        }
+        playerProgress.send(0.0)
     }
     
     private func setupNotifications() {

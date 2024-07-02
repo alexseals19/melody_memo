@@ -15,8 +15,9 @@ struct RecordButtonView: View {
     
     @EnvironmentObject var appTheme: AppTheme
     
-    init(isRecording: Binding<Bool>) {
+    init(isRecording: Binding<Bool>, inputLevel: [Float]?) {
         _isRecording = isRecording
+        self.inputSamples = inputLevel
     }
     
     // MARK: - Variables
@@ -27,6 +28,15 @@ struct RecordButtonView: View {
     @State private var reordButtonOpacity = 1.0
     @State private var recordButtonDimensions: CGFloat = 65
     @State private var recordButtonCornerRadius: CGFloat = 32.5
+    
+    private var inputSamples: [Float]?
+    private var samples: [Float] {
+        if let inputSamples {
+            return inputSamples
+        } else {
+            return []
+        }
+    }
     
     @Namespace private var namespace
     
@@ -66,11 +76,21 @@ struct RecordButtonView: View {
                 .foregroundStyle(appTheme.recordButtonColor)
                 .shadow(color: .pink, radius: appTheme.shadowRadius)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
+                .padding(25)
             
             if isRecording {
-                HStack {
-                    Spacer()
-                        .frame(width: 140)
+                HStack(spacing: 5.0) {
+                    HStack(spacing: 1.0) {
+                        ForEach(samples, id: \.self) { sampleHeight in
+                            Capsule()
+                                .frame(width: 1.0, height: CGFloat(pow((sampleHeight + 80) / 10, 2)))
+                                .foregroundStyle(.white)
+                        }
+                        Spacer()
+                            .frame(minWidth: 0.0)
+                    }
+                    .frame(width: 155, height: 55)
+                    .clipped()
                     RoundedRectangle(cornerRadius: stopButtonCornerRadius)
                         .frame(width: stopButtonDimensions, height: stopButtonDimensions)
                         .foregroundColor(.red)
@@ -83,6 +103,7 @@ struct RecordButtonView: View {
                                 }
                         }
                         .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
+                        .padding(.trailing, 25)
                 }
             }
         }
@@ -90,5 +111,5 @@ struct RecordButtonView: View {
 }
 
 #Preview {
-    RecordButtonView(isRecording: .constant(false))
+    RecordButtonView(isRecording: .constant(false), inputLevel: nil)
 }

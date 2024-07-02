@@ -17,6 +17,8 @@ class HomeViewModel: ObservableObject {
     
     @Published var selectedSession: Session?
     @Published var isSettingsPresented: Bool = false
+    @Published var inputSamples: [Float]?
+    @Published var trackTimer: Double = 0.0
     @Published var isRecording: Bool = false {
         didSet {
             if isRecording {
@@ -60,6 +62,10 @@ class HomeViewModel: ObservableObject {
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
             .assign(to: &$selectedSession)  
+        audioManager.inputSamples
+            .assign(to: &$inputSamples)
+        audioManager.playerProgress
+            .assign(to: &$trackTimer)
     }
     
     // MARK: - Variables
