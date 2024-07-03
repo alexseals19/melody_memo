@@ -13,11 +13,15 @@ class TrackingToolbarViewModel: ObservableObject {
     
     //MARK: - API
     
-    init(audioManager: AudioManager) {
+    
+    init(audioManager: AudioManager, metronome: Metronome) {
         self.audioManager = audioManager
+        self.metronome = metronome
+        
     }
     
     // MARK: - Variables
     
     private let audioManager: AudioManager
+    private let metronome: Metronome
 }

@@ -42,12 +42,18 @@ struct HomeView: View {
                     isRecording: $viewModel.isRecording,
                     isSettingsPresented: $viewModel.isSettingsPresented,
                     inputSamples: viewModel.inputSamples,
-                    trackTimer: viewModel.trackTimer
+                    trackTimer: viewModel.trackTimer,
+                    metronome: viewModel.metronome,
+                    isMetronomeArmed: $viewModel.isMetronomeArmed,
+                    metronomeBpm: viewModel.metronomeBpm
                 )
             }
         }
         .sheet(isPresented: $viewModel.isSettingsPresented) {
-            AppSettingsView(metronome: viewModel.metronome)
+            AppSettingsView(metronome: viewModel.metronome, metronomeBpm: $viewModel.metronomeBpm, isCountInActive: $viewModel.isCountInActive)
+                .onDisappear {
+                    viewModel.metronome.saveSettings()
+                }
         }
     }
 }

@@ -12,6 +12,8 @@ struct TrackingToolbarView: View {
     //MARK: - API
     @Binding var isSettingsPresented: Bool
     @Binding var isRecording: Bool
+    @Binding var isMetronomeArmed: Bool
+    var metronomeBpm: Double
     var inputSamples: [Float]?
     
     init(
@@ -19,13 +21,18 @@ struct TrackingToolbarView: View {
         isRecording: Binding<Bool>,
         isSettingsPresented: Binding<Bool>,
         inputSamples: [Float]?,
-        trackTimer: Double
+        trackTimer: Double,
+        metronome: Metronome,
+        isMetronomeArmed: Binding<Bool>,
+        metronomeBpm: Double
     ) {
-        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager))
+        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager, metronome: metronome))
         _isRecording = isRecording
         _isSettingsPresented = isSettingsPresented
+        _isMetronomeArmed = isMetronomeArmed
         self.inputSamples = inputSamples
         self.trackTimer = trackTimer
+        self.metronomeBpm = metronomeBpm
     }
     
     //MARK: - Variables
@@ -49,7 +56,7 @@ struct TrackingToolbarView: View {
     var body: some View {
         VStack {
             HStack {
-                MetronomeView()
+                MetronomeButtonView(isMetronomeArmed: $isMetronomeArmed, metronomeBpm: metronomeBpm)
                     .padding(.leading)
                 RecordButtonView(isRecording: $isRecording, inputLevel: inputSamples)
                 appSettingsButton
@@ -95,6 +102,9 @@ struct TrackingToolbarView: View {
         isRecording: .constant(false),
         isSettingsPresented: .constant(false),
         inputSamples: nil,
-        trackTimer: 0.0
+        trackTimer: 0.0,
+        metronome: Metronome.shared,
+        isMetronomeArmed: .constant(false),
+        metronomeBpm: 120
         )
 }

@@ -112,7 +112,13 @@ class AppTheme: ObservableObject {
             return Color.clear
                 .background(.ultraThinMaterial.opacity(0.0))
                 .background(Color(UIColor.systemBackground).opacity(0.7))
+            
+//        case .offWhite:
+//            return Color.clear
+//                .background(.ultraThinMaterial.opacity(0.6))
+//                .background(Color(red: 1.0, green: 1.0, blue: 0.95).opacity(0.7))
         }
+        
     }
     
     var toolbarMaterialOpacity: Double {
