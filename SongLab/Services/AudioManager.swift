@@ -66,7 +66,10 @@ class DefaultAudioManager: AudioManager {
         Task {
             await startMetering()
         }
-        recorder.record(atTime: CACurrentMediaTime() + 0.5)
+        if Metronome.shared.isArmed {
+            try Metronome.shared.playMetronome()
+        }
+        recorder.record(atTime: CACurrentMediaTime() + 0.5 + Metronome.shared.countInDelay)
     }
     
     func startTracking(for session: Session) throws {
@@ -79,7 +82,10 @@ class DefaultAudioManager: AudioManager {
         for player in players {
             player.player.play(at: startTime)
         }
-        recorder.record(atTime: CACurrentMediaTime() + 0.5)
+        if Metronome.shared.isArmed {
+            try Metronome.shared.playMetronome()
+        }
+        recorder.record(atTime: CACurrentMediaTime() + 0.5 + Metronome.shared.countInDelay)
         Task {
             await startMetering()
         }
@@ -95,6 +101,10 @@ class DefaultAudioManager: AudioManager {
         }
         
         recorder.stop()
+        
+        if Metronome.shared.isArmed {
+            Metronome.shared.stopMetronome()
+        }
     
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
@@ -151,6 +161,9 @@ class DefaultAudioManager: AudioManager {
         recorder.stop()
         stopPlayback()
         
+        if Metronome.shared.isArmed {
+            Metronome.shared.stopMetronome()
+        }
     
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
@@ -554,7 +567,7 @@ class DefaultAudioManager: AudioManager {
         inputSamples.send([])
         startDate = Date()
         do {
-            try await Task.sleep(nanoseconds: 425_000_000)
+            try await Task.sleep(nanoseconds: 300_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
         } catch {}
         subscription = timer.sink { date in
             self.recorder.updateMeters()

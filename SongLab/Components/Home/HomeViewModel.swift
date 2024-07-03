@@ -13,19 +13,38 @@ import SwiftUI
 class HomeViewModel: ObservableObject {
     
     //MARK: - API
-    @AppStorage("metronomeActive") var metronomeActive: Bool = false
     
     @Published var selectedSession: Session?
     @Published var isSettingsPresented: Bool = false
     @Published var inputSamples: [Float]?
     @Published var trackTimer: Double = 0.0
+    
+    @Published var isMetronomeArmed: Bool {
+        didSet {
+            metronome.isArmed = isMetronomeArmed
+            metronome.saveSettings()
+        }
+    }
+    
+    @Published var metronomeBpm: Double {
+        didSet {
+            metronome.bpm = metronomeBpm
+            metronome.saveSettings()
+        }
+    }
+    
+    @Published var isCountInActive: Bool {
+        didSet {
+            metronome.isCountInActive = isCountInActive
+        }
+    }
+    
     @Published var isRecording: Bool = false {
         didSet {
             if isRecording {
                 if let selectedSession {
                     do {
                         try audioManager.startTracking(for: selectedSession)
-                        metronomeActive ? try metronome.playMetronome(timeSignature: 4, beat: 0) : nil
                     } catch {
                         //TODO
                     }
@@ -33,7 +52,6 @@ class HomeViewModel: ObservableObject {
                     audioManager.stopPlayback()
                     do {
                         try audioManager.startTracking()
-                        metronomeActive ? try metronome.playMetronome(timeSignature: 4, beat: 0) : nil
                     } catch {
                         //TODO
                     }
@@ -42,10 +60,8 @@ class HomeViewModel: ObservableObject {
                 Task{
                     if let selectedSession {
                         await audioManager.stopTracking(for: selectedSession)
-                        metronomeActive ? metronome.stopMetronome() : nil
                     } else {
                         await audioManager.stopTracking()
-                        metronomeActive ? metronome.stopMetronome() : nil
                     }
                 }
             }
@@ -54,11 +70,15 @@ class HomeViewModel: ObservableObject {
     
     let audioManager: AudioManager
     let recordingManager: RecordingManager
-    var metronome = Metronome()
+    
+    var metronome = Metronome.shared
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
+        self.isMetronomeArmed = metronome.isArmed
+        self.metronomeBpm = metronome.bpm
+        self.isCountInActive = metronome.isCountInActive
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
             .assign(to: &$selectedSession)  
@@ -66,6 +86,7 @@ class HomeViewModel: ObservableObject {
             .assign(to: &$inputSamples)
         audioManager.playerProgress
             .assign(to: &$trackTimer)
+        
     }
     
     // MARK: - Variables

@@ -8,14 +8,27 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import Combine
 
-class Metronome: Observable {
+class Metronome {
     
     //MARK: - API
     
-    @AppStorage("bpm") var bpm: Double = 120
+    static let shared = Metronome()
+    
+    var bpm: Double
+    var timeSignature: Int
+    var isArmed: Bool
+    var isCountInActive: Bool
+    
+    var countInDelay: Double {
+        if isArmed, isCountInActive {
+            return 60 / bpm * Double(timeSignature) + 0.1
+        }
+        return 0.0
+    }
         
-    func playMetronome(timeSignature: Int, beat: Int) throws {
+    func playMetronome(beat: Int = 0) throws {
         
         let beatInterval: Double = 60 / bpm
         
@@ -48,9 +61,10 @@ class Metronome: Observable {
         var sampleIntervalTime: AVAudioFramePosition
         
         if firstBeat {
-            metronomeActive = true
+            isMetronomePlaying = true
             beatOffset = 0.5 * sampleRate
             sampleIntervalTime = AVAudioFramePosition(Double(now) + beatOffset)
+            firstBeat = false
         } else {
             beatOffset = beatInterval * sampleRate
             sampleIntervalTime = AVAudioFramePosition(
@@ -94,10 +108,9 @@ class Metronome: Observable {
                                     completionCallbackType: .dataRendered
         ) { _ in
             Task { @MainActor in
-                if self.metronomeActive {
+                if self.isMetronomePlaying {
                     try self.playMetronome(
-                        timeSignature: timeSignature,
-                        beat: beat == timeSignature - 1 ? 0 : beat + 1
+                        beat: beat == self.timeSignature - 1 ? 0 : beat + 1
                     )
                 } else {
                     self.engine.stop()
@@ -107,15 +120,28 @@ class Metronome: Observable {
             }
         }
         metronome.play(at: beatIntervalTime)
-        firstBeat = false
     }
     
     func stopMetronome() {
-        metronomeActive = false
+        isMetronomePlaying = false
         metronome.stop()
         self.engine.stop()
         self.engine.detach(metronome)
         firstBeat = true
+    }
+    
+    func startMetronome() throws {
+        isMetronomePlaying = true
+        try playMetronome()
+    }
+    
+    func saveSettings() {
+        do {
+            try DataPersistenceManager.save(bpm, to: "bpm")
+            try DataPersistenceManager.save(timeSignature, to: "timeSignature")
+            try DataPersistenceManager.save(isArmed, to: "isArmed")
+            try DataPersistenceManager.save(isCountInActive, to: "isCountInActive")
+        } catch {}
     }
     
     //MARK: - Variables
@@ -123,5 +149,22 @@ class Metronome: Observable {
     private var metronome = AVAudioPlayerNode()
     private var engine = AVAudioEngine()
     private var firstBeat: Bool = true
-    private var metronomeActive: Bool = true
+    private var isMetronomePlaying: Bool = false
+    
+    
+    // MARK: - Functions
+    
+    private init() {
+        do {
+            bpm = try DataPersistenceManager.retrieve(Double.self, from: "bpm")
+            timeSignature = try DataPersistenceManager.retrieve(Int.self, from: "timeSignature")
+            isArmed = try DataPersistenceManager.retrieve(Bool.self, from: "isArmed")
+            isCountInActive = try DataPersistenceManager.retrieve(Bool.self, from: "isCountInActive")
+        } catch {
+            bpm = 120
+            timeSignature = 4
+            isArmed = false
+            isCountInActive = false
+        }
+    }
 }

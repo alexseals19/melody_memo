@@ -12,14 +12,20 @@ class AppSettingsViewModel: ObservableObject {
     
     //MARK: - API
     
-    let metronome: Metronome
+    @Published var metronomeBpm: Double {
+        didSet {
+            metronome.bpm = metronomeBpm
+        }
+    }
     
     init(metronome: Metronome) {
         self.metronome = metronome
+        self.metronomeBpm = metronome.bpm
     }
     
     // MARK: - Variables
     
+    private let metronome: Metronome
     
     // MARK: - Functions
     
