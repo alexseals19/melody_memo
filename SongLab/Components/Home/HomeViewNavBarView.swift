@@ -18,9 +18,7 @@ struct HomeViewNavBarView: View {
     //MARK: - Body
     
     var body: some View {
-        Rectangle()
-            
-            .foregroundStyle(appTheme.navBarColor)
+        appTheme.cellBackground
             .background(.ultraThinMaterial)
             .frame(maxWidth: .infinity, maxHeight: 75.0)
             .ignoresSafeArea()

@@ -24,8 +24,9 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         let lengthInSeconds = Int(length)
         let minutes: Int = lengthInSeconds / 60
         let seconds: Int = lengthInSeconds % 60
+        let miliseconds: Int = Int(modf(length).1 * 100)
         
-        return String(format: "%02d:%02d", minutes, seconds)
+        return String(format: "%02d:%02d.%02d", minutes, seconds, miliseconds)
     }
     
     init(

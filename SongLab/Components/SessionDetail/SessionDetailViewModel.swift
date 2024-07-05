@@ -45,6 +45,9 @@ class SessionDetailViewModel: ObservableObject {
                 if self.currentlyPlaying != nil {
                     self.currentlyPlaying = self.session
                 }
+                do {
+                    try recordingManager.updateSession(self.session)
+                } catch {}
             }
             .store(in: &cancellables)
     }
@@ -63,6 +66,9 @@ class SessionDetailViewModel: ObservableObject {
             audioManager.toggleMute(for: tracksToToggle)
             currentlyPlaying = session
         }
+        do {
+            try recordingManager.updateSession(session)
+        } catch {}
     }
     
     func trackCellPlayButtonTapped(for session: Session) {
@@ -84,7 +90,11 @@ class SessionDetailViewModel: ObservableObject {
             }
             currentlyPlaying = session
         }
-        
+        do {
+            try recordingManager.updateSession(session)
+        } catch {
+            
+        }
     }
     
     func trackCellSoloButtonTapped(for track: Track) {
@@ -113,6 +123,11 @@ class SessionDetailViewModel: ObservableObject {
             let tracksToMute = session.tracks.values.filter( { $0.isSolo == false } )
             audioManager.toggleMute(for: tracksToMute)
             currentlyPlaying = session
+        }
+        do {
+            try recordingManager.updateSession(session)
+        } catch {
+            
         }
     }
     
@@ -151,6 +166,11 @@ class SessionDetailViewModel: ObservableObject {
         if currentlyPlaying != nil {
             audioManager.setTrackVolume(for: updatedTrack)
         }
+        do {
+            try recordingManager.updateSession(session)
+        } catch {
+            
+        }
     }
     
     func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
@@ -165,7 +185,6 @@ class SessionDetailViewModel: ObservableObject {
     private var trackVolumeSubject = PassthroughSubject<Track, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var recordingManager: RecordingManager
-    
     
     // MARK: - Functions
 }

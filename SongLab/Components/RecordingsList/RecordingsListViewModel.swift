@@ -9,10 +9,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-protocol RecordingsListViewModelDelegate: AnyObject {
-    
-}
-
 @MainActor
 class RecordingsListViewModel: ObservableObject {
     
@@ -48,7 +44,7 @@ class RecordingsListViewModel: ObservableObject {
         audioManager.stopPlayback()
     }
     
-    nonisolated func recordingCellTrashButtonTapped(for session: Session) {
+    func recordingCellTrashButtonTapped(for session: Session) {
         do {
             try recordingManager.removeSession(session)
         } catch {
@@ -56,8 +52,6 @@ class RecordingsListViewModel: ObservableObject {
         }
     }
     
-    
-        
     // MARK: - Variables
     
 }

@@ -39,9 +39,6 @@ struct MasterCell: View {
     
     var body: some View {
         VStack(spacing: 0.0) {
-            Rectangle()
-                .frame(maxWidth: .infinity, maxHeight: 1.0)
-                .foregroundStyle(appTheme.cellDividerColor)
             VStack {
                 Divider()
                 HStack {
@@ -85,7 +82,7 @@ struct MasterCell: View {
             }
             .padding(.vertical, 10)
             .foregroundColor(.primary)
-            .background(appTheme.cellBackground)
+            .background(Color(UIColor.systemBackground).opacity(0.3))
         }
     }
 }

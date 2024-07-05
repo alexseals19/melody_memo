@@ -14,7 +14,8 @@ class MockRecordingManager: RecordingManager {
     func removeSession(_ session: Session) throws {}
     func removeTrack(_ session: Session, _ track: Track) throws {}
     func saveSession(_ recording: Session) throws {}
-        
+    func updateSession(_ session: Session) throws {}
+
     init() {
         sessions = CurrentValueSubject(Session.recordingsFixture)
     }

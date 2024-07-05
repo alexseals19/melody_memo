@@ -67,7 +67,7 @@ class AppTheme: ObservableObject {
     var cellDividerColor: Color {
         switch theme {
         case .basic:
-            return Color(UIColor.systemBackground).opacity(1.0)
+            return Color(UIColor.secondaryLabel).opacity(0.4)
         case .artist:
             return Color.clear
         }
@@ -88,13 +88,15 @@ class AppTheme: ObservableObject {
             return Image("swirl")
                 .resizable()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .blur(radius: 15)
                 .ignoresSafeArea()
-                .opacity(0.5)
-                .background(Color(UIColor.systemBackground).opacity(1.0))
+                .opacity(0.7)
+                .background(Color.clear.opacity(1.0))
         case .artist:
             return Image("swirl")
                 .resizable()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .blur(radius: 0.0)
                 .ignoresSafeArea()
                 .opacity(0.3)
                 .background(Color.black)
@@ -105,18 +107,13 @@ class AppTheme: ObservableObject {
         switch theme {
         case .basic:
             return Color.clear
-                .background(.ultraThinMaterial.opacity(1.0))
-                .background(Color.clear)
+                .background(Color(UIColor.systemBackground).opacity(0.3))
+                .background(Color.black.opacity(0.0))
                 
         case .artist:
             return Color.clear
-                .background(.ultraThinMaterial.opacity(0.0))
+                .background(Color.white.opacity(0.0))
                 .background(Color(UIColor.systemBackground).opacity(0.7))
-            
-//        case .offWhite:
-//            return Color.clear
-//                .background(.ultraThinMaterial.opacity(0.6))
-//                .background(Color(red: 1.0, green: 1.0, blue: 0.95).opacity(0.7))
         }
         
     }
@@ -124,9 +121,9 @@ class AppTheme: ObservableObject {
     var toolbarMaterialOpacity: Double {
         switch theme {
         case .basic:
-            return 1.0
+            return 0.95
         case .artist:
-            return 0.99
+            return 0.95
         }
     }
 }
