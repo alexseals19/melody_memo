@@ -69,14 +69,11 @@ struct TrackingToolbarView: View {
             }
         }
         .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 25.0)
-                    .foregroundStyle(.ultraThinMaterial.opacity(appTheme.toolbarMaterialOpacity))
-                    .frame(height: 90)
-                RoundedRectangle(cornerRadius: 25.0)
-                    .foregroundStyle(Color(UIColor.systemBackground).opacity(0.5))
-                    .frame(height: 90)
-            }
+            appTheme.cellBackground
+                .background(.ultraThickMaterial.opacity(0.97))
+                .frame(height: 90)
+                .clipShape(RoundedRectangle(cornerRadius: 25))
+            
                 
         )
         .animation(.spring, value: isRecording)

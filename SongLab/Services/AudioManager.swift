@@ -69,11 +69,11 @@ class DefaultAudioManager: AudioManager {
         if Metronome.shared.isArmed {
             try Metronome.shared.playMetronome()
         }
-        recorder.record(atTime: CACurrentMediaTime() + 0.5 + Metronome.shared.countInDelay)
+        recorder.record(atTime: CACurrentMediaTime() + 2.0 + Metronome.shared.countInDelay)
     }
     
     func startTracking(for session: Session) throws {
-        let startTime = try setupPlayers(for: session)
+        let startTime = try setupPlayers(for: session, delay: Metronome.shared.countInDelay)
         try setupRecorder()
         
         isRecording.send(true)
@@ -83,9 +83,9 @@ class DefaultAudioManager: AudioManager {
             player.player.play(at: startTime)
         }
         if Metronome.shared.isArmed {
-            try Metronome.shared.playMetronome()
+            try Metronome.shared.playMetronome(startTime: startTime)
         }
-        recorder.record(atTime: CACurrentMediaTime() + 0.5 + Metronome.shared.countInDelay)
+        recorder.record(atTime: CACurrentMediaTime() + 2.0 + Metronome.shared.countInDelay)
         Task {
             await startMetering()
         }
@@ -354,7 +354,7 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func setupPlayers(for session: Session) throws -> AVAudioTime {
+    private func setupPlayers(for session: Session, delay: Double = 0.0) throws -> AVAudioTime {
         let sortedTracks = session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
             return lhs.length < rhs.length
         }
@@ -391,7 +391,7 @@ class DefaultAudioManager: AudioManager {
         playbackEngine.prepare()
         try playbackEngine.start()
         
-        let kStartDelayTime = 0.5
+        let kStartDelayTime = 2.0 + delay
         guard let renderTime = players[0].player.lastRenderTime else {
             print("Could not get lastRenderTime")
             return AVAudioTime(hostTime: mach_absolute_time())
@@ -565,10 +565,10 @@ class DefaultAudioManager: AudioManager {
     
     private func startMetering() async {
         inputSamples.send([])
-        startDate = Date()
         do {
-            try await Task.sleep(nanoseconds: 300_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
+            try await Task.sleep(nanoseconds: 1_800_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
         } catch {}
+        startDate = Date()
         subscription = timer.sink { date in
             self.recorder.updateMeters()
             guard var updatedSamples: [Float] = self.inputSamples.value else {
@@ -600,7 +600,7 @@ class DefaultAudioManager: AudioManager {
     
     private func startTimer() async {
         do {
-            try await Task.sleep(nanoseconds: 425_000_000)
+            try await Task.sleep(nanoseconds: 1_925_000_000)
         } catch {}
         startDate = Date()
         subscription = timer.sink { date in

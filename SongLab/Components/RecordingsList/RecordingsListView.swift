@@ -44,12 +44,16 @@ struct RecordingsListView: View {
             NavigationStack {
                 ZStack {
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 0.0) {
+                        LazyVStack(alignment: .leading, spacing: 3.0) {
+                            appTheme.cellBackground
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 75)
+                                .ignoresSafeArea()
                             ForEach(viewModel.sessions) { session in
                                 VStack(spacing: 0.0) {
-                                    Rectangle()
-                                        .frame(maxWidth: .infinity, maxHeight: 1.0)
-                                        .foregroundStyle(appTheme.cellDividerColor)
+//                                    Rectangle()
+//                                        .frame(maxWidth: .infinity, maxHeight: 1.0)
+//                                        .foregroundStyle(appTheme.cellDividerColor)
                                     RecordingCell(
                                         currentlyPlaying: viewModel.currentlyPlaying,
                                         session: session,
@@ -63,7 +67,6 @@ struct RecordingsListView: View {
                             CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
                         }
                         .animation(.spring, value: viewModel.sessions)
-                        .offset(y: 75.0)
                         .navigationDestination(
                             for: Session.self,
                             destination: { session in

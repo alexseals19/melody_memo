@@ -73,8 +73,8 @@ struct RecordButtonView: View {
                 .stroke(lineWidth: 4.0)
                 .opacity(reordButtonOpacity)
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
-                .foregroundStyle(appTheme.recordButtonColor)
-                .shadow(color: .pink, radius: appTheme.shadowRadius)
+                .foregroundStyle(.pink)
+                .shadow(color: .pink, radius: 10)
                 .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
                 .padding(25)
             
@@ -93,7 +93,7 @@ struct RecordButtonView: View {
                     .clipped()
                     RoundedRectangle(cornerRadius: stopButtonCornerRadius)
                         .frame(width: stopButtonDimensions, height: stopButtonDimensions)
-                        .foregroundColor(.red)
+                        .foregroundColor(.pink)
                         .opacity(stopButtonOpacity)
                         .onAppear {
                             withAnimation(

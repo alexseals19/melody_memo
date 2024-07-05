@@ -137,38 +137,44 @@ struct RecordingCell: View {
                 NavigationLink(value: session) {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text(session.name)
-                                .font(.title2)
-                                .minimumScaleFactor(0.75)
-                                .lineLimit(1)
-                                .padding(.bottom, 3)
+                            HStack {
+                                Text(session.name)
+                                    .font(.title2)
+                                    .minimumScaleFactor(0.75)
+                                    .lineLimit(1)
+                                    .padding(.bottom, 1)
+                                if let currentlyPlaying, currentlyPlaying == session {
+                                    ProgressView(value: min(playerProgress / session.length, 1.0))
+                                        .progressViewStyle(LinearProgressViewStyle(tint: .primary))
+                                        .transition(.scale(0.0, anchor: .trailing).animation(.linear(duration: 0.2)))
+                                }
+                            }
+                            Capsule()
+                                .frame(maxWidth: .infinity, maxHeight: 1)
+                                .foregroundStyle(.pink)
                             HStack() {
                                 Text(session.lengthDisplayString)
                                     .font(.caption2)
                                 Text(session.dateDisplayString)
                                     .font(.caption2)
+                                
                             }
                             .foregroundStyle(.secondary)
                         }
-                        .padding(EdgeInsets(top: 8, leading: 10, bottom: 11, trailing: 0))
+                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 13, trailing: 0))
                         Spacer()
 
-                        if let currentlyPlaying, currentlyPlaying == session {
-                            ProgressView(value: min(playerProgress / session.length, 1.0))
-                                .progressViewStyle(LinearProgressViewStyle(tint: .primary))
-                                .transition(.scale(0.0, anchor: .trailing).animation(.linear(duration: 0.2)))
-                        }
+                        
                     }
                     .padding(.trailing, 80)
                     .foregroundStyle(.primary)
-                    .background(appTheme.cellBackground)
+                    .background(Color(UIColor.systemBackground).opacity(0.3))
                     .gesture(drag)
-                    .onDisappear { 
+                    .onDisappear {
                         offset = .zero
                         twoWayDrag = false
                     }
                 }
-                
                 HStack {
                     Spacer()
                     PlaybackControlButtonView(

@@ -83,11 +83,6 @@ struct AppSettingsView: View {
                     LazyHStack {
                         ForEach(AppTheme.Theme.allCases) { theme in
                             VStack {
-                                Image(theme.rawValue)
-                                    .resizable()
-                                    .cornerRadius(15)
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(height: 300)
                                 if theme == appTheme.theme {
                                     ZStack {
                                         Circle()

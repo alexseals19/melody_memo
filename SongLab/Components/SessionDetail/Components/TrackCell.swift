@@ -146,11 +146,12 @@ struct TrackCell: View {
                 HStack {
                     TrackCellButtonImage("speaker.wave.2")
                     Slider(value: $sliderValue)
-                        .tint(.primary)
+                        .tint(.pink)
                         .padding(.trailing, 10)
                         .onChange(of: sliderValue) {
                             onTrackVolumeChange(track, Float(sliderValue))
                         }
+                        
                     Button {
                         trashButtonAction(track)
                     } label: {
@@ -163,7 +164,7 @@ struct TrackCell: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
             .foregroundColor(.primary)
-            .background(appTheme.cellBackground)
+            .background(Color(UIColor.systemBackground).opacity(0.3))
             
             Rectangle()
                 .frame(maxWidth: 1, maxHeight: 87)

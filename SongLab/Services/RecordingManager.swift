@@ -13,6 +13,7 @@ protocol RecordingManager {
     func removeSession(_ recording: Session) throws
     func removeTrack(_ session: Session, _ track: Track) throws
     func saveSession(_ recording: Session) throws
+    func updateSession(_ session: Session) throws
 }
 
 final class DefaultRecordingManager: RecordingManager {
@@ -60,6 +61,19 @@ final class DefaultRecordingManager: RecordingManager {
             updatedRecordings.removeAll { $0.id == session.id }
             updatedRecordings.append(session)
             try DataPersistenceManager.save(updatedRecordings, to: "sessions")
+            sessions.send(
+                updatedRecordings.sorted { (lhs: Session, rhs: Session) -> Bool in
+                    return lhs.date > rhs.date
+                }
+            )
+        }
+    }
+    
+    func updateSession(_ session: Session) throws {
+        Task { @MainActor in
+            var updatedRecordings = sessions.value
+            updatedRecordings.removeAll { $0.id == session.id }
+            updatedRecordings.append(session)
             sessions.send(
                 updatedRecordings.sorted { (lhs: Session, rhs: Session) -> Bool in
                     return lhs.date > rhs.date

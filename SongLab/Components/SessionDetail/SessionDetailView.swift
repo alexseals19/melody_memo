@@ -10,6 +10,7 @@ import SwiftUI
 struct SessionDetailView: View {
     
     //MARK: - API
+    
         
     init(recordingManager: RecordingManager, audioManager: AudioManager, session: Session) {
         _viewModel = StateObject(
@@ -24,9 +25,9 @@ struct SessionDetailView: View {
     //MARK: - Variables
     
     @EnvironmentObject private var appTheme: AppTheme
-    
+        
     @Environment(\.dismiss) var dismiss
-    
+
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
     
@@ -40,16 +41,22 @@ struct SessionDetailView: View {
     
     var body: some View {
         
-        VStack(spacing: 0.0) {
-            Rectangle()
-                .frame(maxWidth: .infinity, maxHeight: 1.0)
-                .foregroundStyle(appTheme.cellDividerColor)
+        VStack(spacing: 3.0) {
+            appTheme.cellBackground
+                .frame(maxWidth: .infinity)
+                .frame(height: 75)
+                .ignoresSafeArea()
             HStack {
                 backButton
-                Spacer()
+                Capsule()
+                    .frame(maxWidth: .infinity, maxHeight: 1)
+                    .foregroundStyle(.pink)
                 Text(viewModel.session.name)
                     .font(.largeTitle)
-                Spacer()
+                    .frame(width: 200)
+                Capsule()
+                    .frame(maxWidth: .infinity, maxHeight: 1)
+                    .foregroundStyle(.pink)
                 Button {
                     viewModel.sessionTrashButtonTapped()
                     dismiss()
@@ -62,7 +69,7 @@ struct SessionDetailView: View {
                 .foregroundStyle(.primary)
                 .padding(15)
             }
-            .background(appTheme.cellBackground)
+            .background(Color(UIColor.systemBackground).opacity(0.3))
             
             MasterCell(
                 session: viewModel.session,
@@ -73,24 +80,19 @@ struct SessionDetailView: View {
             )
             GeometryReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 0.0) {
+                    VStack(alignment: .leading, spacing: 3.0) {
                         ForEach(tracks) { track in
-                            VStack(spacing: 0.0) {
-                                Rectangle()
-                                    .frame(maxWidth: .infinity, maxHeight: 1.0)
-                                    .foregroundStyle(appTheme.cellDividerColor)
-                                TrackCell(
-                                    track: track,
-                                    isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
-                                    isSessionPlaying: viewModel.isSessionPlaying,
-                                    trackTimer: viewModel.trackTimer,
-                                    muteButtonAction: viewModel.trackCellMuteButtonTapped,
-                                    soloButtonAction: viewModel.trackCellSoloButtonTapped,
-                                    onTrackVolumeChange: viewModel.setTrackVolume,
-                                    getWaveformImage: viewModel.getWaveformImage,
-                                    trashButtonAction: viewModel.trackCellTrashButtonTapped
-                                )
-                            }
+                            TrackCell(
+                                track: track,
+                                isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
+                                isSessionPlaying: viewModel.isSessionPlaying,
+                                trackTimer: viewModel.trackTimer,
+                                muteButtonAction: viewModel.trackCellMuteButtonTapped,
+                                soloButtonAction: viewModel.trackCellSoloButtonTapped,
+                                onTrackVolumeChange: viewModel.setTrackVolume,
+                                getWaveformImage: viewModel.getWaveformImage,
+                                trashButtonAction: viewModel.trackCellTrashButtonTapped
+                            )
                         }
                         CellSpacer(
                             screenHeight: proxy.size.height,
@@ -103,7 +105,6 @@ struct SessionDetailView: View {
             Spacer()
         }
         .navigationBarBackButtonHidden()
-        .offset(y: 75.0)
         .background(appTheme.backgroundImage)
         .opacity(opacity)
         .onAppear {
