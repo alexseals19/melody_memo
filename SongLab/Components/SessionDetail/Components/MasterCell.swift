@@ -89,7 +89,7 @@ struct MasterCell: View {
 
 #Preview {
     MasterCell(
-        session: Session.recordingFixture,
+        session: Session.sessionFixture,
         currentlyPlaying: nil,
         playButtonAction: { _ in },
         stopButtonAction: {},
