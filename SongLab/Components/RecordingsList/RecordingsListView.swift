@@ -57,6 +57,7 @@ struct RecordingsListView: View {
                             }
                             CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
                         }
+                        .padding(.top, 78)
                         .animation(.spring, value: viewModel.sessions)
                         .navigationDestination(
                             for: Session.self,
@@ -75,7 +76,6 @@ struct RecordingsListView: View {
                             }
                         )
                     }
-                    .offset(y: 78)
                     .scrollDisabled(isScrollDisabled)
                     .background(
                         Image("swirl")

@@ -198,3 +198,16 @@ struct TrackCellButtonImage: View {
             
     }
 }
+
+#Preview {
+    TrackCell(
+        track: Session.trackFixture,
+        isGlobalSoloActive: false,
+        isSessionPlaying: false,
+        trackTimer: 0.0,
+        muteButtonAction: { _ in },
+        soloButtonAction: { _ in },
+        onTrackVolumeChange: { _, _ in },
+        getWaveformImage: { _,_ in return Image("") },
+        trashButtonAction: { _ in })
+}

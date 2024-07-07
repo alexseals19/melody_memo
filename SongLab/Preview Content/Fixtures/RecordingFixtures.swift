@@ -9,8 +9,19 @@ import Foundation
 
 extension Session {
     
-    static let recordingFixture: Session = Session(
-                                            name: "RecordingFixture",
+    static let trackFixture: Track = Track(
+                                        name: "TrackFixture",
+                                        fileName: "",
+                                        date: Date(),
+                                        length: 4,
+                                        id: UUID(),
+                                        volume: 1.0,
+                                        isMuted: false,
+                                        isSolo: false,
+                                        soloOverride: false)
+    
+    static let sessionFixture: Session = Session(
+                                            name: "SessionFixture",
                                             date: Date(),
                                             length: 4,
                                             tracks: [:],
@@ -18,7 +29,7 @@ extension Session {
                                             id: UUID(),
                                             isGlobalSoloActive: true)
     
-    static let recordingsFixture: [Session] = {
+    static let sessionsFixture: [Session] = {
         var recs: [Session] = []
         let date = Date()
         for i in 0...50 {
