@@ -11,7 +11,6 @@ struct SessionDetailView: View {
     
     //MARK: - API
     
-        
     init(recordingManager: RecordingManager, audioManager: AudioManager, session: Session) {
         _viewModel = StateObject(
             wrappedValue: SessionDetailViewModel(
@@ -40,9 +39,8 @@ struct SessionDetailView: View {
     //MARK: - Body
     
     var body: some View {
-        
         VStack(spacing: 3.0) {
-            appTheme.cellBackground
+            Color.clear
                 .frame(maxWidth: .infinity)
                 .frame(height: 75)
                 .ignoresSafeArea()
@@ -50,13 +48,13 @@ struct SessionDetailView: View {
                 backButton
                 Capsule()
                     .frame(maxWidth: .infinity, maxHeight: 1)
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(appTheme.accentColor)
                 Text(viewModel.session.name)
                     .font(.largeTitle)
                     .frame(width: 200)
                 Capsule()
                     .frame(maxWidth: .infinity, maxHeight: 1)
-                    .foregroundStyle(.pink)
+                    .foregroundStyle(appTheme.accentColor)
                 Button {
                     viewModel.sessionTrashButtonTapped()
                     dismiss()
@@ -105,7 +103,14 @@ struct SessionDetailView: View {
             Spacer()
         }
         .navigationBarBackButtonHidden()
-        .background(appTheme.backgroundImage)
+        .background(
+            Image("swirl")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .blur(radius: 15)
+                .ignoresSafeArea()
+                .opacity(0.7)
+        )
         .opacity(opacity)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.5)) {

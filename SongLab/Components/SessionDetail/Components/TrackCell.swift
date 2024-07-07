@@ -146,7 +146,7 @@ struct TrackCell: View {
                 HStack {
                     TrackCellButtonImage("speaker.wave.2")
                     Slider(value: $sliderValue)
-                        .tint(.pink)
+                        .tint(appTheme.accentColor)
                         .padding(.trailing, 10)
                         .onChange(of: sliderValue) {
                             onTrackVolumeChange(track, Float(sliderValue))

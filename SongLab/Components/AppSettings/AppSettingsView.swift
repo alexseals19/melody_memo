@@ -36,13 +36,13 @@ struct AppSettingsView: View {
         VStack {
             RoundedRectangle(cornerRadius: 2)
                 .frame(width: 150, height: 3)
-                .foregroundStyle(.primary)
+                .foregroundStyle(appTheme.accentColor)
                 .padding(15)
-                .shadow(color: .white, radius: appTheme.shadowRadius)
+                .shadow(color: appTheme.accentColor, radius: 5)
             ScrollView {
                 LazyVStack {
                     
-                    Text("Metronome Settings")
+                    Text("Metronome")
                         .font(.title2)
                         .padding(.top, 25)
                     HStack {
@@ -54,7 +54,7 @@ struct AppSettingsView: View {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 25)
                                         .frame(width: 75, height: 25)
-                                        .foregroundStyle(.pink)
+                                        .foregroundStyle(appTheme.accentColor)
                                     Text("Count In")
                                         .font(.caption)
                                         .foregroundStyle(.black)
@@ -64,7 +64,7 @@ struct AppSettingsView: View {
                                     RoundedRectangle(cornerRadius: 25)
                                         .stroke(lineWidth: 1.0)
                                         .frame(width: 75, height: 25)
-                                        .foregroundStyle(.pink)
+                                        .foregroundStyle(appTheme.accentColor)
                                     Text("Count In")
                                         .font(.caption)
                                         .foregroundStyle(.primary)
@@ -80,27 +80,31 @@ struct AppSettingsView: View {
                     Text("App Theme")
                         .font(.title2)
                         .padding(.top, 25)
-                    LazyHStack {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60, maximum: 60))]) {
                         ForEach(AppTheme.Theme.allCases) { theme in
-                            VStack {
+                            Group {
                                 if theme == appTheme.theme {
                                     ZStack {
                                         Circle()
                                             .stroke(lineWidth: 2)
-                                            .frame(width: 24)
+                                            .foregroundStyle(Color[theme.rawValue])
+                                            .frame(width: 40)
                                             .aspectRatio(contentMode: .fit)
                                         Circle()
-                                            .frame(width: 20)
+                                            .frame(width: 36)
+                                            .foregroundStyle(Color[theme.rawValue])
                                             .aspectRatio(contentMode: .fit)
                                             .foregroundStyle(.primary)
                                     }
                                 } else {
                                     Circle()
                                         .stroke(lineWidth: 2)
-                                        .frame(width: 24)
+                                        .foregroundStyle(Color[theme.rawValue])
+                                        .frame(width: 40)
                                         .aspectRatio(contentMode: .fit)
                                 }
                             }
+                            .padding(.bottom, 10)
                             .foregroundStyle(.primary)
                             .onTapGesture {
                                 appTheme.theme = theme
@@ -112,6 +116,35 @@ struct AppSettingsView: View {
                 }
                 .presentationDetents([.height(500)])
             }
+        }
+    }
+}
+
+extension Color {
+    static subscript(name: String) -> Color {
+        switch name {
+        case "red":
+            return Color.red
+        case "orange":
+            return Color.orange
+        case "blue":
+            return Color.blue
+        case "yellow":
+            return Color.yellow
+        case "pink":
+            return Color.pink
+        case "purple":
+            return Color.purple
+        case "black":
+            return Color.black
+        case "white":
+            return Color.white
+        case "green":
+            return Color.green
+        case "cyan":
+            return Color.cyan
+        default:
+            return Color.red
         }
     }
 }

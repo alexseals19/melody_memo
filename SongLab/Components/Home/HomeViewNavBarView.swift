@@ -18,7 +18,8 @@ struct HomeViewNavBarView: View {
     //MARK: - Body
     
     var body: some View {
-        appTheme.cellBackground
+        Color.clear
+            .background(Color(UIColor.systemBackground).opacity(0.3))
             .background(.ultraThinMaterial)
             .frame(maxWidth: .infinity, maxHeight: 75.0)
             .ignoresSafeArea()

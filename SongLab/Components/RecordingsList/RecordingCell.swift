@@ -151,7 +151,7 @@ struct RecordingCell: View {
                             }
                             Capsule()
                                 .frame(maxWidth: .infinity, maxHeight: 1)
-                                .foregroundStyle(.pink)
+                                .foregroundStyle(appTheme.accentColor)
                             HStack() {
                                 Text(session.lengthDisplayString)
                                     .font(.caption2)
@@ -163,7 +163,6 @@ struct RecordingCell: View {
                         }
                         .padding(EdgeInsets(top: 10, leading: 10, bottom: 13, trailing: 0))
                         Spacer()
-
                         
                     }
                     .padding(.trailing, 80)

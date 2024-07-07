@@ -32,7 +32,7 @@ protocol AudioManager {
     func stopTracking() async
     func stopTracking(for session: Session) async
     func startPlayback(for session: Session) throws
-    func stopPlayback()
+    func stopPlayback(stopTimer: Bool)
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
@@ -47,7 +47,6 @@ class DefaultAudioManager: AudioManager {
         audioSession: AVAudioSession(),
         recorder: AVAudioRecorder(),
         players: [AudioPlayer](),
-        metronome: AVAudioPlayerNode(),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
         mixerNode: AVAudioMixerNode(),
@@ -61,31 +60,48 @@ class DefaultAudioManager: AudioManager {
     var subscription: AnyCancellable?
     
     func startTracking() throws {
+        
+        if metronome.isArmed {
+            try metronome.prepare()
+        }
         try setupRecorder()
         isRecording.send(true)
         Task {
             await startMetering()
         }
-        if Metronome.shared.isArmed {
-            try Metronome.shared.playMetronome()
+                
+        let startTime = CACurrentMediaTime() + 0.5
+        if metronome.isArmed {
+            metronome.start(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime)))
         }
-        recorder.record(atTime: CACurrentMediaTime() + 2.0 + Metronome.shared.countInDelay)
+        recorder.record(atTime: startTime + metronome.countInDelay - 0.25)
+        
     }
     
     func startTracking(for session: Session) throws {
-        let startTime = try setupPlayers(for: session, delay: Metronome.shared.countInDelay)
+        try setupPlayers(for: session)
+                
         try setupRecorder()
+        if metronome.isArmed {
+            try metronome.prepare()
+        }
         
         isRecording.send(true)
         currentlyPlaying.send(session)
         
-        for player in players {
-            player.player.play(at: startTime)
+        let startTime = CACurrentMediaTime() + 0.5
+        
+        if !session.tracks.isEmpty {
+            for player in players {
+                player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.25)))
+            }
         }
-        if Metronome.shared.isArmed {
-            try Metronome.shared.playMetronome(startTime: startTime)
+        
+        if metronome.isArmed {
+            metronome.start(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime)))
         }
-        recorder.record(atTime: CACurrentMediaTime() + 2.0 + Metronome.shared.countInDelay)
+        recorder.record(atTime: startTime + metronome.countInDelay - 0.25)
+        
         Task {
             await startMetering()
         }
@@ -100,10 +116,12 @@ class DefaultAudioManager: AudioManager {
             isRecording.send(false)
         }
         
+        metronome.stopMetronome()
+        
         recorder.stop()
         
-        if Metronome.shared.isArmed {
-            Metronome.shared.stopMetronome()
+        if metronome.isArmed {
+            metronome.stopMetronome()
         }
     
         guard let currentFileName else {
@@ -159,7 +177,7 @@ class DefaultAudioManager: AudioManager {
         }
         
         recorder.stop()
-        stopPlayback()
+        stopPlayback(stopTimer: false)
         
         if Metronome.shared.isArmed {
             Metronome.shared.stopMetronome()
@@ -207,7 +225,13 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startPlayback(for session: Session) throws {
-        let startTime = try setupPlayers(for: session)
+        try setupPlayers(for: session)
+        
+        let startTime = AVAudioTime(
+            hostTime: AVAudioTime.hostTime(
+                forSeconds: CACurrentMediaTime() + 0.25
+            )
+        )
         
         currentlyPlaying.send(session)
         playerProgress.send(0.0)
@@ -221,7 +245,7 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    func stopPlayback() {
+    func stopPlayback(stopTimer: Bool) {
         Task { @MainActor in
             currentlyPlaying.send(nil)
         }
@@ -231,9 +255,12 @@ class DefaultAudioManager: AudioManager {
         }
         playbackEngine.stop()
         players.removeAll()
-        Task {
-            await stopTimer()
+        if stopTimer {
+            Task {
+                await self.stopTimer()
+            }
         }
+        
     }
     
     func toggleMute(for tracks: [Track]) {
@@ -287,7 +314,6 @@ class DefaultAudioManager: AudioManager {
     private var audioSession: AVAudioSession
     private var recorder: AVAudioRecorder
     private var players: [AudioPlayer]
-    private var metronome: AVAudioPlayerNode
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
@@ -300,6 +326,7 @@ class DefaultAudioManager: AudioManager {
     private var firstBeat: Bool = true
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
+    private var metronome: Metronome = Metronome.shared
     
     private let timer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     
@@ -310,7 +337,6 @@ class DefaultAudioManager: AudioManager {
         audioSession: AVAudioSession,
         recorder: AVAudioRecorder,
         players: [AudioPlayer],
-        metronome: AVAudioPlayerNode,
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
         mixerNode: AVAudioMixerNode,
@@ -323,7 +349,6 @@ class DefaultAudioManager: AudioManager {
         self.audioSession = audioSession
         self.recorder = recorder
         self.players = players
-        self.metronome = metronome
         self.engine = engine
         self.playbackEngine = playbackEngine
         self.mixerNode = mixerNode
@@ -353,8 +378,13 @@ class DefaultAudioManager: AudioManager {
             print(error.localizedDescription)
         }
     }
-    
-    private func setupPlayers(for session: Session, delay: Double = 0.0) throws -> AVAudioTime {
+        
+    private func setupPlayers(for session: Session) throws {
+        
+        if session.tracks.values.isEmpty {
+            return
+        }
+        
         let sortedTracks = session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
             return lhs.length < rhs.length
         }
@@ -372,36 +402,6 @@ class DefaultAudioManager: AudioManager {
             players.append(AudioPlayer(track: track))
         }
         
-        let url = DataPersistenceManager.createDocumentURL(
-            withFileName: sortedTracks[0].fileName,
-            fileType: .caf
-        )
-        
-        let sampleAudioFile = try AVAudioFile(forReading: url)
-    
-        let sampleRate = sampleAudioFile.processingFormat.sampleRate
-    
-        for player in players {
-            playbackEngine.attach(player.player)
-            playbackEngine.connect(player.player,
-                                   to: playbackEngine.mainMixerNode,
-                                   format: sampleAudioFile.processingFormat)
-        }
-
-        playbackEngine.prepare()
-        try playbackEngine.start()
-        
-        let kStartDelayTime = 2.0 + delay
-        guard let renderTime = players[0].player.lastRenderTime else {
-            print("Could not get lastRenderTime")
-            return AVAudioTime(hostTime: mach_absolute_time())
-        }
-        let now: AVAudioFramePosition = renderTime.sampleTime
-        
-        let sampleTime = AVAudioFramePosition(Double(now) + (kStartDelayTime * sampleRate))
-        
-        let startTime = AVAudioTime(sampleTime: sampleTime, atRate: sampleRate)
-        
         for player in players {
             let url = DataPersistenceManager.createDocumentURL(
                 withFileName: player.track.fileName,
@@ -410,12 +410,17 @@ class DefaultAudioManager: AudioManager {
             
             let audioFile = try AVAudioFile(forReading: url)
             
+            playbackEngine.attach(player.player)
+            playbackEngine.connect(player.player,
+                                   to: playbackEngine.mainMixerNode,
+                                   format: audioFile.processingFormat)
+            
             guard let buffer = AVAudioPCMBuffer(
                 pcmFormat: audioFile.processingFormat,
                 frameCapacity: AVAudioFrameCount(audioFile.length)
             ) else {
                 assertionFailure("Could not assign buffer")
-                return AVAudioTime(hostTime: mach_absolute_time())
+                return
             }
             
             try audioFile.read(into: buffer)
@@ -427,12 +432,15 @@ class DefaultAudioManager: AudioManager {
             ) { _ in
                 Task{ @MainActor in
                     if player.player == self.players.last?.player {
-                        self.stopPlayback()
+                        self.stopPlayback(stopTimer: false)
                     }
                 }
             }
             player.player.prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
         }
+        
+        playbackEngine.prepare()
+        try playbackEngine.start()
         
         if session.isGlobalSoloActive {
             for player in players {
@@ -455,8 +463,6 @@ class DefaultAudioManager: AudioManager {
                 }
             }
         }
-        
-        return startTime
     }
     
     private func setupRecorder() throws {
@@ -566,7 +572,7 @@ class DefaultAudioManager: AudioManager {
     private func startMetering() async {
         inputSamples.send([])
         do {
-            try await Task.sleep(nanoseconds: 1_800_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
+            try await Task.sleep(nanoseconds: 200_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
         } catch {}
         startDate = Date()
         subscription = timer.sink { date in
@@ -600,7 +606,7 @@ class DefaultAudioManager: AudioManager {
     
     private func startTimer() async {
         do {
-            try await Task.sleep(nanoseconds: 1_925_000_000)
+            try await Task.sleep(nanoseconds: 500_000_000)
         } catch {}
         startDate = Date()
         subscription = timer.sink { date in

@@ -45,24 +45,15 @@ struct RecordingsListView: View {
                 ZStack {
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: 3.0) {
-                            appTheme.cellBackground
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 75)
-                                .ignoresSafeArea()
                             ForEach(viewModel.sessions) { session in
-                                VStack(spacing: 0.0) {
-//                                    Rectangle()
-//                                        .frame(maxWidth: .infinity, maxHeight: 1.0)
-//                                        .foregroundStyle(appTheme.cellDividerColor)
-                                    RecordingCell(
-                                        currentlyPlaying: viewModel.currentlyPlaying,
-                                        session: session,
-                                        playerProgress: viewModel.playerProgress,
-                                        playButtonAction: viewModel.recordingCellPlayButtonTapped,
-                                        stopButtonAction: viewModel.recordingCellStopButtonTapped,
-                                        trashButtonAction: viewModel.recordingCellTrashButtonTapped
-                                    )
-                                }
+                                RecordingCell(
+                                    currentlyPlaying: viewModel.currentlyPlaying,
+                                    session: session,
+                                    playerProgress: viewModel.playerProgress,
+                                    playButtonAction: viewModel.recordingCellPlayButtonTapped,
+                                    stopButtonAction: viewModel.recordingCellStopButtonTapped,
+                                    trashButtonAction: viewModel.recordingCellTrashButtonTapped
+                                )
                             }
                             CellSpacer(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
                         }
@@ -84,8 +75,16 @@ struct RecordingsListView: View {
                             }
                         )
                     }
+                    .offset(y: 78)
                     .scrollDisabled(isScrollDisabled)
-                    .background(appTheme.backgroundImage)
+                    .background(
+                        Image("swirl")
+                            .resizable()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .blur(radius: 15)
+                            .ignoresSafeArea()
+                            .opacity(0.7)
+                    )
                     .ignoresSafeArea()
                 }
             }

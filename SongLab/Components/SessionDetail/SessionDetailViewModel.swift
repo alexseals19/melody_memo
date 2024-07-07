@@ -132,7 +132,7 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func trackCellStopButtonTapped() {
-        audioManager.stopPlayback()
+        audioManager.stopPlayback(stopTimer: true)
     }
     
     func trackCellTrashButtonTapped(for track: Track) {

@@ -21,7 +21,7 @@ class MockAudioManager: AudioManager {
     func stopTracking() async {}
     func stopTracking(for _: Session) async {}
     func startPlayback(for session: Session) throws {}
-    func stopPlayback() {}
+    func stopPlayback(stopTimer: Bool) {}
     func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
     func stopMetronome() {}
     func toggleMute(for tracks: [Track]) {}
