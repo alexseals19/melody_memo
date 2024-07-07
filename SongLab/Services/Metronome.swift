@@ -10,6 +10,28 @@ import AVFoundation
 import SwiftUI
 import Combine
 
+struct Beat {
+    var player: AVAudioPlayerNode
+    var downBuffer: AVAudioPCMBuffer
+    var offBuffer: AVAudioPCMBuffer
+    
+    init(player: AVAudioPlayerNode, 
+         downBuffer: AVAudioPCMBuffer,
+         offBuffer: AVAudioPCMBuffer
+    ) {
+        self.player = player
+        self.downBuffer = downBuffer
+        self.offBuffer = offBuffer
+    }
+    
+    init() {
+        player = AVAudioPlayerNode()
+        downBuffer = AVAudioPCMBuffer()
+        offBuffer = AVAudioPCMBuffer()
+    }
+}
+
+@MainActor
 class Metronome {
     
     //MARK: - API
@@ -20,6 +42,7 @@ class Metronome {
     var timeSignature: Int
     var isArmed: Bool
     var isCountInActive: Bool
+    var subscription: AnyCancellable?
     
     var countInDelay: Double {
         if isArmed, isCountInActive {
@@ -27,206 +50,76 @@ class Metronome {
         }
         return 0.0
     }
+    
+    func prepare() throws {
         
-    func playMetronome(beat: Int = 0, startTime: AVAudioTime) throws {
+        let beatHighFile = try AVAudioFile(forReading: beatHighUrl)
+        let beatLowFile = try AVAudioFile(forReading: beatLowUrl)
         
-        let beatInterval: Double = 60 / bpm
-        
-        metronome = AVAudioPlayerNode()
-        
-        guard let samplePath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
-            print("Could not find metronome.wav")
+        guard let bufferHigh = AVAudioPCMBuffer(pcmFormat: beatHighFile.processingFormat, frameCapacity: AVAudioFrameCount(beatHighFile.length)) else {
             return
         }
-        let sampleUrl = URL(filePath: samplePath)
+        guard let bufferLow = AVAudioPCMBuffer(pcmFormat: beatLowFile.processingFormat, frameCapacity: AVAudioFrameCount(beatLowFile.length)) else {
+            return
+        }
         
-        let sampleAudioFile = try AVAudioFile(forReading: sampleUrl)
-    
-        let sampleRate = sampleAudioFile.processingFormat.sampleRate
+        metronome = Beat(player: AVAudioPlayerNode(), downBuffer: bufferHigh, offBuffer: bufferLow)
+
+        engine.attach(metronome.player)
+        engine.connect(metronome.player,
+                       to: engine.mainMixerNode,
+                       format: beatHighFile.processingFormat)
+        try beatHighFile.read(into: metronome.downBuffer)
+        try beatLowFile.read(into: metronome.offBuffer)
         
-        engine.attach(metronome)
-        engine.connect(metronome,
-                               to: engine.mainMixerNode,
-                               format: sampleAudioFile.processingFormat)
-                
         engine.prepare()
         try engine.start()
-                
-        guard let renderTime = metronome.lastRenderTime else {
-            print("Could not get lastRenderTime")
-            return
-        }
-        let now: AVAudioFramePosition = renderTime.sampleTime
-        var beatOffset: Double
-        var sampleIntervalTime: AVAudioFramePosition
-        
-        if firstBeat {
-            isMetronomePlaying = true
-            beatOffset = 2.0 * sampleRate
-            sampleIntervalTime = AVAudioFramePosition(Double(now) + beatOffset)
-            
-        } else {
-            beatOffset = beatInterval * sampleRate
-            sampleIntervalTime = AVAudioFramePosition(
-                Double(now) + beatOffset - Double(sampleAudioFile.length - sampleAudioFile.framePosition)
-            )
-        }
-        
-        let beatIntervalTime = AVAudioTime(sampleTime: sampleIntervalTime, atRate: sampleRate)
-        
-        var url = URL(filePath: "")        
-        
-        if beat % timeSignature == 0 {
-            guard let beatOnePath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
-                print("Could not find metronome.wav")
-                return
-            }
-            url = URL(filePath: beatOnePath)
-        } else {
-            guard let beatPath = Bundle.main.path(forResource: "metrolow.wav", ofType: nil) else {
-                print("Could not find metronome.wav")
-                return
-            }
-            url = URL(filePath: beatPath)
-        }
-        
-        let audioFile = try AVAudioFile(forReading: url)
-            
-        guard let buffer = AVAudioPCMBuffer(
-            pcmFormat: audioFile.processingFormat,
-            frameCapacity: AVAudioFrameCount(audioFile.length)
-        ) else {
-            assertionFailure("Could not assign buffer")
-            return
-        }
-        
-        try audioFile.read(into: buffer)
-        
-        metronome.scheduleBuffer(buffer,
-                                    at: nil,
-                                    options: [.interrupts],
-                                    completionCallbackType: .dataRendered
-        ) { _ in
-            Task { @MainActor in
-                if self.isMetronomePlaying {
-                    try self.playMetronome(
-                        beat: beat == self.timeSignature - 1 ? 0 : beat + 1
-                    )
-                } else {
-                    self.engine.stop()
-                    self.engine.detach(self.metronome)
-                    self.metronome.stop()
-                }
-            }
-        }
-        if firstBeat {
-            metronome.play(at: startTime)
-        } else {
-            metronome.play(at: beatIntervalTime)
-        }
-        firstBeat = false
     }
     
-    func playMetronome(beat: Int = 0) throws {
+    func start(at startTime: AVAudioTime) {
+        isMetronomePlaying = true
         
-        let beatInterval: Double = 60 / bpm
-        
-        metronome = AVAudioPlayerNode()
-        
-        guard let samplePath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
-            print("Could not find metronome.wav")
-            return
+        Task {
+            try await Task.sleep(nanoseconds: 500_000_000)
         }
-        let sampleUrl = URL(filePath: samplePath)
+        let timer = Timer.publish(every: 60 / bpm, on: RunLoop.main, in: .common).autoconnect()
         
-        let sampleAudioFile = try AVAudioFile(forReading: sampleUrl)
+        subscription = timer.sink { date in
+            do {
+                try self.playBeat()
+            } catch {}
+        }
+    }
     
-        let sampleRate = sampleAudioFile.processingFormat.sampleRate
-        
-        engine.attach(metronome)
-        engine.connect(metronome,
-                               to: engine.mainMixerNode,
-                               format: sampleAudioFile.processingFormat)
-                
-        engine.prepare()
-        try engine.start()
-                
-        guard let renderTime = metronome.lastRenderTime else {
-            print("Could not get lastRenderTime")
-            return
-        }
-        let now: AVAudioFramePosition = renderTime.sampleTime
-        var beatOffset: Double
-        var sampleIntervalTime: AVAudioFramePosition
-        
-        if firstBeat {
-            isMetronomePlaying = true
-            beatOffset = 2.0 * sampleRate
-            sampleIntervalTime = AVAudioFramePosition(Double(now) + beatOffset)
-            
-        } else {
-            beatOffset = beatInterval * sampleRate
-            sampleIntervalTime = AVAudioFramePosition(
-                Double(now) + beatOffset - Double(sampleAudioFile.length - sampleAudioFile.framePosition)
-            )
-        }
-        
-        let beatIntervalTime = AVAudioTime(sampleTime: sampleIntervalTime, atRate: sampleRate)
-        
-        var url = URL(filePath: "")
-        
-        if beat % timeSignature == 0 {
-            guard let beatOnePath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
-                print("Could not find metronome.wav")
-                return
-            }
-            url = URL(filePath: beatOnePath)
-        } else {
-            guard let beatPath = Bundle.main.path(forResource: "metrolow.wav", ofType: nil) else {
-                print("Could not find metronome.wav")
-                return
-            }
-            url = URL(filePath: beatPath)
-        }
-        
-        let audioFile = try AVAudioFile(forReading: url)
-            
-        guard let buffer = AVAudioPCMBuffer(
-            pcmFormat: audioFile.processingFormat,
-            frameCapacity: AVAudioFrameCount(audioFile.length)
-        ) else {
-            assertionFailure("Could not assign buffer")
-            return
-        }
-        
-        try audioFile.read(into: buffer)
-        
-        metronome.scheduleBuffer(buffer,
-                                    at: nil,
-                                    options: [.interrupts],
-                                    completionCallbackType: .dataRendered
+    func playBeat() throws {
+                        
+        metronome.player.scheduleBuffer(
+            beatCount % timeSignature == 0 ? metronome.downBuffer : metronome.offBuffer,
+            at: nil,
+            options: [.interrupts],
+            completionCallbackType: .dataPlayedBack
         ) { _ in
             Task { @MainActor in
                 if self.isMetronomePlaying {
-                    try self.playMetronome(
-                        beat: beat == self.timeSignature - 1 ? 0 : beat + 1
-                    )
+                    self.metronome.player.stop()
                 } else {
                     self.engine.stop()
-                    self.engine.detach(self.metronome)
-                    self.metronome.stop()
+                    self.engine.detach(self.metronome.player)
+                    self.metronome.player.stop()
                 }
             }
         }
-        metronome.play(at: beatIntervalTime)
-        firstBeat = false
+        metronome.player.play()
+        
+        beatCount += 1
     }
     
     func stopMetronome() {
         isMetronomePlaying = false
-        metronome.stop()
+        subscription?.cancel()
+        beatCount = 0
         self.engine.stop()
-        self.engine.detach(metronome)
+        self.engine.detach(metronome.player)
         firstBeat = true
     }
     
@@ -241,12 +134,29 @@ class Metronome {
     
     //MARK: - Variables
     
-    private var metronome = AVAudioPlayerNode()
+    private var lastPlayTime: TimeInterval = 0
+    private var metronome = Beat()
     private var engine = AVAudioEngine()
     private var firstBeat: Bool = true
     private var isMetronomePlaying: Bool = false
+    private var beatCount: Int = 0
+    private var now: AVAudioFramePosition = 0
     
-    
+    private var beatHighUrl: URL {
+        guard let beatHighPath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
+            print("Could not find metronome.wav")
+            return URL(filePath: "")
+        }
+        return URL(filePath: beatHighPath)
+    }
+    private var beatLowUrl: URL {
+        guard let beatLowPath = Bundle.main.path(forResource: "metrolow.wav", ofType: nil) else {
+            print("Could not find metronome.wav")
+            return URL(filePath: "")
+        }
+        return URL(filePath: beatLowPath)
+    }
+        
     // MARK: - Functions
     
     private init() {
@@ -260,6 +170,7 @@ class Metronome {
             timeSignature = 4
             isArmed = false
             isCountInActive = false
+            
         }
     }
 }

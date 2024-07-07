@@ -49,11 +49,12 @@ class HomeViewModel: ObservableObject {
                         //TODO
                     }
                 } else {
-                    audioManager.stopPlayback()
+                    audioManager.stopPlayback(stopTimer: true)
                     do {
                         try audioManager.startTracking()
                     } catch {
                         //TODO
+                        print(error.localizedDescription)
                     }
                 }
             } else {

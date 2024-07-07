@@ -69,12 +69,10 @@ struct TrackingToolbarView: View {
             }
         }
         .background(
-            appTheme.cellBackground
+            Color(UIColor.systemBackground).opacity(0.3)
                 .background(.ultraThickMaterial.opacity(0.97))
                 .frame(height: 90)
                 .clipShape(RoundedRectangle(cornerRadius: 25))
-            
-                
         )
         .animation(.spring, value: isRecording)
         .offset(y: -20)

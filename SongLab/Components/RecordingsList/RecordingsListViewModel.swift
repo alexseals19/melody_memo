@@ -41,7 +41,7 @@ class RecordingsListViewModel: ObservableObject {
     }
     
     func recordingCellStopButtonTapped() {
-        audioManager.stopPlayback()
+        audioManager.stopPlayback(stopTimer: true)
     }
     
     func recordingCellTrashButtonTapped(for session: Session) {
