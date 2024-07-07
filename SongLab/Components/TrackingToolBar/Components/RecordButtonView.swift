@@ -84,7 +84,7 @@ struct RecordButtonView: View {
                         ForEach(samples, id: \.self) { sampleHeight in
                             Capsule()
                                 .frame(width: 1.0, height: CGFloat(pow((sampleHeight + 80) / 10, 2)))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color(UIColor.label))
                         }
                         Spacer()
                             .frame(minWidth: 0.0)

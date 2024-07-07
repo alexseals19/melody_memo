@@ -40,10 +40,6 @@ struct SessionDetailView: View {
     
     var body: some View {
         VStack(spacing: 3.0) {
-            Color.clear
-                .frame(maxWidth: .infinity)
-                .frame(height: 75)
-                .ignoresSafeArea()
             HStack {
                 backButton
                 Capsule()
@@ -68,6 +64,7 @@ struct SessionDetailView: View {
                 .padding(15)
             }
             .background(Color(UIColor.systemBackground).opacity(0.3))
+            .padding(.top, 78)
             
             MasterCell(
                 session: viewModel.session,
@@ -117,6 +114,7 @@ struct SessionDetailView: View {
                 self.opacity = 1.0
             }
         }
+        
         .ignoresSafeArea()
     }
     
@@ -140,4 +138,11 @@ struct SessionDetailView: View {
         }
         .foregroundColor(.primary)
     }
+}
+
+#Preview {
+    SessionDetailView(
+        recordingManager: MockRecordingManager(),
+        audioManager: MockAudioManager(),
+        session: Session.sessionFixture)
 }

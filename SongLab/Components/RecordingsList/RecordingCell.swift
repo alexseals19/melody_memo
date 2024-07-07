@@ -214,12 +214,13 @@ struct RecordingCell: View {
     }
 }
 
-//#Preview {
-//    RecordingCell(
-//        currentlyPlaying: nil,
-//        session: Session.recordingFixture,
-//        playButtonAction: {_ in },
-//        stopButtonAction: {},
-//        trashButtonAction: { _ in }
-//    )
-//}
+#Preview {
+    RecordingCell(
+        currentlyPlaying: nil,
+        session: Session.sessionFixture,
+        playerProgress: 0.0,
+        playButtonAction: {_ in },
+        stopButtonAction: {},
+        trashButtonAction: { _ in }
+    )
+}

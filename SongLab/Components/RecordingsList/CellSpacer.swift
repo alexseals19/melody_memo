@@ -31,11 +31,10 @@ struct CellSpacer: View {
     
     var body: some View {
         ZStack {
-            Color.clear
+            Color(UIColor.systemBackground).opacity(0.3)
                 .frame(maxWidth: .infinity, minHeight: 150)
                 .frame(height: height)
                 .ignoresSafeArea()
-                .background(Color(UIColor.systemBackground).opacity(0.3))
                 .padding(.bottom, -height + 150)
             if numberOfSessions == 0 {
                 Text("Create your first recording!")
