@@ -1,5 +1,5 @@
 //
-//  RecordingsListViewModel.swift
+//  SessionsListViewModel.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/4/24.
@@ -10,13 +10,15 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class RecordingsListViewModel: ObservableObject {
+class SessionsListViewModel: ObservableObject {
     
     //MARK: - API
     
     @Published var currentlyPlaying: Session?
     @Published var sessions: [Session] = []
     @Published var playerProgress: Double = 0.0
+    
+    @Published var errorMessage: String?
     
     let recordingManager: RecordingManager
     let audioManager: AudioManager
@@ -32,23 +34,23 @@ class RecordingsListViewModel: ObservableObject {
             .assign(to: &$playerProgress)
     }
     
-    func recordingCellPlayButtonTapped(for session: Session) {
+    func sessionCellPlayButtonTapped(for session: Session) {
         do {
             try audioManager.startPlayback(for: session)
         } catch {
-            //TODO
+            errorMessage = "ERROR: Cannot play session."
         }
     }
     
-    func recordingCellStopButtonTapped() {
+    func sessionCellStopButtonTapped() {
         audioManager.stopPlayback(stopTimer: true)
     }
     
-    func recordingCellTrashButtonTapped(for session: Session) {
+    func sessionCellTrashButtonTapped(for session: Session) {
         do {
             try recordingManager.removeSession(session)
         } catch {
-            // TODO: Handle Error
+            errorMessage = "ERROR: Cannot remove session."
         }
     }
     

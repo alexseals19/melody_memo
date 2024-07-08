@@ -1,5 +1,5 @@
 //
-//  RecordingCard.swift
+//  CellSpacerView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/2/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CellSpacer: View {
+struct CellSpacerView: View {
     
     // MARK: - API
     
@@ -46,5 +46,5 @@ struct CellSpacer: View {
 }
 
 #Preview {
-    CellSpacer(screenHeight: 150, numberOfSessions: 0)
+    CellSpacerView(screenHeight: 150, numberOfSessions: 0)
 }

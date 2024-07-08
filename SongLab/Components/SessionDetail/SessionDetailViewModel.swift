@@ -17,6 +17,7 @@ class SessionDetailViewModel: ObservableObject {
     @Published var currentlyPlaying: Session?
     @Published var session: Session
     @Published var trackTimer: Double = 0.0
+    @Published var errorMessage: String?
     
     let audioManager: AudioManager
     var isSessionPlaying: Bool {
@@ -47,12 +48,15 @@ class SessionDetailViewModel: ObservableObject {
                 }
                 do {
                     try recordingManager.updateSession(self.session)
-                } catch {}
+                } catch {
+                    
+                }
             }
             .store(in: &cancellables)
     }
     
     func masterCellSoloButtonTapped() {
+        
         session.isGlobalSoloActive.toggle()
         for track in session.tracks.values {
             if track.soloOverride {
@@ -68,14 +72,16 @@ class SessionDetailViewModel: ObservableObject {
         }
         do {
             try recordingManager.updateSession(session)
-        } catch {}
+        } catch {
+            errorMessage = "ERROR: Could not update session."
+        }
     }
     
     func trackCellPlayButtonTapped(for session: Session) {
         do {
             try audioManager.startPlayback(for: session)
         } catch {
-            //TODO
+            errorMessage = "ERROR: Could not play session."
         }
     }
     
@@ -93,7 +99,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.updateSession(session)
         } catch {
-            
+            errorMessage = "ERROR: Could not update session."
         }
     }
     
@@ -127,7 +133,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.updateSession(session)
         } catch {
-            
+            errorMessage = "ERROR: Could not update session."
         }
     }
     
@@ -139,7 +145,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.removeTrack(session, track)
         } catch {
-            // TODO: Handle Error
+            errorMessage = "ERROR: Could not remove track."
         }
     }
     
@@ -147,7 +153,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.removeSession(session)
         } catch {
-            // TODO: Handle Error
+            errorMessage = "ERROR: Could not remove session."
         }
     }
     
@@ -155,7 +161,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.saveSession(session)
         } catch {
-            //TODO
+            errorMessage = "ERROR: Could not save session."
         }
     }
     
@@ -169,7 +175,7 @@ class SessionDetailViewModel: ObservableObject {
         do {
             try recordingManager.updateSession(session)
         } catch {
-            
+            errorMessage = "ERROR: Could not update session."
         }
     }
     

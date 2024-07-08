@@ -82,7 +82,7 @@ final class DefaultRecordingManager: RecordingManager {
         }
     }
     
-    func saveTrack(_ recording: Session) throws {
+    func saveTrack(_ session: Session) throws {
         Task { @MainActor in
             let updatedRecordings = sessions.value
             try DataPersistenceManager.save(updatedRecordings, to: "sessions")

@@ -29,8 +29,8 @@ protocol AudioManager {
     var inputSamples: CurrentValueSubject<[Float]?, Never> { get }
     func startTracking() throws
     func startTracking(for session: Session) throws
-    func stopTracking() async
-    func stopTracking(for session: Session) async
+    func stopTracking() async throws
+    func stopTracking(for session: Session) async throws
     func startPlayback(for session: Session) throws
     func stopPlayback(stopTimer: Bool)
     func toggleMute(for tracks: [Track])
@@ -66,11 +66,13 @@ class DefaultAudioManager: AudioManager {
         }
         try setupRecorder()
         isRecording.send(true)
-        Task {
-            await startMetering()
-        }
-                
+        
         let startTime = CACurrentMediaTime() + 0.5
+        
+        Task {
+            try await startMetering(at: startTime - 0.25)
+        }
+        
         if metronome.isArmed {
             metronome.start(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime)))
         }
@@ -79,7 +81,7 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startTracking(for session: Session) throws {
-        try setupPlayers(for: session)
+        try setupPlayers(for: session, stopTimer: false)
                 
         try setupRecorder()
         if metronome.isArmed {
@@ -103,16 +105,16 @@ class DefaultAudioManager: AudioManager {
         recorder.record(atTime: startTime + metronome.countInDelay - 0.25)
         
         Task {
-            await startMetering()
+            try await startMetering(at: startTime - 0.25)
         }
     }
         
-    func stopTracking() async {
+    func stopTracking() async throws {
         
         defer { currentFileName = nil }
         
         Task { @MainActor in
-            await stopMetering()
+            try await stopMetering()
             isRecording.send(false)
         }
         
@@ -134,45 +136,41 @@ class DefaultAudioManager: AudioManager {
             fileType: .caf
         )
         
-        do {
-            let audioAsset = AVURLAsset(url: url, options: nil)
-            let duration = try await audioAsset.load(.duration)
-            let durationInSeconds = CMTimeGetSeconds(duration)
-            
-            let track = Track(
-                name: "Track 1",
-                fileName: currentFileName,
-                date: Date(),
-                length: Double(durationInSeconds),
-                id: UUID(),
-                volume: 1.0,
-                isMuted: false,
-                isSolo: false,
-                soloOverride: false
-            )
-            let session = Session(
-                name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
-                date: Date(),
-                length: Double(durationInSeconds),
-                tracks: [track.id : track],
-                absoluteTrackCount: 1,
-                id: UUID(),
-                isGlobalSoloActive: false
-            )
-            try DefaultRecordingManager.shared.saveSession(session)
-            DefaultRecordingManager.shared.incrementAbsoluteSessionCount()
-        } catch {
-            print(error.localizedDescription)
-        }
+        let audioAsset = AVURLAsset(url: url, options: nil)
+        let duration = try await audioAsset.load(.duration)
+        let durationInSeconds = CMTimeGetSeconds(duration)
+        
+        let track = Track(
+            name: "Track 1",
+            fileName: currentFileName,
+            date: Date(),
+            length: Double(durationInSeconds),
+            id: UUID(),
+            volume: 1.0,
+            isMuted: false,
+            isSolo: false,
+            soloOverride: false
+        )
+        let session = Session(
+            name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
+            date: Date(),
+            length: Double(durationInSeconds),
+            tracks: [track.id : track],
+            absoluteTrackCount: 1,
+            id: UUID(),
+            isGlobalSoloActive: false
+        )
+        try DefaultRecordingManager.shared.saveSession(session)
+        DefaultRecordingManager.shared.incrementAbsoluteSessionCount()
     }
     
-    func stopTracking(for session: Session) async {
+    func stopTracking(for session: Session) async throws {
         defer { currentFileName = nil }
         
         var updatedSession = session
         
         Task { @MainActor in
-            await stopMetering()
+            try await stopMetering()
             isRecording.send(false)
         }
         
@@ -193,43 +191,41 @@ class DefaultAudioManager: AudioManager {
             fileType: .caf
         )
         
-        do {
-            let audioAsset = AVURLAsset(url: url, options: nil)
-            let duration = try await audioAsset.load(.duration)
-            let durationInSeconds = CMTimeGetSeconds(duration)
-            let name = "Track \(session.absoluteTrackCount + 1)"
-            
-            let track = Track(
-                name: name,
-                fileName: currentFileName,
-                date: Date(),
-                length: Double(durationInSeconds),
-                id: UUID(),
-                volume: 1.0,
-                isMuted: false,
-                isSolo: false,
-                soloOverride: false
-            )
-            
-            updatedSession.tracks[track.id] = track
-            updatedSession.absoluteTrackCount += 1
-            
-            if track.length > updatedSession.length {
-                updatedSession.length = track.length
-            }
-            
-            try DefaultRecordingManager.shared.saveSession(updatedSession)
-        } catch {
-            print(error.localizedDescription)
+        let audioAsset = AVURLAsset(url: url, options: nil)
+        let duration = try await audioAsset.load(.duration)
+        let durationInSeconds = CMTimeGetSeconds(duration)
+        let name = "Track \(session.absoluteTrackCount + 1)"
+        
+        let track = Track(
+            name: name,
+            fileName: currentFileName,
+            date: Date(),
+            length: Double(durationInSeconds),
+            id: UUID(),
+            volume: 1.0,
+            isMuted: false,
+            isSolo: false,
+            soloOverride: false
+        )
+        
+        updatedSession.tracks[track.id] = track
+        updatedSession.absoluteTrackCount += 1
+        
+        if track.length > updatedSession.length {
+            updatedSession.length = track.length
         }
+        
+        try DefaultRecordingManager.shared.saveSession(updatedSession)
     }
     
     func startPlayback(for session: Session) throws {
         try setupPlayers(for: session)
         
+        let startTimeInSeconds = CACurrentMediaTime() + 0.25
+        
         let startTime = AVAudioTime(
             hostTime: AVAudioTime.hostTime(
-                forSeconds: CACurrentMediaTime() + 0.25
+                forSeconds: startTimeInSeconds
             )
         )
         
@@ -241,14 +237,11 @@ class DefaultAudioManager: AudioManager {
         }
         
         Task {
-            await startTimer()
+            try await startTimer(at: startTimeInSeconds)
         }
     }
     
     func stopPlayback(stopTimer: Bool) {
-        Task { @MainActor in
-            currentlyPlaying.send(nil)
-        }
         
         for player in players {
             player.player.stop()
@@ -257,10 +250,10 @@ class DefaultAudioManager: AudioManager {
         players.removeAll()
         if stopTimer {
             Task {
-                await self.stopTimer()
+                try await self.stopTimer()
             }
         }
-        
+        currentlyPlaying.send(nil)
     }
     
     func toggleMute(for tracks: [Track]) {
@@ -379,7 +372,7 @@ class DefaultAudioManager: AudioManager {
         }
     }
         
-    private func setupPlayers(for session: Session) throws {
+    private func setupPlayers(for session: Session, stopTimer: Bool = true) throws {
         
         if session.tracks.values.isEmpty {
             return
@@ -432,7 +425,7 @@ class DefaultAudioManager: AudioManager {
             ) { _ in
                 Task{ @MainActor in
                     if player.player == self.players.last?.player {
-                        self.stopPlayback(stopTimer: false)
+                        self.stopPlayback(stopTimer: stopTimer)
                     }
                 }
             }
@@ -569,11 +562,13 @@ class DefaultAudioManager: AudioManager {
         return result
     }
     
-    private func startMetering() async {
+    private func startMetering(at startTime: TimeInterval) async throws {
         inputSamples.send([])
-        do {
-            try await Task.sleep(nanoseconds: 200_000_000 + UInt64(Metronome.shared.countInDelay * pow(10, 9)))
-        } catch {}
+        
+        let delay: Double = 0.2 * pow(10, 9)
+        
+        try await Task.sleep(nanoseconds: UInt64(delay))
+        
         startDate = Date()
         subscription = timer.sink { date in
             self.recorder.updateMeters()
@@ -595,29 +590,26 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func stopMetering() async {
-        do {
-            try await Task.sleep(nanoseconds: 200_000_000)
-        } catch {}
+    private func stopMetering() async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
         subscription?.cancel()
         inputSamples.send(nil)
         playerProgress.send(0.0)
     }
     
-    private func startTimer() async {
-        do {
-            try await Task.sleep(nanoseconds: 500_000_000)
-        } catch {}
+    private func startTimer(at startTime: TimeInterval) async throws {
+        
+        let delay: Double = 0.2 * pow(10, 9)
+        
+        try await Task.sleep(nanoseconds: UInt64(delay))
         startDate = Date()
         subscription = timer.sink { date in
             self.playerProgress.send(date.timeIntervalSince(self.startDate))
         }
     }
     
-    private func stopTimer() async {
-        do {
-            try await Task.sleep(nanoseconds: 200_000_000)
-        } catch {}
+    private func stopTimer() async throws {
+        try await Task.sleep(nanoseconds: 200_000_000)
         subscription?.cancel()
         playerProgress.send(0.0)
     }
@@ -631,7 +623,11 @@ class DefaultAudioManager: AudioManager {
     }
 
     @objc private func handleRouteChange(notification: Notification) {
-        // To be implemented.
+        
+        if audioSession.currentRoute.outputs[0].portName == "Speaker" {
+            stopPlayback(stopTimer: true)
+        }
+        
         guard let inputs = audioSession.availableInputs else {
             assertionFailure("failed to retrieve inputs")
             return
