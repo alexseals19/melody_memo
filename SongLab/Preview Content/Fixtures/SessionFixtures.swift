@@ -1,5 +1,5 @@
 //
-//  RecordingFixtures.swift
+//  SessionFixtures.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/4/24.

@@ -14,10 +14,12 @@ class HomeViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var selectedSession: Session?
     @Published var isSettingsPresented: Bool = false
     @Published var inputSamples: [Float]?
     @Published var trackTimer: Double = 0.0
+    
+    @Published var errorMessage: String?
+    @Published var selectedSession: Session?
     
     @Published var isMetronomeArmed: Bool {
         didSet {
@@ -46,26 +48,39 @@ class HomeViewModel: ObservableObject {
                     do {
                         try audioManager.startTracking(for: selectedSession)
                     } catch {
-                        //TODO
+                        errorMessage = "ERROR: Could not begin recording."
                     }
                 } else {
                     audioManager.stopPlayback(stopTimer: true)
                     do {
                         try audioManager.startTracking()
                     } catch {
-                        //TODO
-                        print(error.localizedDescription)
+                        errorMessage = "ERROR: Could not begin recording."
                     }
                 }
             } else {
                 Task{
                     if let selectedSession {
-                        await audioManager.stopTracking(for: selectedSession)
+                        do {
+                            try await audioManager.stopTracking(for: selectedSession)
+                        } catch {
+                            errorMessage = "ERROR: This operation could not be completed."
+                        }
                     } else {
-                        await audioManager.stopTracking()
+                        do {
+                            try await audioManager.stopTracking()
+                        } catch {
+                            errorMessage = "ERROR: This operation could not be completed."
+                        }
                     }
                 }
             }
+        }
+    }
+    
+    func sessionDetailDismissButtonTapped() {
+        if isRecording {
+            isRecording.toggle()
         }
     }
     

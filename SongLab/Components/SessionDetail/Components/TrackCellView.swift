@@ -1,5 +1,5 @@
 //
-//  TrackCell.swift
+//  TrackCellView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/12/24.
@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import AVFoundation
 
-struct TrackCell: View {
+struct TrackCellView: View {
     
     //MARK: - API
         
@@ -195,12 +195,11 @@ struct TrackCellButtonImage: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 24, height: 24)
-            
     }
 }
 
 #Preview {
-    TrackCell(
+    TrackCellView(
         track: Session.trackFixture,
         isGlobalSoloActive: false,
         isSessionPlaying: false,

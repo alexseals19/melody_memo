@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  HomeView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 2/3/24.
@@ -28,22 +28,23 @@ struct HomeView: View {
     
     var body: some View {
         ZStack {
-            RecordingsListView(
+            SessionsListView(
                 audioManager: viewModel.audioManager,
                 recordingManager: viewModel.recordingManager,
-                selectedSession: $viewModel.selectedSession
+                selectedSession: $viewModel.selectedSession,
+                isRecording: viewModel.isRecording
             )
             VStack {
                 HomeViewNavBarView()
-                
+                if viewModel.errorMessage != nil {
+                    ErrorMessageView(message: $viewModel.errorMessage)
+                }
                 Spacer()
                 TrackingToolbarView(
-                    audioManager: viewModel.audioManager,
                     isRecording: $viewModel.isRecording,
                     isSettingsPresented: $viewModel.isSettingsPresented,
                     inputSamples: viewModel.inputSamples,
                     trackTimer: viewModel.trackTimer,
-                    metronome: viewModel.metronome,
                     isMetronomeArmed: $viewModel.isMetronomeArmed,
                     metronomeBpm: viewModel.metronomeBpm
                 )

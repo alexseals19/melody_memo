@@ -1,5 +1,5 @@
 //
-//  MasterCell.swift
+//  MasterCellView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/12/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct MasterCell: View {
+struct MasterCellView: View {
     
     //MARK: - API
     
@@ -88,7 +88,7 @@ struct MasterCell: View {
 }
 
 #Preview {
-    MasterCell(
+    MasterCellView(
         session: Session.sessionFixture,
         currentlyPlaying: nil,
         playButtonAction: { _ in },

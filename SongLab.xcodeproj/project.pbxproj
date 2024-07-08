@@ -13,20 +13,21 @@
 		9900964E2C1B47250092C9FE /* SessionDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9900964D2C1B47250092C9FE /* SessionDetailViewModel.swift */; };
 		991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */; };
 		991F56D72C0D361B00CC88BA /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D62C0D361B00CC88BA /* Session.swift */; };
-		991F56D92C0D3B1E00CC88BA /* RecordingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */; };
+		991F56D92C0D3B1E00CC88BA /* SessionCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 991F56D82C0D3B1E00CC88BA /* SessionCellView.swift */; };
+		9994611A2C3C5F6000BA862A /* ErrorMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 999461192C3C5F6000BA862A /* ErrorMessageView.swift */; };
 		99A078462C1A01EC008EE21B /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078452C1A01EC008EE21B /* Track.swift */; };
 		99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078492C1A085B008EE21B /* SessionDetailView.swift */; };
-		99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784C2C1A5DE8008EE21B /* TrackCell.swift */; };
-		99A0784F2C1A5E11008EE21B /* MasterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784E2C1A5E11008EE21B /* MasterCell.swift */; };
+		99A0784D2C1A5DE8008EE21B /* TrackCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */; };
+		99A0784F2C1A5E11008EE21B /* MasterCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784E2C1A5E11008EE21B /* MasterCellView.swift */; };
 		99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078502C1A78D7008EE21B /* HomeViewModel.swift */; };
-		99A384C42C1CB72B00736BA8 /* CellSpacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C32C1CB72B00736BA8 /* CellSpacer.swift */; };
+		99A384C42C1CB72B00736BA8 /* CellSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */; };
 		99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */; };
 		99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */; };
 		99B21E062C20A488004D5669 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B21E052C20A488004D5669 /* AppTheme.swift */; };
 		99B21E092C21043F004D5669 /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B21E082C21043F004D5669 /* AppSettingsView.swift */; };
-		99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* RecordingsListView.swift */; };
-		99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */; };
-		99C364F02C0F642B00873213 /* RecordingFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EF2C0F642B00873213 /* RecordingFixtures.swift */; };
+		99C364EB2C0F61AE00873213 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* SessionsListView.swift */; };
+		99C364ED2C0F627800873213 /* SessionsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* SessionsListViewModel.swift */; };
+		99C364F02C0F642B00873213 /* SessionFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EF2C0F642B00873213 /* SessionFixtures.swift */; };
 		99DBF3762C225D2A002B6419 /* metrolow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3742C225D2A002B6419 /* metrolow.wav */; };
 		99DBF3772C225D2A002B6419 /* metrohigh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3752C225D2A002B6419 /* metrohigh.wav */; };
 		99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF3782C235F3D002B6419 /* Metronome.swift */; };
@@ -39,7 +40,6 @@
 		99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE542B6EC9DE003308D2 /* HomeView.swift */; };
 		99F9EE572B6EC9E0003308D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE562B6EC9E0003308D2 /* Assets.xcassets */; };
 		99F9EE5A2B6EC9E0003308D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */; };
-		99FEF52A2C112442004E1031 /* TrackingToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,20 +49,21 @@
 		9900964D2C1B47250092C9FE /* SessionDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailViewModel.swift; sourceTree = "<group>"; };
 		991F56CF2C0CC71700CC88BA /* RecordButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButtonView.swift; sourceTree = "<group>"; };
 		991F56D62C0D361B00CC88BA /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
-		991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCell.swift; sourceTree = "<group>"; };
+		991F56D82C0D3B1E00CC88BA /* SessionCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCellView.swift; sourceTree = "<group>"; };
+		999461192C3C5F6000BA862A /* ErrorMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessageView.swift; sourceTree = "<group>"; };
 		99A078452C1A01EC008EE21B /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
 		99A078492C1A085B008EE21B /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
-		99A0784C2C1A5DE8008EE21B /* TrackCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackCell.swift; sourceTree = "<group>"; };
-		99A0784E2C1A5E11008EE21B /* MasterCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterCell.swift; sourceTree = "<group>"; };
+		99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackCellView.swift; sourceTree = "<group>"; };
+		99A0784E2C1A5E11008EE21B /* MasterCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterCellView.swift; sourceTree = "<group>"; };
 		99A078502C1A78D7008EE21B /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
-		99A384C32C1CB72B00736BA8 /* CellSpacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSpacer.swift; sourceTree = "<group>"; };
+		99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSpacerView.swift; sourceTree = "<group>"; };
 		99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewNavBarView.swift; sourceTree = "<group>"; };
 		99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPersistenceManager.swift; sourceTree = "<group>"; };
 		99B21E052C20A488004D5669 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		99B21E082C21043F004D5669 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
-		99C364EA2C0F61AE00873213 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
-		99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListViewModel.swift; sourceTree = "<group>"; };
-		99C364EF2C0F642B00873213 /* RecordingFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFixtures.swift; sourceTree = "<group>"; };
+		99C364EA2C0F61AE00873213 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
+		99C364EC2C0F627800873213 /* SessionsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListViewModel.swift; sourceTree = "<group>"; };
+		99C364EF2C0F642B00873213 /* SessionFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixtures.swift; sourceTree = "<group>"; };
 		99DBF3742C225D2A002B6419 /* metrolow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrolow.wav; sourceTree = "<group>"; };
 		99DBF3752C225D2A002B6419 /* metrohigh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrohigh.wav; sourceTree = "<group>"; };
 		99DBF3782C235F3D002B6419 /* Metronome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metronome.swift; sourceTree = "<group>"; };
@@ -76,7 +77,6 @@
 		99F9EE542B6EC9DE003308D2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		99F9EE562B6EC9E0003308D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingToolbarViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,7 +101,7 @@
 		4521F44E2C18B0D900246189 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
-				99C364EF2C0F642B00873213 /* RecordingFixtures.swift */,
+				99C364EF2C0F642B00873213 /* SessionFixtures.swift */,
 			);
 			path = Fixtures;
 			sourceTree = "<group>";
@@ -137,8 +137,8 @@
 		99A0784B2C1A5DD8008EE21B /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				99A0784C2C1A5DE8008EE21B /* TrackCell.swift */,
-				99A0784E2C1A5E11008EE21B /* MasterCell.swift */,
+				99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */,
+				99A0784E2C1A5E11008EE21B /* MasterCellView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -152,6 +152,7 @@
 				99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */,
 				99B21E052C20A488004D5669 /* AppTheme.swift */,
 				99DBF3782C235F3D002B6419 /* Metronome.swift */,
+				999461192C3C5F6000BA862A /* ErrorMessageView.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -199,10 +200,10 @@
 		99C364E92C0F619500873213 /* RecordingsList */ = {
 			isa = PBXGroup;
 			children = (
-				99C364EA2C0F61AE00873213 /* RecordingsListView.swift */,
-				99C364EC2C0F627800873213 /* RecordingsListViewModel.swift */,
-				991F56D82C0D3B1E00CC88BA /* RecordingCell.swift */,
-				99A384C32C1CB72B00736BA8 /* CellSpacer.swift */,
+				99C364EA2C0F61AE00873213 /* SessionsListView.swift */,
+				99C364EC2C0F627800873213 /* SessionsListViewModel.swift */,
+				991F56D82C0D3B1E00CC88BA /* SessionCellView.swift */,
+				99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */,
 			);
 			path = RecordingsList;
 			sourceTree = "<group>";
@@ -228,7 +229,6 @@
 			isa = PBXGroup;
 			children = (
 				99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */,
-				99FEF5292C112442004E1031 /* TrackingToolbarViewModel.swift */,
 				99FEF52B2C1126D6004E1031 /* Components */,
 			);
 			path = TrackingToolBar;
@@ -354,18 +354,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				99A384C42C1CB72B00736BA8 /* CellSpacer.swift in Sources */,
+				99A384C42C1CB72B00736BA8 /* CellSpacerView.swift in Sources */,
 				99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */,
 				99F0F72D2C10F8C3001B22CE /* MetronomeButtonView.swift in Sources */,
 				99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */,
 				99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */,
-				99C364ED2C0F627800873213 /* RecordingsListViewModel.swift in Sources */,
+				99C364ED2C0F627800873213 /* SessionsListViewModel.swift in Sources */,
 				99A078462C1A01EC008EE21B /* Track.swift in Sources */,
-				99FEF52A2C112442004E1031 /* TrackingToolbarViewModel.swift in Sources */,
 				9900964E2C1B47250092C9FE /* SessionDetailViewModel.swift in Sources */,
-				99C364F02C0F642B00873213 /* RecordingFixtures.swift in Sources */,
+				99C364F02C0F642B00873213 /* SessionFixtures.swift in Sources */,
 				4521F4512C18B10200246189 /* MockRecordingManager.swift in Sources */,
-				99A0784F2C1A5E11008EE21B /* MasterCell.swift in Sources */,
+				99A0784F2C1A5E11008EE21B /* MasterCellView.swift in Sources */,
 				99B21E092C21043F004D5669 /* AppSettingsView.swift in Sources */,
 				99F0F7332C112055001B22CE /* AudioManager.swift in Sources */,
 				991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */,
@@ -374,14 +373,15 @@
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
 				99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
-				99A0784D2C1A5DE8008EE21B /* TrackCell.swift in Sources */,
+				99A0784D2C1A5DE8008EE21B /* TrackCellView.swift in Sources */,
+				9994611A2C3C5F6000BA862A /* ErrorMessageView.swift in Sources */,
 				99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */,
-				99C364EB2C0F61AE00873213 /* RecordingsListView.swift in Sources */,
+				99C364EB2C0F61AE00873213 /* SessionsListView.swift in Sources */,
 				99DBF3802C24A2DE002B6419 /* PlaybackControlButtonView.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,
 				99B21E062C20A488004D5669 /* AppTheme.swift in Sources */,
 				99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */,
-				991F56D92C0D3B1E00CC88BA /* RecordingCell.swift in Sources */,
+				991F56D92C0D3B1E00CC88BA /* SessionCellView.swift in Sources */,
 				99DBF37B2C236FED002B6419 /* AppSettingsViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

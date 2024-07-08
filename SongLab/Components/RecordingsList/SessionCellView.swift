@@ -1,5 +1,5 @@
 //
-//  RecordingCard.swift
+//  SessionCellView.swift
 //  SongLab
 //
 //  Created by Alex Seals on 6/2/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RecordingCell: View {
+struct SessionCellView: View {
     
     // MARK: - API
         
@@ -215,7 +215,7 @@ struct RecordingCell: View {
 }
 
 #Preview {
-    RecordingCell(
+    SessionCellView(
         currentlyPlaying: nil,
         session: Session.sessionFixture,
         playerProgress: 0.0,

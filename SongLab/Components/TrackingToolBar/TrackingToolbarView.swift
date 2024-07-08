@@ -13,20 +13,18 @@ struct TrackingToolbarView: View {
     @Binding var isSettingsPresented: Bool
     @Binding var isRecording: Bool
     @Binding var isMetronomeArmed: Bool
+    
     var metronomeBpm: Double
     var inputSamples: [Float]?
     
     init(
-        audioManager: AudioManager,
         isRecording: Binding<Bool>,
         isSettingsPresented: Binding<Bool>,
         inputSamples: [Float]?,
         trackTimer: Double,
-        metronome: Metronome,
         isMetronomeArmed: Binding<Bool>,
         metronomeBpm: Double
     ) {
-        _viewModel = StateObject(wrappedValue: TrackingToolbarViewModel(audioManager: audioManager, metronome: metronome))
         _isRecording = isRecording
         _isSettingsPresented = isSettingsPresented
         _isMetronomeArmed = isMetronomeArmed
@@ -38,9 +36,7 @@ struct TrackingToolbarView: View {
     //MARK: - Variables
     
     @EnvironmentObject private var appTheme: AppTheme
-    
-    @StateObject private var viewModel: TrackingToolbarViewModel
-    
+        
     private var trackTimer: Double
     
     private var timerDisplay: String {
@@ -93,12 +89,10 @@ struct TrackingToolbarView: View {
 
 #Preview {
     TrackingToolbarView(
-        audioManager: MockAudioManager(), 
         isRecording: .constant(false),
         isSettingsPresented: .constant(false),
         inputSamples: nil,
         trackTimer: 0.0,
-        metronome: Metronome.shared,
         isMetronomeArmed: .constant(false),
         metronomeBpm: 120
         )
