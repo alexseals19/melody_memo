@@ -118,6 +118,10 @@ struct AppSettingsView: View {
                 .presentationDetents([.height(500)])
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+                viewModel.saveSettings()
+        }
+        
     }
     
     private func changeIcon(to name: String?) {

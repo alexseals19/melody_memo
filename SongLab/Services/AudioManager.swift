@@ -109,9 +109,7 @@ class DefaultAudioManager: AudioManager {
         
         try stopMetering()
         isRecording.send(false)
-        
-        metronome.stopMetronome()
-        
+                
         recorder.stop()
         
         if metronome.isArmed {
@@ -167,8 +165,8 @@ class DefaultAudioManager: AudioManager {
         recorder.stop()
         try stopPlayback(stopTimer: false)
         
-        if Metronome.shared.isArmed {
-            Metronome.shared.stopMetronome()
+        if metronome.isArmed {
+            metronome.stopMetronome()
         }
     
         guard let currentFileName else {

@@ -23,6 +23,10 @@ class AppSettingsViewModel: ObservableObject {
         self.metronomeBpm = metronome.bpm
     }
     
+    func saveSettings() {
+        metronome.saveSettings()
+    }
+    
     // MARK: - Variables
     
     private let metronome: Metronome
