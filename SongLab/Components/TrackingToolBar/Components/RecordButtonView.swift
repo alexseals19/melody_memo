@@ -15,7 +15,7 @@ struct RecordButtonView: View {
     
     @EnvironmentObject var appTheme: AppTheme
     
-    init(isRecording: Binding<Bool>, inputLevel: [Float]?) {
+    init(isRecording: Binding<Bool>, inputLevel: [SampleModel]?) {
         _isRecording = isRecording
         self.inputSamples = inputLevel
     }
@@ -29,8 +29,8 @@ struct RecordButtonView: View {
     @State private var recordButtonDimensions: CGFloat = 65
     @State private var recordButtonCornerRadius: CGFloat = 32.5
     
-    private var inputSamples: [Float]?
-    private var samples: [Float] {
+    private var inputSamples: [SampleModel]?
+    private var samples: [SampleModel] {
         if let inputSamples {
             return inputSamples
         } else {
@@ -81,9 +81,9 @@ struct RecordButtonView: View {
             if isRecording {
                 HStack(spacing: 5.0) {
                     HStack(spacing: 1.0) {
-                        ForEach(samples, id: \.self) { sampleHeight in
+                        ForEach(samples) { sample in
                             Capsule()
-                                .frame(width: 1.0, height: CGFloat(pow((sampleHeight + 80) / 10, 2)))
+                                .frame(width: 1.0, height: CGFloat(pow((sample.decibels + 80) / 10, 2)))
                                 .foregroundStyle(Color(UIColor.label))
                         }
                         Spacer()

@@ -14,7 +14,7 @@ class MockAudioManager: AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
-    var inputSamples: CurrentValueSubject<[Float]?, Never>
+    var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
     
     func startTracking() {}
     func startTracking(for session: Session) throws {}

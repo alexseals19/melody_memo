@@ -12,26 +12,29 @@ import Combine
 
 struct Beat {
     var player: AVAudioPlayerNode
-    var downBuffer: AVAudioPCMBuffer
-    var offBuffer: AVAudioPCMBuffer
+    var number: Int
+    var buffer: AVAudioPCMBuffer
+    var playTime: TimeInterval
     
     init(player: AVAudioPlayerNode, 
-         downBuffer: AVAudioPCMBuffer,
-         offBuffer: AVAudioPCMBuffer
+         number: Int,
+         buffer: AVAudioPCMBuffer,
+         playTime: TimeInterval
     ) {
         self.player = player
-        self.downBuffer = downBuffer
-        self.offBuffer = offBuffer
+        self.number = number
+        self.buffer = buffer
+        self.playTime = playTime
     }
     
     init() {
         player = AVAudioPlayerNode()
-        downBuffer = AVAudioPCMBuffer()
-        offBuffer = AVAudioPCMBuffer()
+        number = 0
+        buffer = AVAudioPCMBuffer()
+        playTime = CACurrentMediaTime()
     }
 }
 
-@MainActor
 class Metronome {
     
     //MARK: - API
@@ -53,74 +56,165 @@ class Metronome {
     
     func prepare() throws {
         
-        let beatHighFile = try AVAudioFile(forReading: beatHighUrl)
-        let beatLowFile = try AVAudioFile(forReading: beatLowUrl)
-        
-        guard let bufferHigh = AVAudioPCMBuffer(pcmFormat: beatHighFile.processingFormat, frameCapacity: AVAudioFrameCount(beatHighFile.length)) else {
-            return
+        for index in 0 ..< beatSetLength {
+            
+            let beatHighFile = try AVAudioFile(forReading: beatHighUrl)
+            let beatLowFile = try AVAudioFile(forReading: beatLowUrl)
+            
+            guard let bufferHigh = AVAudioPCMBuffer(pcmFormat: beatHighFile.processingFormat, frameCapacity: AVAudioFrameCount(beatHighFile.length)) else {
+                return
+            }
+            guard let bufferLow = AVAudioPCMBuffer(pcmFormat: beatLowFile.processingFormat, frameCapacity: AVAudioFrameCount(beatLowFile.length)) else {
+                return
+            }
+            
+            if index % timeSignature == 0 {
+                beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
+                engine.attach(beatSetOne[index].player)
+                engine.connect(beatSetOne[index].player,
+                               to: engine.mainMixerNode,
+                               format: beatHighFile.processingFormat)
+                try beatHighFile.read(into: beatSetOne[index].buffer)
+            } else {
+                beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
+                engine.attach(beatSetOne[index].player)
+                engine.connect(beatSetOne[index].player,
+                               to: engine.mainMixerNode,
+                               format: beatLowFile.processingFormat)
+                try beatLowFile.read(into: beatSetOne[index].buffer)
+            }
         }
-        guard let bufferLow = AVAudioPCMBuffer(pcmFormat: beatLowFile.processingFormat, frameCapacity: AVAudioFrameCount(beatLowFile.length)) else {
-            return
+        
+        for index in 0 ..< beatSetLength {
+            
+            let beatHighFile = try AVAudioFile(forReading: beatHighUrl)
+            let beatLowFile = try AVAudioFile(forReading: beatLowUrl)
+            
+            guard let bufferHigh = AVAudioPCMBuffer(
+                pcmFormat: beatHighFile.processingFormat,
+                frameCapacity: AVAudioFrameCount(beatHighFile.length)
+            ) else {
+                assertionFailure("Could not assign bufferHigh.")
+                return
+            }
+            guard let bufferLow = AVAudioPCMBuffer(
+                pcmFormat: beatLowFile.processingFormat,
+                frameCapacity: AVAudioFrameCount(beatLowFile.length)
+            ) else {
+                assertionFailure("Could not assign bufferLow.")
+                return
+            }
+            
+            if index % timeSignature == 0 {
+                beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
+                engine.attach(beatSetTwo[index].player)
+                engine.connect(beatSetTwo[index].player,
+                               to: engine.mainMixerNode,
+                               format: beatHighFile.processingFormat)
+                try beatHighFile.read(into: beatSetTwo[index].buffer)
+            } else {
+                beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
+                engine.attach(beatSetTwo[index].player)
+                engine.connect(beatSetTwo[index].player,
+                               to: engine.mainMixerNode,
+                               format: beatLowFile.processingFormat)
+                try beatLowFile.read(into: beatSetTwo[index].buffer)
+            }
         }
-        
-        metronome = Beat(player: AVAudioPlayerNode(), downBuffer: bufferHigh, offBuffer: bufferLow)
-
-        engine.attach(metronome.player)
-        engine.connect(metronome.player,
-                       to: engine.mainMixerNode,
-                       format: beatHighFile.processingFormat)
-        try beatHighFile.read(into: metronome.downBuffer)
-        try beatLowFile.read(into: metronome.offBuffer)
-        
         engine.prepare()
         try engine.start()
     }
     
-    func start(at startTime: AVAudioTime) {
-        isMetronomePlaying = true
-        
-        Task {
-            try await Task.sleep(nanoseconds: 500_000_000)
-        }
-        let timer = Timer.publish(every: 60 / bpm, on: RunLoop.main, in: .common).autoconnect()
-        
-        subscription = timer.sink { date in
-            do {
-                try self.playBeat()
-            } catch {}
-        }
-    }
-    
-    func playBeat() throws {
-                        
-        metronome.player.scheduleBuffer(
-            beatCount % timeSignature == 0 ? metronome.downBuffer : metronome.offBuffer,
-            at: nil,
-            options: [.interrupts],
-            completionCallbackType: .dataPlayedBack
-        ) { _ in
-            Task { @MainActor in
-                if self.isMetronomePlaying {
-                    self.metronome.player.stop()
+    func setSchedule(for set: String, at startTime: TimeInterval) {
+        Task.detached(priority: .background) {
+            for index in 0 ..< self.beatSetLength {
+                if index == 0 {
+                    self.beatSetOne[index].playTime = startTime
                 } else {
-                    self.engine.stop()
-                    self.engine.detach(self.metronome.player)
-                    self.metronome.player.stop()
+                    self.beatSetOne[index].playTime = self.beatSetOne[index - 1].playTime + self.beatInterval
                 }
             }
         }
-        metronome.player.play()
-        
-        beatCount += 1
+    }
+    
+    func playSetOne() {
+        Task.detached(priority: .background) {
+            for index in 0 ..< self.beatSetLength {
+                self.beatSetOne[index].player.scheduleBuffer(self.beatSetOne[index].buffer,
+                                            at: nil,
+                                            options: [.interrupts],
+                                            completionCallbackType: .dataPlayedBack
+                ) { _ in
+                    Task { @MainActor in
+                        self.beatSetOne[index].player.stop()
+                        if self.isMetronomePlaying {
+                            if index == self.beatSetLength - 2 {
+                                
+                            } else if index == self.beatSetLength / 2 {
+                                self.playSetTwo()
+                                
+                            }
+                        } else {
+                            self.engine.stop()
+                            self.engine.detach(self.beatSetOne[index].player)
+                            self.beatSetOne[index].player.stop()
+                        }
+                        
+                    }
+                }
+                let time = AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: self.beatSetOne[index].playTime))
+                self.beatSetOne[index].player.play(at: time)
+                self.beatSetTwo[index].playTime = self.beatSetOne[index].playTime + (self.beatInterval * Double(self.beatSetLength))
+            }
+        }
+    }
+    
+    func playSetTwo() {
+        Task.detached(priority: .background) {
+            for index in 0 ..< self.beatSetLength {
+                
+                self.beatSetTwo[index].player.scheduleBuffer(self.beatSetTwo[index].buffer,
+                                            at: nil,
+                                            options: [.interrupts],
+                                            completionCallbackType: .dataPlayedBack
+                ) { _ in
+                    Task { @MainActor in
+                        self.beatSetTwo[index].player.stop()
+                        if self.isMetronomePlaying {
+                            if index == self.beatSetLength - 2 {
+                                
+                            } else if index == self.beatSetLength / 2 {
+                                self.playSetOne()
+                            }
+                        } else {
+                            self.engine.stop()
+                            self.engine.detach(self.beatSetTwo[index].player)
+                            self.beatSetTwo[index].player.stop()
+                        }
+                    }
+                }
+                let time = AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: self.beatSetTwo[index].playTime))
+                self.beatSetTwo[index].player.play(at: time)
+                self.beatSetOne[index].playTime = self.beatSetTwo[index].playTime + (self.beatInterval * Double(self.beatSetLength))
+            }
+        }
+    }
+    
+    func start(at startTime: TimeInterval) {
+        isMetronomePlaying = true
+        setSchedule(for: "zero", at: startTime)
+        playSetOne()
     }
     
     func stopMetronome() {
         isMetronomePlaying = false
-        subscription?.cancel()
-        beatCount = 0
-        self.engine.stop()
-        self.engine.detach(metronome.player)
-        firstBeat = true
+        engine.stop()
+        for index in 0 ..< beatSetLength {
+            beatSetOne[index].player.stop()
+            engine.detach(beatSetOne[index].player)
+            beatSetTwo[index].player.stop()
+            engine.detach(beatSetTwo[index].player)
+        }
     }
     
     func saveSettings() {
@@ -134,24 +228,30 @@ class Metronome {
     
     //MARK: - Variables
     
-    private var lastPlayTime: TimeInterval = 0
-    private var metronome = Beat()
     private var engine = AVAudioEngine()
-    private var firstBeat: Bool = true
     private var isMetronomePlaying: Bool = false
-    private var beatCount: Int = 0
-    private var now: AVAudioFramePosition = 0
+    
+    private var beatSetOne: [Beat] = []
+    private var beatSetTwo: [Beat] = []
+    
+    private var beatInterval: Double {
+        60.0 / bpm
+    }
+    
+    private var beatSetLength: Int {
+        timeSignature * 2
+    }
     
     private var beatHighUrl: URL {
         guard let beatHighPath = Bundle.main.path(forResource: "metrohigh.wav", ofType: nil) else {
-            print("Could not find metronome.wav")
+            assertionFailure("Could not find metrohigh.wav")
             return URL(filePath: "")
         }
         return URL(filePath: beatHighPath)
     }
     private var beatLowUrl: URL {
         guard let beatLowPath = Bundle.main.path(forResource: "metrolow.wav", ofType: nil) else {
-            print("Could not find metronome.wav")
+            assertionFailure("Could not find metrolow.wav")
             return URL(filePath: "")
         }
         return URL(filePath: beatLowPath)
@@ -170,7 +270,6 @@ class Metronome {
             timeSignature = 4
             isArmed = false
             isCountInActive = false
-            
         }
     }
 }
