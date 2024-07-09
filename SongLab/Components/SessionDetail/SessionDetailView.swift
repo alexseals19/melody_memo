@@ -133,7 +133,9 @@ struct SessionDetailView: View {
                 Spacer()
             }
         }
-        
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+                viewModel.saveSession()
+        }
     }
     
     var backButton: some View {
