@@ -107,6 +107,7 @@ struct AppSettingsView: View {
                             .padding(.bottom, 10)
                             .foregroundStyle(.primary)
                             .onTapGesture {
+                                changeIcon(to: "Icon_\(theme.rawValue)")
                                 appTheme.theme = theme
                             }
                         }
@@ -116,6 +117,22 @@ struct AppSettingsView: View {
                 }
                 .presentationDetents([.height(500)])
             }
+        }
+    }
+    
+    private func changeIcon(to name: String?) {
+        if UIApplication.shared.responds(
+            to: #selector(
+                getter: UIApplication.supportsAlternateIcons)) && UIApplication.shared.supportsAlternateIcons {
+            
+            typealias setAlternateIconNameClosure = @convention(c) (NSObject, Selector, NSString?, @escaping (NSError) -> ()) -> ()
+            
+            let selectorString = "_setAlternateIconName:completionHandler:"
+            
+            let selector = NSSelectorFromString(selectorString)
+            let imp = UIApplication.shared.method(for: selector)
+            let method = unsafeBitCast(imp, to: setAlternateIconNameClosure.self)
+            method(UIApplication.shared, selector, name as NSString?, { _ in })
         }
     }
 }

@@ -15,9 +15,8 @@ struct AudioPlayer {
     var track: Track
 }
 
-struct AudioPreviewModel: Hashable, Identifiable {
-    var magnitude: Float
-    var color: Color
+struct SampleModel: Hashable, Identifiable {
+    var decibels: Float
     var id = UUID()
 }
 
@@ -26,13 +25,13 @@ protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
-    var inputSamples: CurrentValueSubject<[Float]?, Never> { get }
+    var inputSamples: CurrentValueSubject<[SampleModel]?, Never> { get }
     func startTracking() throws
     func startTracking(for session: Session) throws
     func stopTracking() async throws
     func stopTracking(for session: Session) async throws
     func startPlayback(for session: Session) throws
-    func stopPlayback(stopTimer: Bool)
+    func stopPlayback(stopTimer: Bool) throws
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
@@ -49,14 +48,13 @@ class DefaultAudioManager: AudioManager {
         players: [AudioPlayer](),
         engine: AVAudioEngine(),
         playbackEngine: AVAudioEngine(),
-        mixerNode: AVAudioMixerNode(),
-        playbackStartTime: Date()
+        mixerNode: AVAudioMixerNode()
     )
     
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
-    var inputSamples: CurrentValueSubject<[Float]?, Never>
+    var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
     var subscription: AnyCancellable?
     
     func startTracking() throws {
@@ -69,14 +67,12 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = CACurrentMediaTime() + 0.5
         
-        Task {
-            try await startMetering(at: startTime - 0.25)
-        }
+        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
         
         if metronome.isArmed {
-            metronome.start(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime)))
+            metronome.start(at: startTime)
         }
-        recorder.record(atTime: startTime + metronome.countInDelay - 0.25)
+        recorder.record(atTime: (startTime + metronome.countInDelay) - 0.25)
         
     }
     
@@ -95,28 +91,24 @@ class DefaultAudioManager: AudioManager {
         
         if !session.tracks.isEmpty {
             for player in players {
-                player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.25)))
+                player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
             }
         }
         
         if metronome.isArmed {
-            metronome.start(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime)))
+            metronome.start(at: startTime)
         }
-        recorder.record(atTime: startTime + metronome.countInDelay - 0.25)
+        recorder.record(atTime: (startTime + metronome.countInDelay) - 0.25)
         
-        Task {
-            try await startMetering(at: startTime - 0.25)
-        }
+        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
     }
         
     func stopTracking() async throws {
         
         defer { currentFileName = nil }
         
-        Task { @MainActor in
-            try await stopMetering()
-            isRecording.send(false)
-        }
+        try stopMetering()
+        isRecording.send(false)
         
         metronome.stopMetronome()
         
@@ -169,13 +161,11 @@ class DefaultAudioManager: AudioManager {
         
         var updatedSession = session
         
-        Task { @MainActor in
-            try await stopMetering()
-            isRecording.send(false)
-        }
+        try stopMetering()
+        isRecording.send(false)
         
         recorder.stop()
-        stopPlayback(stopTimer: false)
+        try stopPlayback(stopTimer: false)
         
         if Metronome.shared.isArmed {
             Metronome.shared.stopMetronome()
@@ -236,12 +226,10 @@ class DefaultAudioManager: AudioManager {
             player.player.play(at: startTime)
         }
         
-        Task {
-            try await startTimer(at: startTimeInSeconds)
-        }
+        try startTimer(at: startTimeInSeconds + 0.03)
     }
     
-    func stopPlayback(stopTimer: Bool) {
+    func stopPlayback(stopTimer: Bool) throws {
         
         for player in players {
             player.player.stop()
@@ -249,9 +237,7 @@ class DefaultAudioManager: AudioManager {
         playbackEngine.stop()
         players.removeAll()
         if stopTimer {
-            Task {
-                try await self.stopTimer()
-            }
+            try self.stopTimer()
         }
         currentlyPlaying.send(nil)
     }
@@ -288,7 +274,7 @@ class DefaultAudioManager: AudioManager {
                 HStack(spacing: 1.0) {
                     ForEach(samples) { sample in
                         Capsule()
-                            .frame(width: 1, height: self.normalizeSoundLevel(level: sample.magnitude))
+                            .frame(width: 1, height: self.normalizeSoundLevel(level: sample.decibels))
                     }
                     .foregroundStyle(color)
                 }
@@ -311,12 +297,8 @@ class DefaultAudioManager: AudioManager {
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
-    private var playbackStartTime: Date
     
     private var bufferInterrupt: Bool = false
-    private var beats: [AVAudioPlayerNode] = []
-    private var metronomeActive: Bool = true
-    private var firstBeat: Bool = true
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
     private var metronome: Metronome = Metronome.shared
@@ -332,8 +314,7 @@ class DefaultAudioManager: AudioManager {
         players: [AudioPlayer],
         engine: AVAudioEngine,
         playbackEngine: AVAudioEngine,
-        mixerNode: AVAudioMixerNode,
-        playbackStartTime: Date
+        mixerNode: AVAudioMixerNode
     ) {
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
@@ -345,9 +326,7 @@ class DefaultAudioManager: AudioManager {
         self.engine = engine
         self.playbackEngine = playbackEngine
         self.mixerNode = mixerNode
-        self.playbackStartTime = playbackStartTime
         setUpSession()
-        setUpEngine()
         setupNotifications()
     }
     
@@ -356,7 +335,7 @@ class DefaultAudioManager: AudioManager {
             audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(
                 .playAndRecord,
-                options: [.allowBluetoothA2DP, .defaultToSpeaker]
+                options: [.allowBluetoothA2DP, .defaultToSpeaker, .mixWithOthers]
             )
            
             try audioSession.setSupportsMultichannelContent(true)
@@ -425,7 +404,7 @@ class DefaultAudioManager: AudioManager {
             ) { _ in
                 Task{ @MainActor in
                     if player.player == self.players.last?.player {
-                        self.stopPlayback(stopTimer: stopTimer)
+                        try self.stopPlayback(stopTimer: stopTimer)
                     }
                 }
             }
@@ -487,39 +466,13 @@ class DefaultAudioManager: AudioManager {
         recorder.isMeteringEnabled = true
     }
     
-    private func setUpEngine() {
-        engine = AVAudioEngine()
-        mixerNode = AVAudioMixerNode()
-        
-        mixerNode.volume = 0
-        
-        engine.attach(mixerNode)
-        makeConnections()
-    }
-    
-    private func makeConnections() {
-        let inputNode = engine.inputNode
-        let inputFormat = inputNode.outputFormat(forBus: 0)
-        engine.connect(inputNode, to: mixerNode, format: inputFormat)
-        
-        let mainMixerNode = engine.mainMixerNode
-        let mixerFormat = AVAudioFormat(
-            commonFormat: .pcmFormatFloat32,
-            sampleRate: inputFormat.sampleRate,
-            channels: 1,
-            interleaved: false
-        )
-        
-        engine.connect(mixerNode, to: mainMixerNode, format: mixerFormat)
-    }
-    
     private func normalizeSoundLevel(level: Float) -> CGFloat {
         let level = max(0.2, CGFloat(level) + 70) / 2
         
         return CGFloat(level * (40/20))
     }
     
-    private func getWaveform(for fileName: String) throws -> [AudioPreviewModel] {
+    private func getWaveform(for fileName: String) throws -> [SampleModel] {
         let url = DataPersistenceManager.createDocumentURL(
             withFileName: fileName,
             fileType: .caf
@@ -545,7 +498,7 @@ class DefaultAudioManager: AudioManager {
         
         let samples = Array(UnsafeBufferPointer(start: floatChannelData[0], count: frameLength))
         
-        var result = [AudioPreviewModel]()
+        var result = [SampleModel]()
         
         let chunked = samples.chunked(into: samples.count / Int(UIScreen.main.bounds.width - 300))
         
@@ -554,64 +507,67 @@ class DefaultAudioManager: AudioManager {
             let newRow = row.map { $0 * $0 }
             accumulator = newRow.reduce(0, +)
             let power: Float = accumulator / Float(row.count)
-            let decibles = 10 * log10f(power)
+            let decibels = 10 * log10f(power)
             
-            result.append(AudioPreviewModel(magnitude: decibles, color: .gray))
+            result.append(SampleModel(decibels: decibels))
         }
         
         return result
     }
     
-    private func startMetering(at startTime: TimeInterval) async throws {
+    private func startMetering(at startTime: TimeInterval) throws {
         inputSamples.send([])
         
-        let delay: Double = 0.2 * pow(10, 9)
+        let delay: Double = startTime - CACurrentMediaTime()
         
-        try await Task.sleep(nanoseconds: UInt64(delay))
-        
-        startDate = Date()
-        subscription = timer.sink { date in
-            self.recorder.updateMeters()
-            guard var updatedSamples: [Float] = self.inputSamples.value else {
-                return
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            self.startDate = Date()
+            self.subscription = self.timer.sink { date in
+                self.recorder.updateMeters()
+                guard var updatedSamples: [SampleModel] = self.inputSamples.value else {
+                    return
+                }
+                let power = self.recorder.averagePower(forChannel: 0)
+                if power > -80.0 {
+                    updatedSamples.append(SampleModel(decibels: power))
+                } else {
+                    updatedSamples.append(SampleModel(decibels: -80.0))
+                }
+                
+                if updatedSamples.count > 77 {
+                    updatedSamples.removeFirst()
+                }
+                self.inputSamples.send(updatedSamples)
+                self.playerProgress.send(date.timeIntervalSince(self.startDate))
             }
-            let power = self.recorder.averagePower(forChannel: 0)
-            if power > -80.0 {
-                updatedSamples.append(power)
-            } else {
-                updatedSamples.append(-80.0)
-            }
-            
-            if updatedSamples.count > 77 {
-                updatedSamples.removeFirst()
-            }
-            self.inputSamples.send(updatedSamples)
-            self.playerProgress.send(date.timeIntervalSince(self.startDate))
         }
     }
     
-    private func stopMetering() async throws {
-        try await Task.sleep(nanoseconds: 200_000_000)
-        subscription?.cancel()
-        inputSamples.send(nil)
-        playerProgress.send(0.0)
-    }
-    
-    private func startTimer(at startTime: TimeInterval) async throws {
-        
-        let delay: Double = 0.2 * pow(10, 9)
-        
-        try await Task.sleep(nanoseconds: UInt64(delay))
-        startDate = Date()
-        subscription = timer.sink { date in
-            self.playerProgress.send(date.timeIntervalSince(self.startDate))
+    private func stopMetering() throws {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.subscription?.cancel()
+            self.inputSamples.send(nil)
+            self.playerProgress.send(0.0)
         }
     }
     
-    private func stopTimer() async throws {
-        try await Task.sleep(nanoseconds: 200_000_000)
-        subscription?.cancel()
-        playerProgress.send(0.0)
+    private func startTimer(at startTime: TimeInterval) throws {
+        
+        let delay: Double = startTime - CACurrentMediaTime()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            self.startDate = Date()
+            self.subscription = self.timer.sink { date in
+                self.playerProgress.send(date.timeIntervalSince(self.startDate))
+            }
+        }
+    }
+    
+    private func stopTimer() throws {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.subscription?.cancel()
+            self.playerProgress.send(0.0)
+        }
     }
     
     private func setupNotifications() {
@@ -625,17 +581,21 @@ class DefaultAudioManager: AudioManager {
     @objc private func handleRouteChange(notification: Notification) {
         
         if audioSession.currentRoute.outputs[0].portName == "Speaker" {
-            stopPlayback(stopTimer: true)
+            do {
+                try stopPlayback(stopTimer: true)
+            } catch {
+                assertionFailure("Could not stop playback.")
+            }
         }
         
         guard let inputs = audioSession.availableInputs else {
-            assertionFailure("failed to retrieve inputs")
+            assertionFailure("Failed to retrieve inputs.")
             return
         }
         do {
             try audioSession.setPreferredInput(inputs[0])
         } catch {
-            print(error.localizedDescription)
+            assertionFailure("Could not set preferred input.")
         }
     }
 }

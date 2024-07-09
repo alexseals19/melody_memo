@@ -28,13 +28,13 @@ final class DefaultRecordingManager: RecordingManager {
     
     func removeSession(_ session: Session) throws {
         Task { @MainActor in
-            var updatedRecordings = sessions.value
-            updatedRecordings.removeAll { $0.id == session.id }
+            var updatedSessions = sessions.value
+            updatedSessions.removeAll { $0.id == session.id }
             for track in session.tracks.values {
                 try DataPersistenceManager.delete(track.fileName, fileType: .caf)
             }
-            try DataPersistenceManager.save(updatedRecordings, to: "sessions")
-            sessions.send(updatedRecordings)
+            try DataPersistenceManager.save(updatedSessions, to: "sessions")
+            sessions.send(updatedSessions)
         }
     }
     
@@ -44,25 +44,25 @@ final class DefaultRecordingManager: RecordingManager {
             var updatedSession = session
             updatedSession.tracks.removeValue(forKey: track.id)
             
-            var updatedRecordings = sessions.value
-            updatedRecordings.removeAll { $0.id == session.id }
-            updatedRecordings.append(updatedSession)
+            var updatedSessions = sessions.value
+            updatedSessions.removeAll { $0.id == session.id }
+            updatedSessions.append(updatedSession)
             
             try DataPersistenceManager.delete(track.fileName, fileType: .caf)
             
-            try DataPersistenceManager.save(updatedRecordings, to: "sessions")
-            sessions.send(updatedRecordings)
+            try DataPersistenceManager.save(updatedSessions, to: "sessions")
+            sessions.send(updatedSessions)
         }
     }
     
     func saveSession(_ session: Session) throws {
         Task { @MainActor in
-            var updatedRecordings = sessions.value
-            updatedRecordings.removeAll { $0.id == session.id }
-            updatedRecordings.append(session)
-            try DataPersistenceManager.save(updatedRecordings, to: "sessions")
+            var updatedSessions = sessions.value
+            updatedSessions.removeAll { $0.id == session.id }
+            updatedSessions.append(session)
+            try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(
-                updatedRecordings.sorted { (lhs: Session, rhs: Session) -> Bool in
+                updatedSessions.sorted { (lhs: Session, rhs: Session) -> Bool in
                     return lhs.date > rhs.date
                 }
             )
@@ -71,11 +71,11 @@ final class DefaultRecordingManager: RecordingManager {
     
     func updateSession(_ session: Session) throws {
         Task { @MainActor in
-            var updatedRecordings = sessions.value
-            updatedRecordings.removeAll { $0.id == session.id }
-            updatedRecordings.append(session)
+            var updatedSessions = sessions.value
+            updatedSessions.removeAll { $0.id == session.id }
+            updatedSessions.append(session)
             sessions.send(
-                updatedRecordings.sorted { (lhs: Session, rhs: Session) -> Bool in
+                updatedSessions.sorted { (lhs: Session, rhs: Session) -> Bool in
                     return lhs.date > rhs.date
                 }
             )
@@ -84,9 +84,9 @@ final class DefaultRecordingManager: RecordingManager {
     
     func saveTrack(_ session: Session) throws {
         Task { @MainActor in
-            let updatedRecordings = sessions.value
-            try DataPersistenceManager.save(updatedRecordings, to: "sessions")
-            sessions.send(updatedRecordings)
+            let updatedSessions = sessions.value
+            try DataPersistenceManager.save(updatedSessions, to: "sessions")
+            sessions.send(updatedSessions)
         }
     }
     

@@ -15,7 +15,7 @@ class HomeViewModel: ObservableObject {
     //MARK: - API
     
     @Published var isSettingsPresented: Bool = false
-    @Published var inputSamples: [Float]?
+    @Published var inputSamples: [SampleModel]?
     @Published var trackTimer: Double = 0.0
     
     @Published var errorMessage: String?
@@ -51,7 +51,11 @@ class HomeViewModel: ObservableObject {
                         errorMessage = "ERROR: Could not begin recording."
                     }
                 } else {
-                    audioManager.stopPlayback(stopTimer: true)
+                    do {
+                        try audioManager.stopPlayback(stopTimer: true)
+                    } catch {
+                        errorMessage = "ERROR: Could not stop playback."
+                    }
                     do {
                         try audioManager.startTracking()
                     } catch {
