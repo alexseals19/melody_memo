@@ -65,11 +65,15 @@ class SessionDetailViewModel: ObservableObject {
                 session.tracks[track.id]?.soloOverride.toggle()
             }
         }
+        
         if currentlyPlaying != nil {
-            let tracksToToggle = session.tracks.values.filter( { $0.isSolo == false } )
+            var tracksToToggle = session.tracks.values.filter( { $0.isSolo == false  } )
+            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.soloOverride == true } ))
             audioManager.toggleMute(for: tracksToToggle)
             currentlyPlaying = session
+            
         }
+        
         do {
             try recordingManager.updateSession(session)
         } catch {
@@ -91,9 +95,7 @@ class SessionDetailViewModel: ObservableObject {
             session.tracks[track.id]?.soloOverride = false
         }
         if currentlyPlaying != nil {
-            if !session.isGlobalSoloActive {
-                audioManager.toggleMute(for: Array(arrayLiteral: track))
-            }
+            audioManager.toggleMute(for: Array(arrayLiteral: track))
             currentlyPlaying = session
         }
         do {
@@ -123,13 +125,14 @@ class SessionDetailViewModel: ObservableObject {
             } else {
                 session.tracks[track.id]?.soloOverride = false
             }
+            if currentlyPlaying != nil {
+                let tracksToToggle = [track]
+                audioManager.toggleMute(for: tracksToToggle)
+                currentlyPlaying = session
+            }
         }
         
-        if currentlyPlaying != nil {
-            let tracksToMute = session.tracks.values.filter( { $0.isSolo == false } )
-            audioManager.toggleMute(for: tracksToMute)
-            currentlyPlaying = session
-        }
+        
         do {
             try recordingManager.updateSession(session)
         } catch {
