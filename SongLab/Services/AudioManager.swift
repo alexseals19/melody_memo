@@ -70,12 +70,11 @@ class DefaultAudioManager: AudioManager {
         let startTime = CACurrentMediaTime() + 0.5
         
         try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
-        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
         
         if metronome.isArmed {
             metronome.start(at: startTime)
         }
-        recorder.record(atTime: (startTime + metronome.countInDelay) - 0.25)
+        recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
         
     }
     
@@ -101,7 +100,7 @@ class DefaultAudioManager: AudioManager {
         if metronome.isArmed {
             metronome.start(at: startTime)
         }
-        recorder.record(atTime: (startTime + metronome.countInDelay) - 0.25)
+        recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
         
         try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
         try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
@@ -311,6 +310,7 @@ class DefaultAudioManager: AudioManager {
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
     private var metronome: Metronome = Metronome.shared
+    private var bluetoothDelay: Double = 0.0
     
     private let progressTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     private let meterTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
@@ -587,12 +587,19 @@ class DefaultAudioManager: AudioManager {
 
     @objc private func handleRouteChange(notification: Notification) {
         
-        if audioSession.currentRoute.outputs[0].portName == "Speaker" {
+        print("\(audioSession.currentRoute.outputs[0].portType)")
+        
+        if audioSession.currentRoute.outputs[0].portType == .builtInSpeaker {
             do {
                 try stopPlayback()
             } catch {
                 assertionFailure("Could not stop playback.")
             }
+        } else if audioSession.currentRoute.outputs[0].portType == .bluetoothA2DP {
+            bluetoothDelay = 0.15
+        }
+        if audioSession.currentRoute.outputs[0].portType != .bluetoothA2DP {
+            bluetoothDelay = 0.0
         }
         
         guard let inputs = audioSession.availableInputs else {
