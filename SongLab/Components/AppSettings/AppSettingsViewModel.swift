@@ -29,7 +29,7 @@ class AppSettingsViewModel: ObservableObject {
     
     // MARK: - Variables
     
-    private let metronome: Metronome
+    private var metronome: Metronome
     
     // MARK: - Functions
     

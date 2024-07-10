@@ -35,6 +35,12 @@ class HomeViewModel: ObservableObject {
         }
     }
     
+    @Published var metronomeVolume: Float {
+        didSet {
+            metronome.volume = metronomeVolume
+        }
+    }
+    
     @Published var isCountInActive: Bool {
         didSet {
             metronome.isCountInActive = isCountInActive
@@ -91,13 +97,14 @@ class HomeViewModel: ObservableObject {
     let audioManager: AudioManager
     let recordingManager: RecordingManager
     
-    var metronome = Metronome.shared
+    var metronome = DefaultMetronome.shared
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
         self.isMetronomeArmed = metronome.isArmed
         self.metronomeBpm = metronome.bpm
+        self.metronomeVolume = metronome.volume
         self.isCountInActive = metronome.isCountInActive
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
