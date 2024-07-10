@@ -586,9 +586,7 @@ class DefaultAudioManager: AudioManager {
     }
 
     @objc private func handleRouteChange(notification: Notification) {
-        
-        print("\(audioSession.currentRoute.outputs[0].portType)")
-        
+                
         if audioSession.currentRoute.outputs[0].portType == .builtInSpeaker {
             do {
                 try stopPlayback()

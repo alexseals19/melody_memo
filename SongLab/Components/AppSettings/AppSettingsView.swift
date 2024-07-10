@@ -59,7 +59,9 @@ struct AppSettingsView: View {
                             }
                         } label: {
                             bpmAdjustmentLabelView(name: "minus")
+                                .foregroundStyle(.primary)
                         }
+                        .buttonRepeatBehavior(.enabled)
                         VStack {
                             Text("BPM")
                                 .font(.caption)
@@ -72,7 +74,9 @@ struct AppSettingsView: View {
                             }
                         } label: {
                             bpmAdjustmentLabelView(name: "plus")
+                                .foregroundStyle(.primary)
                         }
+                        .buttonRepeatBehavior(.enabled)
                         .padding(.trailing, 10)
                         Button {
                             isCountInActive.toggle()
@@ -83,6 +87,7 @@ struct AppSettingsView: View {
                     .foregroundStyle(.primary)
                     HStack {
                         bpmAdjustmentLabelView(name: "speaker.wave.2")
+                            .foregroundStyle(.secondary)
                         Slider(value: $metronomeVolume)
                             .tint(.primary)
                     }
@@ -126,7 +131,7 @@ struct AppSettingsView: View {
                     .padding(.horizontal, 20)
                     Spacer()
                 }
-                .presentationDetents([.height(500)])
+                .presentationDetents([.height(375)])
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
@@ -182,7 +187,6 @@ struct bpmAdjustmentLabelView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 24, height: 24)
-            .foregroundStyle(.primary)
     }
 }
 
