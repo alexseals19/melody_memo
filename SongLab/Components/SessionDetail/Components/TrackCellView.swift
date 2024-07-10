@@ -145,6 +145,7 @@ struct TrackCellView: View {
                 Divider()
                 HStack {
                     TrackCellButtonImage("speaker.wave.2")
+                        .foregroundStyle(.secondary)
                     Slider(value: $sliderValue)
                         .tint(appTheme.accentColor)
                         .padding(.trailing, 10)
@@ -157,7 +158,7 @@ struct TrackCellView: View {
                     } label: {
                         TrackCellButtonImage("trash")
                     }
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 10)
                 }
             }

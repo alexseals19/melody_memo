@@ -53,6 +53,7 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.isSettingsPresented) {
             AppSettingsView(
                 metronome: viewModel.metronome,
+                audioManager: viewModel.audioManager,
                 metronomeBpm: $viewModel.metronomeBpm,
                 metronomeVolume: $viewModel.metronomeVolume,
                 isCountInActive: $viewModel.isCountInActive

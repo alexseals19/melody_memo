@@ -59,7 +59,11 @@ struct SessionsListView: View {
                                         trashButtonAction: viewModel.sessionCellTrashButtonTapped
                                     )
                                 }
-                                CellSpacerView(screenHeight: proxy.size.height, numberOfSessions: viewModel.sessions.count)
+                                CellSpacerView(
+                                    screenHeight: proxy.size.height,
+                                    numberOfSessions: viewModel.sessions.count, 
+                                    showMessage: true
+                                )
                             }
                             .padding(.top, 78)
                             .animation(.spring, value: viewModel.sessions)

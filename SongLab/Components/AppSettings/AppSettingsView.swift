@@ -15,13 +15,14 @@ struct AppSettingsView: View {
     @Binding var metronomeVolume: Float
     @Binding var isCountInActive: Bool
         
-    init(metronome: Metronome, 
+    init(metronome: Metronome,
+         audioManager: AudioManager,
          metronomeBpm: Binding<Double>,
          metronomeVolume: Binding<Float>,
          isCountInActive: Binding<Bool>
     ) {
         _viewModel = StateObject(
-            wrappedValue: AppSettingsViewModel(metronome: metronome)
+            wrappedValue: AppSettingsViewModel(metronome: metronome, audioManager: audioManager)
         )
         _metronomeBpm = metronomeBpm
         _metronomeVolume = metronomeVolume
@@ -50,7 +51,7 @@ struct AppSettingsView: View {
                     
                     Text("Metronome")
                         .font(.title2)
-                        .padding(.top, 25)
+                        .padding(.top, 15)
                     HStack {
                         
                         Button {
@@ -92,10 +93,55 @@ struct AppSettingsView: View {
                             .tint(.primary)
                     }
                     .padding(.horizontal, 20)
+                    .padding(.bottom, 10)
+                    
                     Divider()
+                    
+                    Text("Tracking")
+                        .font(.title2)
+                        .padding(.top, 15)
+                    HStack {
+                        Text("Track length minimum")
+                            .padding(.trailing, 15)
+                        Button {
+                            if viewModel.trackLengthLimit > 0 {
+                                viewModel.trackLengthLimit -= 1
+                            }
+                        } label: {
+                            bpmAdjustmentLabelView(name: "minus")
+                        }
+                        .foregroundStyle(.primary)
+                        VStack {
+                            if viewModel.trackLengthLimit > 0 {
+                                Text("\(viewModel.trackLengthLimit)")
+                                Text("sec")
+                                    .font(.caption)
+                            } else {
+                                Text("off")
+                                    .font(.body)
+                            }
+                        }
+                        .foregroundStyle(.secondary)
+                        Button {
+                            if viewModel.trackLengthLimit < 5 {
+                                viewModel.trackLengthLimit += 1
+                            }
+                        } label: {
+                            bpmAdjustmentLabelView(name: "plus")
+                        }
+                        .foregroundStyle(.primary)
+                        .padding(.trailing, 10)
+                    }
+                    Text("Only keep new recordings longer than this.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.bottom, 10)
+                    
+                    Divider()
+                    
                     Text("App Theme")
                         .font(.title2)
-                        .padding(.top, 25)
+                        .padding(.top, 15)
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 60, maximum: 60))]) {
                         ForEach(AppTheme.Theme.allCases) { theme in
                             Group {
@@ -222,6 +268,7 @@ extension Color {
 #Preview {
     AppSettingsView(
         metronome: DefaultMetronome.shared,
+        audioManager: MockAudioManager(),
         metronomeBpm: .constant(120),
         metronomeVolume: .constant(1.0),
         isCountInActive: .constant(false)

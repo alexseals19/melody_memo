@@ -41,9 +41,8 @@ protocol Metronome {
     var isArmed: Bool { get set }
     var isCountInActive: Bool { get set }
     var volume: Float { get set }
-    var subscription: AnyCancellable? { get set }
-    
     var countInDelay: Double { get }
+    
     func prepare() throws
     func setSchedule(for set: String, at startTime: TimeInterval)
     func playSetOne()
@@ -64,7 +63,6 @@ class DefaultMetronome: Metronome {
     var isArmed: Bool
     var isCountInActive: Bool
     var volume: Float
-    var subscription: AnyCancellable?
     
     var countInDelay: Double {
         if isArmed, isCountInActive {
@@ -74,6 +72,11 @@ class DefaultMetronome: Metronome {
     }
     
     func prepare() throws {
+        
+        engine = AVAudioEngine()
+        guard let mainMixerNode = engine?.mainMixerNode else {
+            return
+        }
         
         for index in 0 ..< beatSetLength {
             
@@ -90,17 +93,17 @@ class DefaultMetronome: Metronome {
             if index % timeSignature == 0 {
                 beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
                 beatSetOne[index].player.volume = volume
-                engine.attach(beatSetOne[index].player)
-                engine.connect(beatSetOne[index].player,
-                               to: engine.mainMixerNode,
+                engine?.attach(beatSetOne[index].player)
+                engine?.connect(beatSetOne[index].player,
+                               to: mainMixerNode,
                                format: beatHighFile.processingFormat)
                 try beatHighFile.read(into: beatSetOne[index].buffer)
             } else {
                 beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
                 beatSetOne[index].player.volume = volume
-                engine.attach(beatSetOne[index].player)
-                engine.connect(beatSetOne[index].player,
-                               to: engine.mainMixerNode,
+                engine?.attach(beatSetOne[index].player)
+                engine?.connect(beatSetOne[index].player,
+                               to: mainMixerNode,
                                format: beatLowFile.processingFormat)
                 try beatLowFile.read(into: beatSetOne[index].buffer)
             }
@@ -129,23 +132,23 @@ class DefaultMetronome: Metronome {
             if index % timeSignature == 0 {
                 beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
                 beatSetTwo[index].player.volume = volume
-                engine.attach(beatSetTwo[index].player)
-                engine.connect(beatSetTwo[index].player,
-                               to: engine.mainMixerNode,
+                engine?.attach(beatSetTwo[index].player)
+                engine?.connect(beatSetTwo[index].player,
+                               to: mainMixerNode,
                                format: beatHighFile.processingFormat)
                 try beatHighFile.read(into: beatSetTwo[index].buffer)
             } else {
                 beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
                 beatSetTwo[index].player.volume = volume
-                engine.attach(beatSetTwo[index].player)
-                engine.connect(beatSetTwo[index].player,
-                               to: engine.mainMixerNode,
+                engine?.attach(beatSetTwo[index].player)
+                engine?.connect(beatSetTwo[index].player,
+                               to: mainMixerNode,
                                format: beatLowFile.processingFormat)
                 try beatLowFile.read(into: beatSetTwo[index].buffer)
             }
         }
-        engine.prepare()
-        try engine.start()
+        engine?.prepare()
+        try engine?.start()
     }
     
     func setSchedule(for set: String, at startTime: TimeInterval) {
@@ -178,8 +181,8 @@ class DefaultMetronome: Metronome {
                                 
                             }
                         } else {
-                            self.engine.stop()
-                            self.engine.detach(self.beatSetOne[index].player)
+                            self.engine?.stop()
+                            self.engine?.detach(self.beatSetOne[index].player)
                             self.beatSetOne[index].player.stop()
                         }
                         
@@ -210,8 +213,8 @@ class DefaultMetronome: Metronome {
                                 self.playSetOne()
                             }
                         } else {
-                            self.engine.stop()
-                            self.engine.detach(self.beatSetTwo[index].player)
+                            self.engine?.stop()
+                            self.engine?.detach(self.beatSetTwo[index].player)
                             self.beatSetTwo[index].player.stop()
                         }
                     }
@@ -231,13 +234,15 @@ class DefaultMetronome: Metronome {
     
     func stopMetronome() {
         isMetronomePlaying = false
-        engine.stop()
+        engine?.stop()
         for index in 0 ..< beatSetLength {
             beatSetOne[index].player.stop()
-            engine.detach(beatSetOne[index].player)
+            engine?.detach(beatSetOne[index].player)
             beatSetTwo[index].player.stop()
-            engine.detach(beatSetTwo[index].player)
+            engine?.detach(beatSetTwo[index].player)
         }
+        
+        engine = nil
     }
     
     func saveSettings() {
@@ -252,11 +257,13 @@ class DefaultMetronome: Metronome {
     
     //MARK: - Variables
     
-    private var engine = AVAudioEngine()
+    private var engine: AVAudioEngine?
     private var isMetronomePlaying: Bool = false
     
     private var beatSetOne: [Beat] = []
     private var beatSetTwo: [Beat] = []
+    
+    private var subscription: AnyCancellable?
     
     private var beatInterval: Double {
         60.0 / bpm

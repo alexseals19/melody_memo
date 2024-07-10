@@ -11,6 +11,7 @@ import AVFoundation
 import SwiftUI
 
 class MockAudioManager: AudioManager {
+    var trackLengthLimit: Int
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
@@ -30,6 +31,7 @@ class MockAudioManager: AudioManager {
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {Image(systemName: "doc")}
     
     init() {
+        trackLengthLimit = 0
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
         playerProgress = CurrentValueSubject(0.0)

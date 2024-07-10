@@ -69,7 +69,7 @@ struct SessionDetailView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 24, height: 24)
                     }
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
                     .padding(15)
                 }
                 .background(Color(UIColor.systemBackground).opacity(0.3))
@@ -100,7 +100,8 @@ struct SessionDetailView: View {
                             }
                             CellSpacerView(
                                 screenHeight: proxy.size.height,
-                                numberOfSessions: viewModel.session.tracks.count
+                                numberOfSessions: viewModel.session.tracks.count,
+                                showMessage: false
                             )
                         }
                         .animation(.spring, value: viewModel.session.tracks)
