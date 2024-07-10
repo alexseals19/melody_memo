@@ -13,6 +13,7 @@ struct CellSpacerView: View {
     
     var screenHeight: CGFloat
     var numberOfSessions: Int
+    var showMessage: Bool
         
     // MARK: - Variables
     
@@ -36,7 +37,7 @@ struct CellSpacerView: View {
                 .frame(height: height)
                 .ignoresSafeArea()
                 .padding(.bottom, -height + 150)
-            if numberOfSessions == 0 {
+            if numberOfSessions == 0, showMessage {
                 Text("Create your first recording!")
                     .font(.title)
                     .offset(y: 300)
@@ -46,5 +47,5 @@ struct CellSpacerView: View {
 }
 
 #Preview {
-    CellSpacerView(screenHeight: 150, numberOfSessions: 0)
+    CellSpacerView(screenHeight: 150, numberOfSessions: 0, showMessage: true)
 }

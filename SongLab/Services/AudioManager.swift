@@ -22,6 +22,7 @@ struct SampleModel: Hashable, Identifiable {
 
 @MainActor
 protocol AudioManager {
+    var trackLengthLimit: Int { get set }
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
@@ -52,6 +53,8 @@ class DefaultAudioManager: AudioManager {
         mixerNode: AVAudioMixerNode()
     )
     
+    @AppStorage("trackLengthLimit") var trackLengthLimit: Int = 3
+    
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
@@ -69,17 +72,18 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = CACurrentMediaTime() + 0.5
         
-        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
-        
         if metronome.isArmed {
             metronome.start(at: startTime)
         }
         recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
         
+        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
+        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
+        
     }
     
     func startTracking(for session: Session) throws {
-        try setupPlayers(for: session, stopTimer: false)
+        try setupPlayers(for: session)
                 
         try setupRecorder()
         if metronome.isArmed {
@@ -111,6 +115,7 @@ class DefaultAudioManager: AudioManager {
         defer { currentFileName = nil }
         
         try stopMetering()
+        try stopTimer()
         isRecording.send(false)
                 
         recorder.stop()
@@ -126,12 +131,21 @@ class DefaultAudioManager: AudioManager {
         
         let url = DataPersistenceManager.createDocumentURL(
             withFileName: currentFileName,
-            fileType: .caf
+            fileType: .m4a
         )
         
         let audioAsset = AVURLAsset(url: url, options: nil)
         let duration = try await audioAsset.load(.duration)
         let durationInSeconds = CMTimeGetSeconds(duration)
+        
+        if durationInSeconds < Double(trackLengthLimit) {
+            do {
+                try DataPersistenceManager.delete(currentFileName, fileType: .m4a)
+            } catch {
+                print(error.localizedDescription)
+            }
+            return
+        }
         
         let track = Track(
             name: "Track 1",
@@ -179,13 +193,18 @@ class DefaultAudioManager: AudioManager {
         
         let url = DataPersistenceManager.createDocumentURL(
             withFileName: currentFileName,
-            fileType: .caf
+            fileType: .m4a
         )
         
         let audioAsset = AVURLAsset(url: url, options: nil)
         let duration = try await audioAsset.load(.duration)
         let durationInSeconds = CMTimeGetSeconds(duration)
         let name = "Track \(session.absoluteTrackCount + 1)"
+        
+        if durationInSeconds < Double(trackLengthLimit) {
+            try DataPersistenceManager.delete(currentFileName, fileType: .m4a)
+            return
+        }
         
         let track = Track(
             name: name,
@@ -338,6 +357,8 @@ class DefaultAudioManager: AudioManager {
         self.mixerNode = mixerNode
         setUpSession()
         setupNotifications()
+        
+            
     }
     
     private func setUpSession() {
@@ -387,7 +408,7 @@ class DefaultAudioManager: AudioManager {
         for player in players {
             let url = DataPersistenceManager.createDocumentURL(
                 withFileName: player.track.fileName,
-                fileType: .caf
+                fileType: .m4a
             )
             
             let audioFile = try AVAudioFile(forReading: url)
@@ -457,7 +478,7 @@ class DefaultAudioManager: AudioManager {
         
         let url = DataPersistenceManager.createDocumentURL(
             withFileName: currentFileName,
-            fileType: .caf
+            fileType: .m4a
         )
         
         let settings = [
@@ -485,7 +506,7 @@ class DefaultAudioManager: AudioManager {
     private func getWaveform(for fileName: String) throws -> [SampleModel] {
         let url = DataPersistenceManager.createDocumentURL(
             withFileName: fileName,
-            fileType: .caf
+            fileType: .m4a
         )
         
         let audioFile = try AVAudioFile(forReading: url)
@@ -562,7 +583,7 @@ class DefaultAudioManager: AudioManager {
         
         let delay: Double = startTime - CACurrentMediaTime()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay - 0.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             self.startDate = Date()
             self.progressTimerSubscription = self.progressTimer.sink { date in
                 self.playerProgress.send(date.timeIntervalSince(self.startDate))
@@ -583,9 +604,22 @@ class DefaultAudioManager: AudioManager {
                        selector: #selector(handleRouteChange),
                        name: AVAudioSession.routeChangeNotification,
                        object: nil)
+        nc.addObserver(self,
+                       selector: #selector(handleRouteChange),
+                       name: AVAudioSession.interruptionNotification,
+                       object: nil)
+    }
+    
+    @objc private func handleInterruption(notification: Notification) {
+        do {
+            try stopPlayback()
+        } catch {
+            assertionFailure("Stop playback due to interruption could not be completed")
+        }
     }
 
     @objc private func handleRouteChange(notification: Notification) {
+        
                 
         if audioSession.currentRoute.outputs[0].portType == .builtInSpeaker {
             do {

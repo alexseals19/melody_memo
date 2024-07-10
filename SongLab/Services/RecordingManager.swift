@@ -30,8 +30,11 @@ final class DefaultRecordingManager: RecordingManager {
         Task { @MainActor in
             var updatedSessions = sessions.value
             updatedSessions.removeAll { $0.id == session.id }
+            if updatedSessions.isEmpty {
+                zeroAbsoluteSessionCount()
+            }
             for track in session.tracks.values {
-                try DataPersistenceManager.delete(track.fileName, fileType: .caf)
+                try DataPersistenceManager.delete(track.fileName, fileType: .m4a)
             }
             try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(updatedSessions)
@@ -44,19 +47,23 @@ final class DefaultRecordingManager: RecordingManager {
             var updatedSession = session
             updatedSession.tracks.removeValue(forKey: track.id)
             
-            guard let longestTrack = updatedSession.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
-                return lhs.date > rhs.date
-            }).last else {
-                return
+            if !updatedSession.tracks.isEmpty {
+                guard let longestTrack = updatedSession.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
+                    return lhs.date > rhs.date
+                }).last else {
+                    return
+                }
+                
+                updatedSession.length = longestTrack.length
+            } else {
+                updatedSession.absoluteTrackCount = 0
             }
-            
-            updatedSession.length = longestTrack.length
             
             var updatedSessions = sessions.value
             updatedSessions.removeAll { $0.id == session.id }
             updatedSessions.append(updatedSession)
             
-            try DataPersistenceManager.delete(track.fileName, fileType: .caf)
+            try DataPersistenceManager.delete(track.fileName, fileType: .m4a)
             
             try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(updatedSessions)
@@ -105,7 +112,18 @@ final class DefaultRecordingManager: RecordingManager {
         absoluteSessionCount += 1
         do {
             try DataPersistenceManager.save(absoluteSessionCount, to: "session_count")
-        } catch {}
+        } catch {
+            assertionFailure("Could not set absoluteSessionCount.")
+        }
+    }
+    
+    func zeroAbsoluteSessionCount() {
+        absoluteSessionCount = 0
+        do {
+            try DataPersistenceManager.save(absoluteSessionCount, to: "session_count")
+        } catch {
+            assertionFailure("Could not set absoluteSessionCount.")
+        }
     }
     
     // MARK: - Functions
