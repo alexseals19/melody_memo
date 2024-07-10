@@ -10,19 +10,20 @@ import SwiftUI
 
 class AppTheme: ObservableObject {
 
-    @AppStorage("appTheme") var theme: Theme = .red
+    @AppStorage("appTheme") var theme: Theme = .cyan
 
     enum Theme: String, CaseIterable, Identifiable {
         case red
         case orange
-        case blue
         case yellow
-        case pink
-        case purple
         case green
+        case cyan
+        case blue
+        case purple
+        case pink
         case black
         case white
-        case cyan
+        
         
         var id: Self { self }
     }
@@ -33,22 +34,23 @@ class AppTheme: ObservableObject {
             return Color.red
         case .orange:
             return Color.orange
-        case .blue:
-            return Color.blue
         case .yellow:
             return Color.yellow
-        case .pink:
-            return Color.pink
-        case .purple:
-            return Color.purple
         case .green:
             return Color.green
+        case .cyan:
+            return Color.cyan
+        case .blue:
+            return Color.blue
+        case .purple:
+            return Color.purple
+        case .pink:
+            return Color.pink
         case .black:
             return Color.black
         case .white:
             return Color.white
-        case .cyan:
-            return Color.cyan
+        
         }
     }
 }
