@@ -44,7 +44,7 @@ class SessionsListViewModel: ObservableObject {
     
     func sessionCellStopButtonTapped() {
         do {
-            try audioManager.stopPlayback(stopTimer: true)
+            try audioManager.stopPlayback()
         } catch {
             errorMessage = "ERROR: Could not stop playback."
         }

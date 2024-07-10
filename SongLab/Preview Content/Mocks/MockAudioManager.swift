@@ -21,9 +21,10 @@ class MockAudioManager: AudioManager {
     func stopTracking() async {}
     func stopTracking(for _: Session) async {}
     func startPlayback(for session: Session) throws {}
-    func stopPlayback(stopTimer: Bool) {}
+    func stopPlayback() {}
     func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
     func stopMetronome() {}
+    func removeTrack(track: Track) {}
     func toggleMute(for tracks: [Track]) {}
     func setTrackVolume(for track: Track) {}
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {Image(systemName: "doc")}
