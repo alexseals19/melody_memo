@@ -52,7 +52,7 @@ class HomeViewModel: ObservableObject {
                     }
                 } else {
                     do {
-                        try audioManager.stopPlayback(stopTimer: true)
+                        try audioManager.stopPlayback()
                     } catch {
                         errorMessage = "ERROR: Could not stop playback."
                     }

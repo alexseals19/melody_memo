@@ -44,6 +44,14 @@ final class DefaultRecordingManager: RecordingManager {
             var updatedSession = session
             updatedSession.tracks.removeValue(forKey: track.id)
             
+            guard let longestTrack = updatedSession.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
+                return lhs.date > rhs.date
+            }).last else {
+                return
+            }
+            
+            updatedSession.length = longestTrack.length
+            
             var updatedSessions = sessions.value
             updatedSessions.removeAll { $0.id == session.id }
             updatedSessions.append(updatedSession)
@@ -52,6 +60,9 @@ final class DefaultRecordingManager: RecordingManager {
             
             try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(updatedSessions)
+            if DefaultAudioManager.shared.currentlyPlaying.value != nil {
+                DefaultAudioManager.shared.currentlyPlaying.send(updatedSession)
+            }
         }
     }
     

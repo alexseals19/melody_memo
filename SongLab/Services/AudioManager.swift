@@ -31,7 +31,8 @@ protocol AudioManager {
     func stopTracking() async throws
     func stopTracking(for session: Session) async throws
     func startPlayback(for session: Session) throws
-    func stopPlayback(stopTimer: Bool) throws
+    func stopPlayback() throws
+    func removeTrack(track: Track)
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
@@ -55,7 +56,8 @@ class DefaultAudioManager: AudioManager {
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
-    var subscription: AnyCancellable?
+    var progressTimerSubscription: AnyCancellable?
+    var meterTimerSubscription: AnyCancellable?
     
     func startTracking() throws {
         
@@ -68,6 +70,7 @@ class DefaultAudioManager: AudioManager {
         let startTime = CACurrentMediaTime() + 0.5
         
         try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
+        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
         
         if metronome.isArmed {
             metronome.start(at: startTime)
@@ -101,6 +104,7 @@ class DefaultAudioManager: AudioManager {
         recorder.record(atTime: (startTime + metronome.countInDelay) - 0.25)
         
         try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
+        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
     }
         
     func stopTracking() async throws {
@@ -163,7 +167,7 @@ class DefaultAudioManager: AudioManager {
         isRecording.send(false)
         
         recorder.stop()
-        try stopPlayback(stopTimer: false)
+        try stopPlayback()
         
         if metronome.isArmed {
             metronome.stopMetronome()
@@ -227,17 +231,24 @@ class DefaultAudioManager: AudioManager {
         try startTimer(at: startTimeInSeconds + 0.03)
     }
     
-    func stopPlayback(stopTimer: Bool) throws {
+    func stopPlayback() throws {
         
         for player in players {
             player.player.stop()
         }
         playbackEngine.stop()
         players.removeAll()
-        if stopTimer {
-            try self.stopTimer()
-        }
+        try self.stopTimer()
         currentlyPlaying.send(nil)
+    }
+    
+    func removeTrack(track: Track) {
+        guard let newPlayer = players.first(where: { $0.track.id == track.id }) else {
+            return
+        }
+        newPlayer.player.stop()
+        playbackEngine.detach(newPlayer.player)
+        players = players.filter( { $0.track != track } )
     }
     
     func toggleMute(for tracks: [Track]) {
@@ -260,7 +271,7 @@ class DefaultAudioManager: AudioManager {
         newPlayer.player.volume = track.volume
     }
     
-    @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {        
+    @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {
         let samples = try getWaveform(for: fileName)
         
         var color: Color {
@@ -301,7 +312,8 @@ class DefaultAudioManager: AudioManager {
     private var startDate: Date = Date()
     private var metronome: Metronome = Metronome.shared
     
-    private let timer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
+    private let progressTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
+    private let meterTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     
         
     // MARK: - Functions
@@ -402,7 +414,7 @@ class DefaultAudioManager: AudioManager {
             ) { _ in
                 Task{ @MainActor in
                     if player.player == self.players.last?.player {
-                        try self.stopPlayback(stopTimer: stopTimer)
+                        try self.stopPlayback()
                     }
                 }
             }
@@ -519,8 +531,7 @@ class DefaultAudioManager: AudioManager {
         let delay: Double = startTime - CACurrentMediaTime()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            self.startDate = Date()
-            self.subscription = self.timer.sink { date in
+            self.meterTimerSubscription = self.meterTimer.sink { date in
                 self.recorder.updateMeters()
                 guard var updatedSamples: [SampleModel] = self.inputSamples.value else {
                     return
@@ -536,16 +547,14 @@ class DefaultAudioManager: AudioManager {
                     updatedSamples.removeFirst()
                 }
                 self.inputSamples.send(updatedSamples)
-                self.playerProgress.send(date.timeIntervalSince(self.startDate))
             }
         }
     }
     
     private func stopMetering() throws {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.subscription?.cancel()
+            self.meterTimerSubscription?.cancel()
             self.inputSamples.send(nil)
-            self.playerProgress.send(0.0)
         }
     }
     
@@ -553,9 +562,9 @@ class DefaultAudioManager: AudioManager {
         
         let delay: Double = startTime - CACurrentMediaTime()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay - 0.1) {
             self.startDate = Date()
-            self.subscription = self.timer.sink { date in
+            self.progressTimerSubscription = self.progressTimer.sink { date in
                 self.playerProgress.send(date.timeIntervalSince(self.startDate))
             }
         }
@@ -563,7 +572,7 @@ class DefaultAudioManager: AudioManager {
     
     private func stopTimer() throws {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.subscription?.cancel()
+            self.progressTimerSubscription?.cancel()
             self.playerProgress.send(0.0)
         }
     }
@@ -580,7 +589,7 @@ class DefaultAudioManager: AudioManager {
         
         if audioSession.currentRoute.outputs[0].portName == "Speaker" {
             do {
-                try stopPlayback(stopTimer: true)
+                try stopPlayback()
             } catch {
                 assertionFailure("Could not stop playback.")
             }
