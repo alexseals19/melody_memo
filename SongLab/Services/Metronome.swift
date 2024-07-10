@@ -35,16 +35,35 @@ struct Beat {
     }
 }
 
-class Metronome {
+protocol Metronome {
+    var bpm: Double { get set }
+    var timeSignature: Int { get set }
+    var isArmed: Bool { get set }
+    var isCountInActive: Bool { get set }
+    var volume: Float { get set }
+    var subscription: AnyCancellable? { get set }
+    
+    var countInDelay: Double { get }
+    func prepare() throws
+    func setSchedule(for set: String, at startTime: TimeInterval)
+    func playSetOne()
+    func playSetTwo()
+    func start(at startTime: TimeInterval)
+    func stopMetronome()
+    func saveSettings()
+}
+
+class DefaultMetronome: Metronome {
     
     //MARK: - API
     
-    static let shared = Metronome()
+    static let shared = DefaultMetronome()
     
     var bpm: Double
     var timeSignature: Int
     var isArmed: Bool
     var isCountInActive: Bool
+    var volume: Float
     var subscription: AnyCancellable?
     
     var countInDelay: Double {
@@ -70,6 +89,7 @@ class Metronome {
             
             if index % timeSignature == 0 {
                 beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
+                beatSetOne[index].player.volume = volume
                 engine.attach(beatSetOne[index].player)
                 engine.connect(beatSetOne[index].player,
                                to: engine.mainMixerNode,
@@ -77,6 +97,7 @@ class Metronome {
                 try beatHighFile.read(into: beatSetOne[index].buffer)
             } else {
                 beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
+                beatSetOne[index].player.volume = volume
                 engine.attach(beatSetOne[index].player)
                 engine.connect(beatSetOne[index].player,
                                to: engine.mainMixerNode,
@@ -107,6 +128,7 @@ class Metronome {
             
             if index % timeSignature == 0 {
                 beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
+                beatSetTwo[index].player.volume = volume
                 engine.attach(beatSetTwo[index].player)
                 engine.connect(beatSetTwo[index].player,
                                to: engine.mainMixerNode,
@@ -114,6 +136,7 @@ class Metronome {
                 try beatHighFile.read(into: beatSetTwo[index].buffer)
             } else {
                 beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: index, buffer: bufferLow, playTime: CACurrentMediaTime()))
+                beatSetTwo[index].player.volume = volume
                 engine.attach(beatSetTwo[index].player)
                 engine.connect(beatSetTwo[index].player,
                                to: engine.mainMixerNode,
@@ -223,6 +246,7 @@ class Metronome {
             try DataPersistenceManager.save(timeSignature, to: "timeSignature")
             try DataPersistenceManager.save(isArmed, to: "isArmed")
             try DataPersistenceManager.save(isCountInActive, to: "isCountInActive")
+            try DataPersistenceManager.save(volume, to: "volume")
         } catch {}
     }
     
@@ -265,11 +289,13 @@ class Metronome {
             timeSignature = try DataPersistenceManager.retrieve(Int.self, from: "timeSignature")
             isArmed = try DataPersistenceManager.retrieve(Bool.self, from: "isArmed")
             isCountInActive = try DataPersistenceManager.retrieve(Bool.self, from: "isCountInActive")
+            volume = try DataPersistenceManager.retrieve(Float.self, from: "volume")
         } catch {
             bpm = 120
             timeSignature = 4
             isArmed = false
             isCountInActive = false
+            volume = 1.0
         }
     }
 }

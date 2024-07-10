@@ -309,7 +309,7 @@ class DefaultAudioManager: AudioManager {
     private var bufferInterrupt: Bool = false
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
-    private var metronome: Metronome = Metronome.shared
+    private var metronome: Metronome = DefaultMetronome.shared
     private var bluetoothDelay: Double = 0.0
     
     private let progressTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()

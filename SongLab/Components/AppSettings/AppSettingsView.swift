@@ -12,13 +12,19 @@ struct AppSettingsView: View {
     //MARK: - API
     
     @Binding var metronomeBpm: Double
+    @Binding var metronomeVolume: Float
     @Binding var isCountInActive: Bool
         
-    init(metronome: Metronome, metronomeBpm: Binding<Double>, isCountInActive: Binding<Bool>) {
+    init(metronome: Metronome, 
+         metronomeBpm: Binding<Double>,
+         metronomeVolume: Binding<Float>,
+         isCountInActive: Binding<Bool>
+    ) {
         _viewModel = StateObject(
             wrappedValue: AppSettingsViewModel(metronome: metronome)
         )
         _metronomeBpm = metronomeBpm
+        _metronomeVolume = metronomeVolume
         _isCountInActive = isCountInActive
     }
     
@@ -46,36 +52,41 @@ struct AppSettingsView: View {
                         .font(.title2)
                         .padding(.top, 25)
                     HStack {
-                        Text("BPM \(Int(metronomeBpm))")
+                        
+                        Button {
+                            if metronomeBpm > 1 {
+                                metronomeBpm -= 1
+                            }
+                        } label: {
+                            bpmAdjustmentLabelView(name: "minus")
+                        }
+                        VStack {
+                            Text("BPM")
+                                .font(.caption)
+                            Text("\(Int(metronomeBpm))")
+                        }
+                        .foregroundStyle(.secondary)
+                        Button {
+                            if metronomeBpm < 300 {
+                                metronomeBpm += 1
+                            }
+                        } label: {
+                            bpmAdjustmentLabelView(name: "plus")
+                        }
+                        .padding(.trailing, 10)
                         Button {
                             isCountInActive.toggle()
                         } label: {
-                            if isCountInActive {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .frame(width: 75, height: 25)
-                                        .foregroundStyle(appTheme.accentColor)
-                                    Text("Count In")
-                                        .font(.caption)
-                                        .foregroundStyle(.black)
-                                }
-                            } else {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .stroke(lineWidth: 1.0)
-                                        .frame(width: 75, height: 25)
-                                        .foregroundStyle(appTheme.accentColor)
-                                    Text("Count In")
-                                        .font(.caption)
-                                        .foregroundStyle(.primary)
-                                }
-                            }
+                            countInButtonLabel
                         }
                     }
                     .foregroundStyle(.primary)
-                    Slider(value: $metronomeBpm, in: 1 ... 300)
-                        .tint(.primary)
-                        .padding(.horizontal, 20)
+                    HStack {
+                        bpmAdjustmentLabelView(name: "speaker.wave.2")
+                        Slider(value: $metronomeVolume)
+                            .tint(.primary)
+                    }
+                    .padding(.horizontal, 20)
                     Divider()
                     Text("App Theme")
                         .font(.title2)
@@ -124,6 +135,27 @@ struct AppSettingsView: View {
         
     }
     
+    var countInButtonLabel: some View {
+        ZStack {
+            if isCountInActive {
+                RoundedRectangle(cornerRadius: 25)
+                    .frame(width: 75, height: 25)
+                    .foregroundStyle(appTheme.accentColor)
+                Text("Count In")
+                    .font(.caption)
+                    .foregroundStyle(.black)
+            } else {
+                RoundedRectangle(cornerRadius: 25)
+                    .stroke(lineWidth: 1.0)
+                    .frame(width: 75, height: 25)
+                    .foregroundStyle(appTheme.accentColor)
+                Text("Count In")
+                    .font(.caption)
+                    .foregroundStyle(.primary)
+            }
+        }
+    }
+    
     private func changeIcon(to name: String?) {
         if UIApplication.shared.responds(
             to: #selector(
@@ -138,6 +170,19 @@ struct AppSettingsView: View {
             let method = unsafeBitCast(imp, to: setAlternateIconNameClosure.self)
             method(UIApplication.shared, selector, name as NSString?, { _ in })
         }
+    }
+}
+
+struct bpmAdjustmentLabelView: View {
+    
+    var name: String
+    
+    var body: some View {
+        Image(systemName: name)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 24, height: 24)
+            .foregroundStyle(.primary)
     }
 }
 
@@ -171,5 +216,10 @@ extension Color {
 }
 
 #Preview {
-    AppSettingsView(metronome: Metronome.shared, metronomeBpm: .constant(120), isCountInActive: .constant(false))
+    AppSettingsView(
+        metronome: DefaultMetronome.shared,
+        metronomeBpm: .constant(120),
+        metronomeVolume: .constant(1.0),
+        isCountInActive: .constant(false)
+    )
 }

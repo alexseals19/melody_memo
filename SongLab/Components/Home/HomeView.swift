@@ -51,10 +51,15 @@ struct HomeView: View {
             }
         }
         .sheet(isPresented: $viewModel.isSettingsPresented) {
-            AppSettingsView(metronome: viewModel.metronome, metronomeBpm: $viewModel.metronomeBpm, isCountInActive: $viewModel.isCountInActive)
-                .onDisappear {
-                    viewModel.metronome.saveSettings()
-                }
+            AppSettingsView(
+                metronome: viewModel.metronome,
+                metronomeBpm: $viewModel.metronomeBpm,
+                metronomeVolume: $viewModel.metronomeVolume,
+                isCountInActive: $viewModel.isCountInActive
+            )
+            .onDisappear {
+                viewModel.metronome.saveSettings()
+            }
         }
     }
 }
