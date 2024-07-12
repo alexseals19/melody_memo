@@ -27,8 +27,8 @@ protocol AudioManager {
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never> { get }
-    func startTracking() throws
-    func startTracking(for session: Session) throws
+    func startTracking() async throws
+    func startTracking(for session: Session) async throws
     func stopTracking() async throws
     func stopTracking(for session: Session) async throws
     func startPlayback(for session: Session) throws
@@ -62,41 +62,37 @@ class DefaultAudioManager: AudioManager {
     var progressTimerSubscription: AnyCancellable?
     var meterTimerSubscription: AnyCancellable?
     
-    func startTracking() throws {
+    func startTracking() async throws {
         
         try setupRecorder()
         isRecording.send(true)
                 
-        Task {
-            if await metronome.isArmed {
-                try await metronome.prepare()
-            }
-            
-            let countInDelay = await metronome.countInDelay
-            
-            let startTime = CACurrentMediaTime() + 0.25
-            
-            if await metronome.isArmed {
-                await metronome.start(at: startTime + 0.25)
-            }
-            
-            recorder.record(atTime: (startTime + countInDelay + bluetoothDelay))
-            
-            try startMetering(at: startTime + countInDelay)
-            try startTimer(at: startTime + countInDelay)
+        if await metronome.isArmed {
+            try await metronome.prepare()
         }
+        
+        let countInDelay = await metronome.countInDelay
+        
+        let startTime = CACurrentMediaTime() + 0.25
+        
+        if await metronome.isArmed {
+            await metronome.start(at: startTime + 0.25)
+        }
+        
+        recorder.record(atTime: (startTime + countInDelay + bluetoothDelay))
+        
+        try startMetering(at: startTime + countInDelay)
+        try startTimer(at: startTime + countInDelay)
                 
     }
     
-    func startTracking(for session: Session) throws {
+    func startTracking(for session: Session) async throws {
         try setupPlayers(for: session, stopTimer: false)
                 
         try setupRecorder()
         
-        Task {
-            if await metronome.isArmed {
-                try await metronome.prepare()
-            }
+        if await metronome.isArmed {
+            try await metronome.prepare()
         }
         
         isRecording.send(true)
@@ -104,21 +100,19 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = CACurrentMediaTime() + 0.5
         
-        Task {
-            if !session.tracks.isEmpty {
-                for player in players {
-                    await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
-                }
+        if !session.tracks.isEmpty {
+            for player in players {
+                await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
             }
-            
-            if await metronome.isArmed {
-                await metronome.start(at: startTime)
-            }
-            await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
-            
-            try await startMetering(at: (startTime +  metronome.countInDelay) - 0.25)
-            try await startTimer(at: (startTime +  metronome.countInDelay) - 0.25)
         }
+        
+        if await metronome.isArmed {
+            await metronome.start(at: startTime)
+        }
+        await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
+        
+        try await startMetering(at: (startTime +  metronome.countInDelay) - 0.25)
+        try await startTimer(at: (startTime +  metronome.countInDelay) - 0.25)
     }
         
     func stopTracking() async throws {
