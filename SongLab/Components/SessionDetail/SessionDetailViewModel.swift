@@ -67,8 +67,9 @@ class SessionDetailViewModel: ObservableObject {
         }
         
         if currentlyPlaying != nil {
-            var tracksToToggle = session.tracks.values.filter( { $0.isSolo == false  } )
-            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.soloOverride == true } ))
+            var tracksToToggle: [Track] = []
+            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } ))
+            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } ))
             audioManager.toggleMute(for: tracksToToggle)
             currentlyPlaying = session
             
@@ -91,11 +92,11 @@ class SessionDetailViewModel: ObservableObject {
     
     func trackCellMuteButtonTapped(for track: Track) {
         session.tracks[track.id]?.isMuted.toggle()
-        if track.isMuted {
-            session.tracks[track.id]?.soloOverride = false
-        }
+        session.tracks[track.id]?.soloOverride = false
         if currentlyPlaying != nil {
-            audioManager.toggleMute(for: Array(arrayLiteral: track))
+            if !track.soloOverride {
+                audioManager.toggleMute(for: Array(arrayLiteral: track))
+            }
             currentlyPlaying = session
         }
         do {
@@ -108,27 +109,46 @@ class SessionDetailViewModel: ObservableObject {
     func trackCellSoloButtonTapped(for track: Track) {
         
         if !session.isGlobalSoloActive {
+            session.isGlobalSoloActive = true
             session.tracks[track.id]?.isSolo = true
             let otherTracks = session.tracks.filter { $0.key != track.id }
             for track in otherTracks.values {
                 session.tracks[track.id]?.isSolo = false
             }
-            masterCellSoloButtonTapped()
+            if track.isMuted {
+                session.tracks[track.id]?.soloOverride = true
+            }
+            if currentlyPlaying != nil {
+                if track.isMuted {
+                    let tracksToToggle = [track]
+                    audioManager.toggleMute(for: tracksToToggle)
+                }
+                currentlyPlaying = session
+            }
         } else {
             session.tracks[track.id]?.isSolo.toggle()
-            let otherSoloTracks = session.tracks.filter { $0.value.isSolo }
-            if otherSoloTracks.isEmpty {
+            let allSoloTracks = session.tracks.filter { $0.value.isSolo }
+            if allSoloTracks.isEmpty {
                 session.isGlobalSoloActive = false
                 session.tracks[track.id]?.soloOverride = false
-            } else if otherSoloTracks.contains(where: { $0.key == track.id } ), track.isMuted {
+            } else if allSoloTracks.contains(where: { $0.key == track.id } ), track.isMuted {
                 session.tracks[track.id]?.soloOverride = true
             } else {
                 session.tracks[track.id]?.soloOverride = false
             }
             if currentlyPlaying != nil {
-                let tracksToToggle = [track]
-                audioManager.toggleMute(for: tracksToToggle)
-                currentlyPlaying = session
+                if allSoloTracks.isEmpty {
+                    var tracksToToggle = session.tracks.values.filter { $0.id != track.id && !$0.isMuted}
+                    if track.isMuted, track.soloOverride {
+                        tracksToToggle.append(track)
+                    }
+                    audioManager.toggleMute(for: tracksToToggle)
+                    currentlyPlaying = session
+                } else {
+                    let tracksToToggle = [track]
+                    audioManager.toggleMute(for: tracksToToggle)
+                    currentlyPlaying = session
+                }
             }
         }
         
