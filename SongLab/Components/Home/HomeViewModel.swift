@@ -60,10 +60,12 @@ class HomeViewModel: ObservableObject {
         didSet {
             if isRecording {
                 if let selectedSession {
-                    do {
-                        try audioManager.startTracking(for: selectedSession)
-                    } catch {
-                        errorMessage = "ERROR: Could not begin recording."
+                    Task {
+                        do {
+                            try await audioManager.startTracking(for: selectedSession)
+                        } catch {
+                            errorMessage = "ERROR: Could not begin recording."
+                        }
                     }
                 } else {
                     do {
@@ -71,10 +73,12 @@ class HomeViewModel: ObservableObject {
                     } catch {
                         errorMessage = "ERROR: Could not stop playback."
                     }
-                    do {
-                        try audioManager.startTracking()
-                    } catch {
-                        errorMessage = "ERROR: Could not begin recording."
+                    Task {
+                        do {
+                            try await audioManager.startTracking()
+                        } catch {
+                            errorMessage = "ERROR: Could not begin recording."
+                        }
                     }
                 }
             } else {
