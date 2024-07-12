@@ -180,6 +180,7 @@ struct AppSettingsView: View {
                 .presentationDetents([.height(375)])
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: 360)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
                 viewModel.saveSettings()
         }
@@ -267,7 +268,7 @@ extension Color {
 
 #Preview {
     AppSettingsView(
-        metronome: DefaultMetronome.shared,
+        metronome: Metronome.shared,
         audioManager: MockAudioManager(),
         metronomeBpm: .constant(120),
         metronomeVolume: .constant(1.0),

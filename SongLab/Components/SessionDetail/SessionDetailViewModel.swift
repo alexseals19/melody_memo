@@ -142,7 +142,7 @@ class SessionDetailViewModel: ObservableObject {
     
     func trackCellStopButtonTapped() {
         do {
-            try audioManager.stopPlayback()
+            try audioManager.stopPlayback(stopTimer: true)
         } catch {
             errorMessage = "ERROR: Could not stop playback."
         }
