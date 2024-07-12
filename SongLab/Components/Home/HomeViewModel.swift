@@ -23,27 +23,36 @@ class HomeViewModel: ObservableObject {
     
     @Published var isMetronomeArmed: Bool {
         didSet {
-            metronome.isArmed = isMetronomeArmed
-            metronome.saveSettings()
+            
+            Task {
+                await metronome.setIsArmed(value: isMetronomeArmed)
+                await metronome.saveSettings()
+            }
         }
     }
     
     @Published var metronomeBpm: Double {
         didSet {
-            metronome.bpm = metronomeBpm
-            metronome.saveSettings()
+            Task {
+                await metronome.setBpm(newBpm: metronomeBpm)
+                await metronome.saveSettings()
+            }
         }
     }
     
     @Published var metronomeVolume: Float {
         didSet {
-            metronome.volume = metronomeVolume
+            Task {
+                await metronome.setVolume(newVolume: metronomeVolume)
+            }
         }
     }
     
     @Published var isCountInActive: Bool {
         didSet {
-            metronome.isCountInActive = isCountInActive
+            Task {
+                await metronome.setIsCountInActive(value: isCountInActive)
+            }
         }
     }
     
@@ -58,7 +67,7 @@ class HomeViewModel: ObservableObject {
                     }
                 } else {
                     do {
-                        try audioManager.stopPlayback()
+                        try audioManager.stopPlayback(stopTimer: false)
                     } catch {
                         errorMessage = "ERROR: Could not stop playback."
                     }
@@ -69,18 +78,20 @@ class HomeViewModel: ObservableObject {
                     }
                 }
             } else {
-                Task{
-                    if let selectedSession {
+                if let selectedSession {
+                    Task {
                         do {
                             try await audioManager.stopTracking(for: selectedSession)
                         } catch {
-                            errorMessage = "ERROR: This operation could not be completed."
+                            errorMessage = "ERROR: Could not stop recording."
                         }
-                    } else {
+                    }
+                } else {
+                    Task {
                         do {
                             try await audioManager.stopTracking()
                         } catch {
-                            errorMessage = "ERROR: This operation could not be completed."
+                            errorMessage = "ERROR: Could not stop recording."
                         }
                     }
                 }
@@ -97,15 +108,15 @@ class HomeViewModel: ObservableObject {
     let audioManager: AudioManager
     let recordingManager: RecordingManager
     
-    var metronome = DefaultMetronome.shared
+    var metronome = Metronome.shared
     
     init(audioManager: AudioManager, recordingManager: RecordingManager) {
         self.audioManager = audioManager
         self.recordingManager = recordingManager
-        self.isMetronomeArmed = metronome.isArmed
-        self.metronomeBpm = metronome.bpm
-        self.metronomeVolume = metronome.volume
-        self.isCountInActive = metronome.isCountInActive
+        self.isMetronomeArmed = false
+        self.metronomeBpm = 120
+        self.metronomeVolume = 1
+        self.isCountInActive = false
         recordingManager.sessions
             .compactMap { $0.first { $0.id == self.selectedSession?.id }}
             .assign(to: &$selectedSession)  
@@ -114,10 +125,20 @@ class HomeViewModel: ObservableObject {
         audioManager.playerProgress
             .assign(to: &$trackTimer)
         
+        setVariables()
+        
     }
     
     // MARK: - Variables
     
     // MARK: - Functions
     
+    private func setVariables() {
+        Task {
+            await isMetronomeArmed = metronome.isArmed
+            await metronomeBpm = metronome.bpm
+            await metronomeVolume = metronome.volume
+            await isCountInActive = metronome.isCountInActive
+        }
+    }
 }

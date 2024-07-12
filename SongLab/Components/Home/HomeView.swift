@@ -59,7 +59,10 @@ struct HomeView: View {
                 isCountInActive: $viewModel.isCountInActive
             )
             .onDisappear {
-                viewModel.metronome.saveSettings()
+                Task {
+                    await viewModel.metronome.saveSettings()
+                }
+                
             }
         }
     }

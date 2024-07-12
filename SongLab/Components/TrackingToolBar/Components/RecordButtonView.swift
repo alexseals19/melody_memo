@@ -22,12 +22,14 @@ struct RecordButtonView: View {
     
     // MARK: - Variables
                 
-    @State private var stopButtonOpacity = 0.0
-    @State private var stopButtonDimensions: CGFloat = 65
-    @State private var stopButtonCornerRadius: CGFloat = 32.5
+    @State private var stopButtonOpacity = 0.15
+    @State private var stopButtonDimensions: CGFloat = 25
+    @State private var stopButtonCornerRadius: CGFloat = 5
     @State private var reordButtonOpacity = 1.0
     @State private var recordButtonDimensions: CGFloat = 65
     @State private var recordButtonCornerRadius: CGFloat = 32.5
+    @State private var recordButtonOffset: CGFloat = 0.0
+    @State private var inputMeterWidth: CGFloat = 0.0
     
     private var inputSamples: [SampleModel]?
     private var samples: [SampleModel] {
@@ -44,20 +46,20 @@ struct RecordButtonView: View {
         
     var body: some View {
         Button {
-            stopButtonOpacity = 0.15
-            withAnimation(.easeInOut) {
+            
+            withAnimation(.easeInOut(duration: 0.25)) {
                 if isRecording {
-                    stopButtonDimensions = 65
-                    stopButtonCornerRadius = 27.5
                     recordButtonDimensions = 65
                     recordButtonCornerRadius = 32.5
                     reordButtonOpacity = 1.0
+                    recordButtonOffset = 0.0
+                    inputMeterWidth = 0.0
                 } else {
-                    stopButtonDimensions = 25
-                    stopButtonCornerRadius = 5
                     recordButtonDimensions = 21
                     recordButtonCornerRadius = 5
                     reordButtonOpacity = 0.0
+                    recordButtonOffset = 75.0
+                    inputMeterWidth = 155.0
                 }
             }
             isRecording.toggle()
@@ -75,7 +77,7 @@ struct RecordButtonView: View {
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
                 .foregroundStyle(appTheme.accentColor)
                 .shadow(color: appTheme.accentColor, radius: 2)
-                .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
+                .offset(x: recordButtonOffset)
                 .padding(25)
             
             if isRecording {
@@ -89,7 +91,7 @@ struct RecordButtonView: View {
                         Spacer()
                             .frame(minWidth: 0.0)
                     }
-                    .frame(width: 155, height: 55)
+                    .frame(width: inputMeterWidth, height: 55)
                     .clipped()
                     RoundedRectangle(cornerRadius: stopButtonCornerRadius)
                         .frame(width: stopButtonDimensions, height: stopButtonDimensions)
@@ -102,7 +104,9 @@ struct RecordButtonView: View {
                                     stopButtonOpacity = 1.0
                                 }
                         }
-                        .matchedGeometryEffect(id: 1, in: namespace, properties: .position)
+                        .onDisappear {
+                            stopButtonOpacity = 0.15
+                        }
                         .padding(.trailing, 25)
                 }
             }

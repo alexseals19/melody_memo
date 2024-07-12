@@ -32,7 +32,7 @@ protocol AudioManager {
     func stopTracking() async throws
     func stopTracking(for session: Session) async throws
     func startPlayback(for session: Session) throws
-    func stopPlayback() throws
+    func stopPlayback(stopTimer: Bool) throws
     func removeTrack(track: Track)
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
@@ -64,30 +64,39 @@ class DefaultAudioManager: AudioManager {
     
     func startTracking() throws {
         
-        if metronome.isArmed {
-            try metronome.prepare()
-        }
         try setupRecorder()
         isRecording.send(true)
-        
-        let startTime = CACurrentMediaTime() + 0.5
-        
-        if metronome.isArmed {
-            metronome.start(at: startTime)
+                
+        Task {
+            if await metronome.isArmed {
+                try await metronome.prepare()
+            }
+            
+            let countInDelay = await metronome.countInDelay
+            
+            let startTime = CACurrentMediaTime() + 0.25
+            
+            if await metronome.isArmed {
+                await metronome.start(at: startTime + 0.25)
+            }
+            
+            recorder.record(atTime: (startTime + countInDelay + bluetoothDelay))
+            
+            try startMetering(at: startTime + countInDelay)
+            try startTimer(at: startTime + countInDelay)
         }
-        recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
-        
-        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
-        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
-        
+                
     }
     
     func startTracking(for session: Session) throws {
-        try setupPlayers(for: session)
+        try setupPlayers(for: session, stopTimer: false)
                 
         try setupRecorder()
-        if metronome.isArmed {
-            try metronome.prepare()
+        
+        Task {
+            if await metronome.isArmed {
+                try await metronome.prepare()
+            }
         }
         
         isRecording.send(true)
@@ -95,35 +104,40 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = CACurrentMediaTime() + 0.5
         
-        if !session.tracks.isEmpty {
-            for player in players {
-                player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
+        Task {
+            if !session.tracks.isEmpty {
+                for player in players {
+                    await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
+                }
             }
+            
+            if await metronome.isArmed {
+                await metronome.start(at: startTime)
+            }
+            await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
+            
+            try await startMetering(at: (startTime +  metronome.countInDelay) - 0.25)
+            try await startTimer(at: (startTime +  metronome.countInDelay) - 0.25)
         }
-        
-        if metronome.isArmed {
-            metronome.start(at: startTime)
-        }
-        recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
-        
-        try startMetering(at: (startTime + metronome.countInDelay) - 0.25)
-        try startTimer(at: (startTime + metronome.countInDelay) - 0.25)
     }
         
     func stopTracking() async throws {
         
         defer { currentFileName = nil }
         
-        try stopMetering()
-        try stopTimer()
+        currentTrackLength = playerProgress.value
+        
+        if await metronome.isArmed {
+            await metronome.stopMetronome()
+        }
+        
+        stopMetering()
+        stopTimer()
+        
         isRecording.send(false)
                 
         recorder.stop()
-        
-        if metronome.isArmed {
-            metronome.stopMetronome()
-        }
-    
+            
         guard let currentFileName else {
             assertionFailure("currentFileName is nil.")
             return
@@ -134,7 +148,10 @@ class DefaultAudioManager: AudioManager {
             fileType: .m4a
         )
         
+        
+        
         let audioAsset = AVURLAsset(url: url, options: nil)
+        
         let duration = try await audioAsset.load(.duration)
         let durationInSeconds = CMTimeGetSeconds(duration)
         
@@ -151,7 +168,7 @@ class DefaultAudioManager: AudioManager {
             name: "Track 1",
             fileName: currentFileName,
             date: Date(),
-            length: Double(durationInSeconds),
+            length: durationInSeconds,
             id: UUID(),
             volume: 1.0,
             isMuted: false,
@@ -161,7 +178,7 @@ class DefaultAudioManager: AudioManager {
         let session = Session(
             name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
             date: Date(),
-            length: Double(durationInSeconds),
+            length: durationInSeconds,
             tracks: [track.id : track],
             absoluteTrackCount: 1,
             id: UUID(),
@@ -176,14 +193,14 @@ class DefaultAudioManager: AudioManager {
         
         var updatedSession = session
         
-        try stopMetering()
+        stopMetering()
         isRecording.send(false)
         
         recorder.stop()
-        try stopPlayback()
+        try stopPlayback(stopTimer: true)
         
-        if metronome.isArmed {
-            metronome.stopMetronome()
+        if await metronome.isArmed {
+            await metronome.stopMetronome()
         }
     
         guard let currentFileName else {
@@ -249,14 +266,16 @@ class DefaultAudioManager: AudioManager {
         try startTimer(at: startTimeInSeconds + 0.03)
     }
     
-    func stopPlayback() throws {
+    func stopPlayback(stopTimer: Bool) throws {
         
         for player in players {
             player.player.stop()
         }
         playbackEngine.stop()
         players.removeAll()
-        try self.stopTimer()
+        if stopTimer {
+            self.stopTimer()
+        }
         currentlyPlaying.send(nil)
     }
     
@@ -324,11 +343,12 @@ class DefaultAudioManager: AudioManager {
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
     private var currentFileName: String?
+    private var currentTrackLength: Double?
     
     private var bufferInterrupt: Bool = false
     private var audioLengthSamples: AVAudioFramePosition = 0
     private var startDate: Date = Date()
-    private var metronome: Metronome = DefaultMetronome.shared
+    private var metronome = Metronome.shared
     private var bluetoothDelay: Double = 0.0
     
     private let progressTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
@@ -434,8 +454,9 @@ class DefaultAudioManager: AudioManager {
                                   completionCallbackType: .dataPlayedBack
             ) { _ in
                 Task{ @MainActor in
+                    self.playerProgress.send(player.track.length)
                     if player.player == self.players.last?.player {
-                        try self.stopPlayback()
+                        try self.stopPlayback(stopTimer: stopTimer)
                     }
                 }
             }
@@ -551,8 +572,10 @@ class DefaultAudioManager: AudioManager {
         
         let delay: Double = startTime - CACurrentMediaTime()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            self.meterTimerSubscription = self.meterTimer.sink { date in
+        let start: Date = Date() + delay
+        self.meterTimerSubscription = self.meterTimer.sink { date in
+            let interval = date.timeIntervalSince(start)
+            if interval > 0 {
                 self.recorder.updateMeters()
                 guard var updatedSamples: [SampleModel] = self.inputSamples.value else {
                     return
@@ -572,26 +595,26 @@ class DefaultAudioManager: AudioManager {
         }
     }
     
-    private func stopMetering() throws {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.meterTimerSubscription?.cancel()
-            self.inputSamples.send(nil)
-        }
+    private func stopMetering() {
+        meterTimerSubscription?.cancel()
+        inputSamples.send(nil)
     }
     
     private func startTimer(at startTime: TimeInterval) throws {
         
         let delay: Double = startTime - CACurrentMediaTime()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            self.startDate = Date()
-            self.progressTimerSubscription = self.progressTimer.sink { date in
-                self.playerProgress.send(date.timeIntervalSince(self.startDate))
+        let start: Date = Date() + delay
+        
+        self.progressTimerSubscription = self.progressTimer.sink { date in
+            let interval = date.timeIntervalSince(start)
+            if interval > 0 {
+                self.playerProgress.send(interval)
             }
         }
     }
     
-    private func stopTimer() throws {
+    private func stopTimer() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             self.progressTimerSubscription?.cancel()
             self.playerProgress.send(0.0)
@@ -612,7 +635,7 @@ class DefaultAudioManager: AudioManager {
     
     @objc private func handleInterruption(notification: Notification) {
         do {
-            try stopPlayback()
+            try stopPlayback(stopTimer: true)
         } catch {
             assertionFailure("Stop playback due to interruption could not be completed")
         }
@@ -623,7 +646,7 @@ class DefaultAudioManager: AudioManager {
                 
         if audioSession.currentRoute.outputs[0].portType == .builtInSpeaker {
             do {
-                try stopPlayback()
+                try stopPlayback(stopTimer: true)
             } catch {
                 assertionFailure("Could not stop playback.")
             }
