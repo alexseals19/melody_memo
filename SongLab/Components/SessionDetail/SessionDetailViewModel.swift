@@ -119,10 +119,11 @@ class SessionDetailViewModel: ObservableObject {
                 session.tracks[track.id]?.soloOverride = true
             }
             if currentlyPlaying != nil {
+                var tracksToToggle = session.tracks.values.filter { $0.id != track.id }
                 if track.isMuted {
-                    let tracksToToggle = [track]
-                    audioManager.toggleMute(for: tracksToToggle)
+                    tracksToToggle.append(track)
                 }
+                audioManager.toggleMute(for: tracksToToggle)
                 currentlyPlaying = session
             }
         } else {
