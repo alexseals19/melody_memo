@@ -23,7 +23,6 @@ class HomeViewModel: ObservableObject {
     
     @Published var isMetronomeArmed: Bool {
         didSet {
-            
             Task {
                 await metronome.setIsArmed(value: isMetronomeArmed)
                 await metronome.saveSettings()
