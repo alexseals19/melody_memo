@@ -13,9 +13,16 @@ struct MetronomeButtonView: View {
     
     @Binding var isMetronomeArmed: Bool
     
-    init(isMetronomeArmed: Binding<Bool>, metronomeBpm: Double) {
+    var isRecording: Bool
+    
+    init(
+        isMetronomeArmed: Binding<Bool>,
+        metronomeBpm: Double,
+        isRecording: Bool
+    ) {
         _isMetronomeArmed = isMetronomeArmed
         self.metronomeBpm = metronomeBpm
+        self.isRecording = isRecording
     }
     
     // MARK: - Variables
@@ -29,7 +36,9 @@ struct MetronomeButtonView: View {
     var body: some View {
         Button {
             withAnimation(.easeInOut) {
-                isMetronomeArmed.toggle()
+                if !isRecording {
+                    isMetronomeArmed.toggle()
+                }
             }
         } label: {
             metronomeLabel
@@ -59,5 +68,9 @@ struct MetronomeButtonView: View {
 }
 
 #Preview {
-    MetronomeButtonView(isMetronomeArmed: .constant(false), metronomeBpm: 120)
+    MetronomeButtonView(
+        isMetronomeArmed: .constant(false),
+        metronomeBpm: 120,
+        isRecording: false
+    )
 }

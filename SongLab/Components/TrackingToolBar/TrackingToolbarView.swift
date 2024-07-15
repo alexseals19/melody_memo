@@ -52,7 +52,11 @@ struct TrackingToolbarView: View {
     var body: some View {
         VStack {
             HStack {
-                MetronomeButtonView(isMetronomeArmed: $isMetronomeArmed, metronomeBpm: metronomeBpm)
+                MetronomeButtonView(
+                    isMetronomeArmed: $isMetronomeArmed,
+                    metronomeBpm: metronomeBpm,
+                    isRecording: isRecording
+                )
                     .padding(.leading)
                 RecordButtonView(isRecording: $isRecording, inputLevel: inputSamples)
                 appSettingsButton
@@ -77,7 +81,9 @@ struct TrackingToolbarView: View {
     
     var appSettingsButton: some View {
         Button {
-            isSettingsPresented.toggle()
+            if !isRecording {
+                isSettingsPresented.toggle()
+            }
         } label: {
             Image(systemName: "slider.horizontal.3")
         }
