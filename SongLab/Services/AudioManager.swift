@@ -448,7 +448,6 @@ class DefaultAudioManager: AudioManager {
                                   completionCallbackType: .dataPlayedBack
             ) { _ in
                 Task{ @MainActor in
-                    self.playerProgress.send(player.track.length)
                     if player.player == self.players.last?.player {
                         try self.stopPlayback(stopTimer: stopTimer)
                     }
@@ -609,10 +608,8 @@ class DefaultAudioManager: AudioManager {
     }
     
     private func stopTimer() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            self.progressTimerSubscription?.cancel()
-            self.playerProgress.send(0.0)
-        }
+        self.progressTimerSubscription?.cancel()
+        self.playerProgress.send(0.0)
     }
     
     private func setupNotifications() {
