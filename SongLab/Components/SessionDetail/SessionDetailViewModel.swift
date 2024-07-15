@@ -55,6 +55,21 @@ class SessionDetailViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    func masterCellRestartButtonTapped() {
+        if currentlyPlaying != nil {
+            do {
+                try audioManager.stopPlayback(stopTimer: true)
+            } catch {
+                errorMessage = "ERROR: Could not stop playback for restart."
+            }
+            do {
+                try audioManager.startPlayback(for: session)
+            } catch {
+                errorMessage = "ERROR: Could not play session."
+            }
+        }
+    }
+    
     func masterCellSoloButtonTapped() {
         
         session.isGlobalSoloActive.toggle()
@@ -119,7 +134,7 @@ class SessionDetailViewModel: ObservableObject {
                 session.tracks[track.id]?.soloOverride = true
             }
             if currentlyPlaying != nil {
-                var tracksToToggle = session.tracks.values.filter { $0.id != track.id }
+                var tracksToToggle = session.tracks.values.filter { $0.id != track.id && !$0.isMuted }
                 if track.isMuted {
                     tracksToToggle.append(track)
                 }

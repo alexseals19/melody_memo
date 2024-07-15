@@ -15,13 +15,15 @@ struct MasterCellView: View {
          currentlyPlaying: Session?,
          playButtonAction: @escaping (_: Session) -> Void,
          stopButtonAction: @escaping () -> Void,
-         globalSoloButtonAction: @escaping () -> Void
+         globalSoloButtonAction: @escaping () -> Void,
+         restartButtonAction: @escaping () -> Void
     ) {
         self.session = session
         self.currentlyPlaying = currentlyPlaying
         self.playButtonAction = playButtonAction
         self.stopButtonAction = stopButtonAction
         self.globalSoloButtonAction = globalSoloButtonAction
+        self.restartButtonAction = restartButtonAction
     }
     
     //MARK: - Variables
@@ -34,6 +36,7 @@ struct MasterCellView: View {
     private let playButtonAction: (_ session: Session) -> Void
     private let stopButtonAction: () -> Void
     private let globalSoloButtonAction: () -> Void
+    private let restartButtonAction: () -> Void
     
     //MARK: - Body
     
@@ -68,12 +71,22 @@ struct MasterCellView: View {
                             }
                             .padding(.leading, 5)
                             Spacer()
-                            PlaybackControlButtonView(
-                                session: session,
-                                currentlyPlaying: currentlyPlaying,
-                                playButtonAction: playButtonAction,
-                                stopButtonAction: stopButtonAction
-                            )
+                            HStack(spacing: 20) {
+                                Button {
+                                    restartButtonAction()
+                                } label: {
+                                    Image(systemName: "gobackward")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 24, height: 24)
+                                }
+                                PlaybackControlButtonView(
+                                    session: session,
+                                    currentlyPlaying: currentlyPlaying,
+                                    playButtonAction: playButtonAction,
+                                    stopButtonAction: stopButtonAction
+                                )
+                            }
                         }
                     }
                     Spacer()
@@ -93,6 +106,7 @@ struct MasterCellView: View {
         currentlyPlaying: nil,
         playButtonAction: { _ in },
         stopButtonAction: {},
-        globalSoloButtonAction: {}
+        globalSoloButtonAction: {},
+        restartButtonAction: {}
     )
 }

@@ -80,7 +80,8 @@ struct SessionDetailView: View {
                     currentlyPlaying: viewModel.currentlyPlaying,
                     playButtonAction: viewModel.trackCellPlayButtonTapped,
                     stopButtonAction: viewModel.trackCellStopButtonTapped,
-                    globalSoloButtonAction: viewModel.masterCellSoloButtonTapped
+                    globalSoloButtonAction: viewModel.masterCellSoloButtonTapped,
+                    restartButtonAction: viewModel.masterCellRestartButtonTapped
                 )
                 GeometryReader { proxy in
                     ScrollView {
