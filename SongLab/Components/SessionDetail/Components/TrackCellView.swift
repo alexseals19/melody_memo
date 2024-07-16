@@ -20,7 +20,8 @@ struct TrackCellView: View {
         trackTimer: Double,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
-        onTrackVolumeChange: @escaping (_: Track, _ : Float) -> Void,
+        onTrackVolumeChange: @escaping (_: Track, _: Float) -> Void,
+        onTrackPanChange: @escaping (_: Track, _: Float) -> Void,
         getWaveformImage: @escaping (_: String, _: ColorScheme) -> Image,
         trashButtonAction: @escaping (_: Track) -> Void
     ) {
@@ -31,9 +32,11 @@ struct TrackCellView: View {
         self.muteButtonAction = muteButtonAction
         self.soloButtonAction = soloButtonAction
         self.onTrackVolumeChange = onTrackVolumeChange
+        self.onTrackPanChange = onTrackPanChange
         self.getWaveformImage = getWaveformImage
         self.trashButtonAction = trashButtonAction
-        self.sliderValue = Double(track.volume)
+        self.volumeSliderValue = Double(track.volume)
+        self.panSliderValue = Double(track.pan)
     }
     
     //MARK: - Variables
@@ -42,14 +45,18 @@ struct TrackCellView: View {
     
     @EnvironmentObject private var appTheme: AppTheme
     
-    @State private var sliderValue: Double
-    @State private var waveformWidth: CGFloat = UIScreen.main.bounds.width - 205
+    @State private var volumeSliderValue: Double
+    @State private var panSliderValue: CGFloat
+    @State private var lastPanValue: CGFloat = 0.0
+    @State private var waveformWidth: CGFloat = UIScreen.main.bounds.width - 215
     @State private var waveform: Image = Image(systemName: "waveform")
     @State private var muteButtonOpacity: Double = 0.75
+    @State private var panSliderWidth: Double = 0.0
     
     private var track: Track
     private var isGlobalSoloActive: Bool
     private var trackTimer: Double
+    
     
     private let isSessionPlaying: Bool
     
@@ -72,12 +79,33 @@ struct TrackCellView: View {
     private let muteButtonAction: (_: Track) -> Void
     private let soloButtonAction: (_: Track) -> Void
     private let onTrackVolumeChange: (_: Track, _ : Float) -> Void
+    private let onTrackPanChange: (_: Track, _ : Float) -> Void
     private let getWaveformImage: (_: String, _: ColorScheme) -> Image
     private let trashButtonAction: (_: Track) -> Void
     
     //MARK: - Body
         
     var body: some View {
+        
+        let drag = DragGesture()
+            .onChanged() { gesture in
+                if panSliderValue <= 1.0, panSliderValue >= -1.0 {
+                    panSliderValue = (gesture.translation.width / panSliderWidth) + lastPanValue
+                    onTrackPanChange(track, Float(panSliderValue))
+                }
+                
+            }
+            .onEnded { _ in
+                if panSliderValue < -1.0 {
+                    panSliderValue = -1.0
+                    onTrackPanChange(track, Float(panSliderValue))
+                } else if panSliderValue > 1.0 {
+                    panSliderValue = 1.0
+                    onTrackPanChange(track, Float(panSliderValue))
+                }
+                lastPanValue = panSliderValue
+            }
+        
         ZStack {
             VStack {
                 HStack(alignment: .center) {
@@ -89,16 +117,25 @@ struct TrackCellView: View {
                             Text(track.lengthDisplayString)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            Button {
+                                trashButtonAction(track)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 18, height: 18)
+                                    .foregroundStyle(.primary)
+                            }
                         }
                         Spacer()
                     }
-                    .frame(width: 75.0)
+                    .frame(width: 80.0)
                     Spacer()
                     waveform
                         .resizable()
                         .opacity(trackOpacity)
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: UIScreen.main.bounds.width - 205, height: 70)
+                        .frame(width: UIScreen.main.bounds.width - 215, height: 70)
                         .animation(.linear(duration: 0.25), value: trackOpacity)
                         
                     Spacer()
@@ -140,26 +177,48 @@ struct TrackCellView: View {
                             }
                         }
                     }
-                    .frame(width: 75.0)
+                    .frame(width: 80.0)
                 }
                 Divider()
                 HStack {
                     TrackCellButtonImage("speaker.wave.2")
                         .foregroundStyle(.secondary)
-                    Slider(value: $sliderValue)
+                    Slider(value: $volumeSliderValue)
                         .tint(appTheme.accentColor)
                         .padding(.trailing, 10)
-                        .onChange(of: sliderValue) {
-                            onTrackVolumeChange(track, Float(sliderValue))
+                        .onChange(of: volumeSliderValue) {
+                            onTrackVolumeChange(track, Float(volumeSliderValue))
                         }
-                        
-                    Button {
-                        trashButtonAction(track)
-                    } label: {
-                        TrackCellButtonImage("trash")
+                }
+                .padding(.bottom, 7)
+                HStack {
+                    TrackCellButtonImage("l.circle")
+                        .foregroundStyle(.secondary)
+                    ZStack {
+                        Capsule()
+                            .frame(maxWidth: .infinity, maxHeight: 5)
+                            .foregroundStyle(.ultraThinMaterial)
+                        GeometryReader { proxy in
+                            Rectangle()
+                                .frame(width: 2, height: 25)
+                                .foregroundStyle(.primary)
+                                .shadow(color: .black, radius: 3)
+                                .onAppear {
+                                    panSliderWidth = proxy.size.width / 2
+                                    lastPanValue = panSliderValue
+                                }
+                                .offset(x: panSliderWidth)
+                                .offset(x: (panSliderValue * panSliderWidth))
+                        }
                     }
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
+                    .gesture(drag)
+                    .onTapGesture(count: 2) {
+                        lastPanValue = 0.0
+                        panSliderValue = 0.0
+                        onTrackPanChange(track, 0.0)
+                    }
+                    TrackCellButtonImage("r.circle")
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 20)
@@ -170,7 +229,7 @@ struct TrackCellView: View {
             Rectangle()
                 .frame(maxWidth: 1, maxHeight: 87)
                 .foregroundStyle(.red)
-                .offset(x: offset, y: -25)
+                .offset(x: offset, y: -45)
                 .animation(
                     isSessionPlaying ? .none : .linear(duration: 0.5).delay(0.25),
                     value: offset
@@ -208,6 +267,7 @@ struct TrackCellButtonImage: View {
         muteButtonAction: { _ in },
         soloButtonAction: { _ in },
         onTrackVolumeChange: { _, _ in },
+        onTrackPanChange: {_, _ in },
         getWaveformImage: { _,_ in return Image("") },
         trashButtonAction: { _ in })
 }

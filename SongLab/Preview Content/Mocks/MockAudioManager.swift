@@ -28,6 +28,7 @@ class MockAudioManager: AudioManager {
     func removeTrack(track: Track) {}
     func toggleMute(for tracks: [Track]) {}
     func setTrackVolume(for track: Track) {}
+    func setTrackPan(for track: Track) {}
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {Image(systemName: "doc")}
     
     init() {

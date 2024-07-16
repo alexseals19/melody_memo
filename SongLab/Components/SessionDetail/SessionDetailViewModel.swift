@@ -13,7 +13,7 @@ import SwiftUI
 class SessionDetailViewModel: ObservableObject {
     
     //MARK: - API
-    
+        
     @Published var currentlyPlaying: Session?
     @Published var session: Session
     @Published var trackTimer: Double = 0.0
@@ -43,6 +43,21 @@ class SessionDetailViewModel: ObservableObject {
             .debounce(for: 0.25, scheduler: RunLoop.main)
             .sink { track in
                 self.session.tracks[track.id]?.volume = track.volume
+                if self.currentlyPlaying != nil {
+                    self.currentlyPlaying = self.session
+                }
+                do {
+                    try recordingManager.updateSession(self.session)
+                } catch {
+                    
+                }
+            }
+            .store(in: &cancellables)
+        
+        trackPanSubject
+            .debounce(for: 0.25, scheduler: RunLoop.main)
+            .sink { track in
+                self.session.tracks[track.id]?.pan = track.pan
                 if self.currentlyPlaying != nil {
                     self.currentlyPlaying = self.session
                 }
@@ -227,6 +242,20 @@ class SessionDetailViewModel: ObservableObject {
         }
     }
     
+    func setTrackPan(for track: Track, pan: Float) {
+        var updatedTrack = track
+        updatedTrack.pan = pan
+        trackPanSubject.send(updatedTrack)
+        if currentlyPlaying != nil {
+            audioManager.setTrackPan(for: updatedTrack)
+        }
+        do {
+            try recordingManager.updateSession(session)
+        } catch {
+            errorMessage = "ERROR: Could not update session."
+        }
+    }
+    
     func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
         do {
             return try audioManager.getImage(for: fileName, colorScheme: colorScheme)
@@ -237,6 +266,7 @@ class SessionDetailViewModel: ObservableObject {
     // MARK: - Variables
     
     private var trackVolumeSubject = PassthroughSubject<Track, Never>()
+    private var trackPanSubject = PassthroughSubject<Track, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var recordingManager: RecordingManager
     
