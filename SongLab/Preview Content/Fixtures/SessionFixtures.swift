@@ -16,6 +16,7 @@ extension Session {
                                         length: 4,
                                         id: UUID(),
                                         volume: 1.0,
+                                        pan: 0.0,
                                         isMuted: false,
                                         isSolo: false,
                                         soloOverride: false)

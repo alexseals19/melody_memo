@@ -95,6 +95,7 @@ struct SessionDetailView: View {
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     onTrackVolumeChange: viewModel.setTrackVolume,
+                                    onTrackPanChange: viewModel.setTrackPan,
                                     getWaveformImage: viewModel.getWaveformImage,
                                     trashButtonAction: viewModel.trackCellTrashButtonTapped
                                 )

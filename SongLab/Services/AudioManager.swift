@@ -36,6 +36,7 @@ protocol AudioManager {
     func removeTrack(track: Track)
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
+    func setTrackPan(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
 }
 
@@ -63,7 +64,6 @@ class DefaultAudioManager: AudioManager {
     var meterTimerSubscription: AnyCancellable?
     
     func startTracking() async throws {
-        
         try setupRecorder()
         isRecording.send(true)
                 
@@ -83,7 +83,6 @@ class DefaultAudioManager: AudioManager {
         
         try startMetering(at: startTime + countInDelay)
         try startTimer(at: startTime + countInDelay)
-                
     }
     
     func startTracking(for session: Session) async throws {
@@ -142,8 +141,6 @@ class DefaultAudioManager: AudioManager {
             fileType: .m4a
         )
         
-        
-        
         let audioAsset = AVURLAsset(url: url, options: nil)
         
         let duration = try await audioAsset.load(.duration)
@@ -165,6 +162,7 @@ class DefaultAudioManager: AudioManager {
             length: durationInSeconds,
             id: UUID(),
             volume: 1.0,
+            pan: 0.0,
             isMuted: false,
             isSolo: false,
             soloOverride: false
@@ -224,6 +222,7 @@ class DefaultAudioManager: AudioManager {
             length: Double(durationInSeconds),
             id: UUID(),
             volume: 1.0,
+            pan: 0.0,
             isMuted: false,
             isSolo: false,
             soloOverride: false
@@ -300,6 +299,13 @@ class DefaultAudioManager: AudioManager {
             return
         }
         newPlayer.player.volume = track.volume
+    }
+    
+    func setTrackPan(for track: Track) {
+        guard let newPlayer = players.first(where: { $0.track.id == track.id }) else {
+            return
+        }
+        newPlayer.player.pan = track.pan
     }
     
     @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {
@@ -470,6 +476,7 @@ class DefaultAudioManager: AudioManager {
                 } else {
                     player.player.volume = 0.0
                 }
+                player.player.pan = player.track.pan
             }
         } else {
             for player in players {
@@ -478,6 +485,7 @@ class DefaultAudioManager: AudioManager {
                 } else {
                     player.player.volume = player.track.volume
                 }
+                player.player.pan = player.track.pan
             }
         }
     }

@@ -50,21 +50,23 @@ struct MasterCellView: View {
                             VStack {
                                 Text("Master")
                                     .font(.title2)
-                                Button {
-                                    globalSoloButtonAction()
-                                } label: {
-                                    HStack {
-                                        if session.isGlobalSoloActive {
-                                            Image(systemName: "s.square.fill")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: 24, height: 24)
-                                                .foregroundStyle(.purple)
-                                        } else {
-                                            Image(systemName: "s.square")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fit)
-                                                .frame(width: 24, height: 24)
+                                HStack {
+                                    Button {
+                                        globalSoloButtonAction()
+                                    } label: {
+                                        HStack {
+                                            if session.isGlobalSoloActive {
+                                                Image(systemName: "s.square.fill")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 24, height: 24)
+                                                    .foregroundStyle(.purple)
+                                            } else {
+                                                Image(systemName: "s.square")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 24, height: 24)
+                                            }
                                         }
                                     }
                                 }

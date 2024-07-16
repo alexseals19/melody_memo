@@ -16,6 +16,7 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
     let id: UUID
     
     var volume: Float
+    var pan: Float
     var isMuted: Bool
     var isSolo: Bool
     var soloOverride: Bool
@@ -36,6 +37,7 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         length: Double,
         id: UUID,
         volume: Float,
+        pan: Float,
         isMuted: Bool,
         isSolo: Bool,
         soloOverride: Bool
@@ -46,6 +48,7 @@ struct Track: Identifiable, Codable, Hashable, Equatable {
         self.length = length
         self.id = id
         self.volume = volume
+        self.pan = pan
         self.isMuted = isMuted
         self.isSolo = isSolo
         self.soloOverride = soloOverride
