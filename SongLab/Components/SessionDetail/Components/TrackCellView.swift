@@ -65,7 +65,7 @@ struct TrackCellView: View {
     }
     
     private var offset: Double {
-        return (waveformWidth / -2.0) + (waveformWidth * progressPercentage)
+        return (waveformWidth / -2.0) + (waveformWidth * progressPercentage) + 5
     }
     
     private var trackOpacity: Double {
@@ -129,13 +129,13 @@ struct TrackCellView: View {
                         }
                         Spacer()
                     }
-                    .frame(width: 80.0)
+                    .frame(width: 85.0)
                     Spacer()
                     waveform
                         .resizable()
                         .opacity(trackOpacity)
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: UIScreen.main.bounds.width - 215, height: 70)
+                        .frame(width: waveformWidth, height: 70)
                         .animation(.linear(duration: 0.25), value: trackOpacity)
                         
                     Spacer()
@@ -177,7 +177,7 @@ struct TrackCellView: View {
                             }
                         }
                     }
-                    .frame(width: 80.0)
+                    .frame(width: 75.0)
                 }
                 Divider()
                 HStack {
