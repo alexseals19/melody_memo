@@ -1,6 +1,6 @@
 //
-//  SongLabApp.swift
-//  SongLab
+//  MelodyMemoApp.swift
+//  MelodyMemo
 //
 //  Created by Alex Seals on 2/3/24.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct SongLabApp: App {
+struct MelodyMemoApp: App {
         
     var appTheme = AppTheme()
 

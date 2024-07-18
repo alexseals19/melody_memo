@@ -54,7 +54,7 @@ class DefaultAudioManager: AudioManager {
         mixerNode: AVAudioMixerNode()
     )
     
-    @AppStorage("trackLengthLimit") var trackLengthLimit: Int = 3
+    @AppStorage("trackLengthLimit") var trackLengthLimit: Int = 2
     
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
@@ -377,7 +377,6 @@ class DefaultAudioManager: AudioManager {
         self.mixerNode = mixerNode
         setUpSession()
         setupNotifications()
-        
             
     }
     
@@ -397,9 +396,14 @@ class DefaultAudioManager: AudioManager {
                 return
             }
             try audioSession.setPreferredInput(inputs[0])
+            
+            try audioSession.setActive(true)
+            
+            AVAudioApplication.requestRecordPermission(completionHandler: { _ in })
         } catch {
             print(error.localizedDescription)
         }
+        
     }
         
     private func setupPlayers(for session: Session, stopTimer: Bool = true) throws {

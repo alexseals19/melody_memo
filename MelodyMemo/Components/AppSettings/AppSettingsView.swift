@@ -101,7 +101,7 @@ struct AppSettingsView: View {
                         .font(.title2)
                         .padding(.top, 15)
                     HStack {
-                        Text("Track length minimum")
+                        Text("Minimum recording length")
                             .padding(.trailing, 15)
                         Button {
                             if viewModel.trackLengthLimit > 0 {

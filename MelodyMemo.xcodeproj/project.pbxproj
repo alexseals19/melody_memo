@@ -36,7 +36,7 @@
 		99F0F72D2C10F8C3001B22CE /* MetronomeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72C2C10F8C3001B22CE /* MetronomeButtonView.swift */; };
 		99F0F72F2C1102D6001B22CE /* TrackingToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */; };
 		99F0F7332C112055001B22CE /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F0F7322C112055001B22CE /* AudioManager.swift */; };
-		99F9EE532B6EC9DE003308D2 /* SongLabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE522B6EC9DE003308D2 /* SongLabApp.swift */; };
+		99F9EE532B6EC9DE003308D2 /* MelodyMemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE522B6EC9DE003308D2 /* MelodyMemoApp.swift */; };
 		99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE542B6EC9DE003308D2 /* HomeView.swift */; };
 		99F9EE572B6EC9E0003308D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE562B6EC9E0003308D2 /* Assets.xcassets */; };
 		99F9EE5A2B6EC9E0003308D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */; };
@@ -72,8 +72,8 @@
 		99F0F72C2C10F8C3001B22CE /* MetronomeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeButtonView.swift; sourceTree = "<group>"; };
 		99F0F72E2C1102D6001B22CE /* TrackingToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingToolbarView.swift; sourceTree = "<group>"; };
 		99F0F7322C112055001B22CE /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
-		99F9EE4F2B6EC9DE003308D2 /* SongLab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SongLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		99F9EE522B6EC9DE003308D2 /* SongLabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongLabApp.swift; sourceTree = "<group>"; };
+		99F9EE4F2B6EC9DE003308D2 /* MelodyMemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MelodyMemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		99F9EE522B6EC9DE003308D2 /* MelodyMemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MelodyMemoApp.swift; sourceTree = "<group>"; };
 		99F9EE542B6EC9DE003308D2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		99F9EE562B6EC9E0003308D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -169,7 +169,7 @@
 		99C364E62C0F615200873213 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				99F9EE522B6EC9DE003308D2 /* SongLabApp.swift */,
+				99F9EE522B6EC9DE003308D2 /* MelodyMemoApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -237,7 +237,7 @@
 		99F9EE462B6EC9DE003308D2 = {
 			isa = PBXGroup;
 			children = (
-				99F9EE512B6EC9DE003308D2 /* SongLab */,
+				99F9EE512B6EC9DE003308D2 /* MelodyMemo */,
 				99F9EE502B6EC9DE003308D2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -245,12 +245,12 @@
 		99F9EE502B6EC9DE003308D2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				99F9EE4F2B6EC9DE003308D2 /* SongLab.app */,
+				99F9EE4F2B6EC9DE003308D2 /* MelodyMemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		99F9EE512B6EC9DE003308D2 /* SongLab */ = {
+		99F9EE512B6EC9DE003308D2 /* MelodyMemo */ = {
 			isa = PBXGroup;
 			children = (
 				99F9EE562B6EC9E0003308D2 /* Assets.xcassets */,
@@ -260,7 +260,7 @@
 				99AD35C62C1355B70055CC2A /* Services */,
 				99F9EE582B6EC9E0003308D2 /* Preview Content */,
 			);
-			path = SongLab;
+			path = MelodyMemo;
 			sourceTree = "<group>";
 		};
 		99F9EE582B6EC9E0003308D2 /* Preview Content */ = {
@@ -285,9 +285,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		99F9EE4E2B6EC9DE003308D2 /* SongLab */ = {
+		99F9EE4E2B6EC9DE003308D2 /* MelodyMemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 99F9EE5D2B6EC9E0003308D2 /* Build configuration list for PBXNativeTarget "SongLab" */;
+			buildConfigurationList = 99F9EE5D2B6EC9E0003308D2 /* Build configuration list for PBXNativeTarget "MelodyMemo" */;
 			buildPhases = (
 				99F9EE4B2B6EC9DE003308D2 /* Sources */,
 				99F9EE4C2B6EC9DE003308D2 /* Frameworks */,
@@ -297,9 +297,9 @@
 			);
 			dependencies = (
 			);
-			name = SongLab;
+			name = MelodyMemo;
 			productName = SongLab;
-			productReference = 99F9EE4F2B6EC9DE003308D2 /* SongLab.app */;
+			productReference = 99F9EE4F2B6EC9DE003308D2 /* MelodyMemo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -317,7 +317,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 99F9EE4A2B6EC9DE003308D2 /* Build configuration list for PBXProject "SongLab" */;
+			buildConfigurationList = 99F9EE4A2B6EC9DE003308D2 /* Build configuration list for PBXProject "MelodyMemo" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -330,7 +330,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				99F9EE4E2B6EC9DE003308D2 /* SongLab */,
+				99F9EE4E2B6EC9DE003308D2 /* MelodyMemo */,
 			);
 		};
 /* End PBXProject section */
@@ -369,7 +369,7 @@
 				99F0F7332C112055001B22CE /* AudioManager.swift in Sources */,
 				991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */,
 				99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */,
-				99F9EE532B6EC9DE003308D2 /* SongLabApp.swift in Sources */,
+				99F9EE532B6EC9DE003308D2 /* MelodyMemoApp.swift in Sources */,
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
 				99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
@@ -515,15 +515,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SongLab/Preview Content\"";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "\"MelodyMemo/Preview Content\"";
 				DEVELOPMENT_TEAM = G62H7YX6F2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SongLab/Info.plist;
+				INFOPLIST_FILE = MelodyMemo/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This can be changed later in device settings.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This is a music recording app. The microphone will be used for this purpose.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -551,15 +551,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"SongLab/Preview Content\"";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_ASSET_PATHS = "\"MelodyMemo/Preview Content\"";
 				DEVELOPMENT_TEAM = G62H7YX6F2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SongLab/Info.plist;
+				INFOPLIST_FILE = MelodyMemo/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = NO;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This can be changed later in device settings.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This is a music recording app. The microphone will be used for this purpose.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -582,7 +582,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		99F9EE4A2B6EC9DE003308D2 /* Build configuration list for PBXProject "SongLab" */ = {
+		99F9EE4A2B6EC9DE003308D2 /* Build configuration list for PBXProject "MelodyMemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				99F9EE5B2B6EC9E0003308D2 /* Debug */,
@@ -591,7 +591,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		99F9EE5D2B6EC9E0003308D2 /* Build configuration list for PBXNativeTarget "SongLab" */ = {
+		99F9EE5D2B6EC9E0003308D2 /* Build configuration list for PBXNativeTarget "MelodyMemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				99F9EE5E2B6EC9E0003308D2 /* Debug */,
