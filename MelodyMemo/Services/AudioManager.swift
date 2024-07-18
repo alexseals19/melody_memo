@@ -81,8 +81,8 @@ class DefaultAudioManager: AudioManager {
         
         recorder.record(atTime: (startTime + countInDelay + bluetoothDelay))
         
-        try startMetering(at: startTime + countInDelay)
-        try startTimer(at: startTime + countInDelay)
+        try startMetering(at: startTime + countInDelay + bluetoothDelay)
+        try startTimer(at: startTime + countInDelay + bluetoothDelay)
     }
     
     func startTracking(for session: Session) async throws {
@@ -110,8 +110,8 @@ class DefaultAudioManager: AudioManager {
         }
         await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
         
-        try await startMetering(at: (startTime +  metronome.countInDelay) - 0.25)
-        try await startTimer(at: (startTime +  metronome.countInDelay) - 0.25)
+        try await startMetering(at: (startTime +  metronome.countInDelay + bluetoothDelay) - 0.25)
+        try await startTimer(at: (startTime +  metronome.countInDelay + bluetoothDelay) - 0.25)
     }
         
     func stopTracking() async throws {

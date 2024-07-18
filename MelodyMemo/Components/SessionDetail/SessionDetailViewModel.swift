@@ -232,7 +232,7 @@ class SessionDetailViewModel: ObservableObject {
         var updatedTrack = track
         updatedTrack.volume = volume
         trackVolumeSubject.send(updatedTrack)
-        if currentlyPlaying != nil {
+        if currentlyPlaying != nil, !track.isMuted {
             audioManager.setTrackVolume(for: updatedTrack)
         }
         do {

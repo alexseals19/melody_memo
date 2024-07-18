@@ -44,143 +44,140 @@ struct AppSettingsView: View {
             RoundedRectangle(cornerRadius: 2)
                 .frame(width: 150, height: 3)
                 .foregroundStyle(appTheme.accentColor)
-                .padding(15)
+                .padding(.top, 15)
                 .shadow(color: appTheme.accentColor, radius: 5)
-            ScrollView {
-                LazyVStack {
+            LazyVStack {
+                Text("Metronome")
+                    .font(.title2)
+                    .padding(.top, 15)
+                HStack {
                     
-                    Text("Metronome")
-                        .font(.title2)
-                        .padding(.top, 15)
-                    HStack {
-                        
-                        Button {
-                            if metronomeBpm > 1 {
-                                metronomeBpm -= 1
-                            }
-                        } label: {
-                            bpmAdjustmentLabelView(name: "minus")
-                                .foregroundStyle(.primary)
+                    Button {
+                        if metronomeBpm > 1 {
+                            metronomeBpm -= 1
                         }
-                        .buttonRepeatBehavior(.enabled)
-                        VStack {
-                            Text("BPM")
-                                .font(.caption)
-                            Text("\(Int(metronomeBpm))")
+                    } label: {
+                        bpmAdjustmentLabelView(name: "minus")
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonRepeatBehavior(.enabled)
+                    VStack {
+                        Text("BPM")
+                            .font(.caption)
+                        Text("\(Int(metronomeBpm))")
+                    }
+                    .foregroundStyle(.secondary)
+                    Button {
+                        if metronomeBpm < 300 {
+                            metronomeBpm += 1
                         }
+                    } label: {
+                        bpmAdjustmentLabelView(name: "plus")
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonRepeatBehavior(.enabled)
+                    .padding(.trailing, 10)
+                    Button {
+                        isCountInActive.toggle()
+                    } label: {
+                        countInButtonLabel
+                    }
+                }
+                .foregroundStyle(.primary)
+                HStack {
+                    bpmAdjustmentLabelView(name: "speaker.wave.2")
                         .foregroundStyle(.secondary)
-                        Button {
-                            if metronomeBpm < 300 {
-                                metronomeBpm += 1
-                            }
-                        } label: {
-                            bpmAdjustmentLabelView(name: "plus")
-                                .foregroundStyle(.primary)
+                    Slider(value: $metronomeVolume)
+                        .tint(.primary)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
+                
+                Divider()
+                
+                Text("Tracking")
+                    .font(.title2)
+                    .padding(.top, 15)
+                HStack {
+                    Text("Minimum recording length")
+                        .padding(.trailing, 15)
+                    Button {
+                        if viewModel.trackLengthLimit > 0 {
+                            viewModel.trackLengthLimit -= 1
                         }
-                        .buttonRepeatBehavior(.enabled)
-                        .padding(.trailing, 10)
-                        Button {
-                            isCountInActive.toggle()
-                        } label: {
-                            countInButtonLabel
-                        }
+                    } label: {
+                        bpmAdjustmentLabelView(name: "minus")
                     }
                     .foregroundStyle(.primary)
-                    HStack {
-                        bpmAdjustmentLabelView(name: "speaker.wave.2")
-                            .foregroundStyle(.secondary)
-                        Slider(value: $metronomeVolume)
-                            .tint(.primary)
+                    VStack {
+                        if viewModel.trackLengthLimit > 0 {
+                            Text("\(viewModel.trackLengthLimit)")
+                            Text("sec")
+                                .font(.caption)
+                        } else {
+                            Text("off")
+                                .font(.body)
+                        }
                     }
-                    .padding(.horizontal, 20)
+                    .foregroundStyle(.secondary)
+                    Button {
+                        if viewModel.trackLengthLimit < 5 {
+                            viewModel.trackLengthLimit += 1
+                        }
+                    } label: {
+                        bpmAdjustmentLabelView(name: "plus")
+                    }
+                    .foregroundStyle(.primary)
+                    .padding(.trailing, 10)
+                }
+                Text("Only keep new recordings longer than this.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .padding(.bottom, 10)
-                    
-                    Divider()
-                    
-                    Text("Tracking")
-                        .font(.title2)
-                        .padding(.top, 15)
-                    HStack {
-                        Text("Minimum recording length")
-                            .padding(.trailing, 15)
-                        Button {
-                            if viewModel.trackLengthLimit > 0 {
-                                viewModel.trackLengthLimit -= 1
-                            }
-                        } label: {
-                            bpmAdjustmentLabelView(name: "minus")
-                        }
-                        .foregroundStyle(.primary)
-                        VStack {
-                            if viewModel.trackLengthLimit > 0 {
-                                Text("\(viewModel.trackLengthLimit)")
-                                Text("sec")
-                                    .font(.caption)
-                            } else {
-                                Text("off")
-                                    .font(.body)
-                            }
-                        }
-                        .foregroundStyle(.secondary)
-                        Button {
-                            if viewModel.trackLengthLimit < 5 {
-                                viewModel.trackLengthLimit += 1
-                            }
-                        } label: {
-                            bpmAdjustmentLabelView(name: "plus")
-                        }
-                        .foregroundStyle(.primary)
-                        .padding(.trailing, 10)
-                    }
-                    Text("Only keep new recordings longer than this.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.bottom, 10)
-                    
-                    Divider()
-                    
-                    Text("App Theme")
-                        .font(.title2)
-                        .padding(.top, 15)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60, maximum: 60))]) {
-                        ForEach(AppTheme.Theme.allCases) { theme in
-                            Group {
-                                if theme == appTheme.theme {
-                                    ZStack {
-                                        Circle()
-                                            .stroke(lineWidth: 2)
-                                            .foregroundStyle(Color[theme.rawValue])
-                                            .frame(width: 40)
-                                            .aspectRatio(contentMode: .fit)
-                                        Circle()
-                                            .frame(width: 36)
-                                            .foregroundStyle(Color[theme.rawValue])
-                                            .aspectRatio(contentMode: .fit)
-                                            .foregroundStyle(.primary)
-                                    }
-                                } else {
+                
+                Divider()
+                
+                Text("App Theme")
+                    .font(.title2)
+                    .padding(.top, 15)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60, maximum: 60))]) {
+                    ForEach(AppTheme.Theme.allCases) { theme in
+                        Group {
+                            if theme == appTheme.theme {
+                                ZStack {
                                     Circle()
                                         .stroke(lineWidth: 2)
                                         .foregroundStyle(Color[theme.rawValue])
                                         .frame(width: 40)
                                         .aspectRatio(contentMode: .fit)
+                                    Circle()
+                                        .frame(width: 36)
+                                        .foregroundStyle(Color[theme.rawValue])
+                                        .aspectRatio(contentMode: .fit)
+                                        .foregroundStyle(.primary)
                                 }
-                            }
-                            .padding(.bottom, 10)
-                            .foregroundStyle(.primary)
-                            .onTapGesture {
-                                changeIcon(to: "Icon_\(theme.rawValue)")
-                                appTheme.theme = theme
+                            } else {
+                                Circle()
+                                    .stroke(lineWidth: 2)
+                                    .foregroundStyle(Color[theme.rawValue])
+                                    .frame(width: 40)
+                                    .aspectRatio(contentMode: .fit)
                             }
                         }
+                        .padding(.bottom, 10)
+                        .foregroundStyle(.primary)
+                        .onTapGesture {
+                            changeIcon(to: "Icon_\(theme.rawValue)")
+                            appTheme.theme = theme
+                        }
                     }
-                    .padding(.horizontal, 20)
-                    Spacer()
                 }
-                .presentationDetents([.height(375)])
+                .padding(.horizontal, 20)
+                Spacer()
             }
+            .presentationDetents([.height(500)])
+            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: 360)
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
                 viewModel.saveSettings()
         }
