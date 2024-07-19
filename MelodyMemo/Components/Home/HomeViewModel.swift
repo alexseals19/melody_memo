@@ -17,6 +17,7 @@ class HomeViewModel: ObservableObject {
     @Published var isSettingsPresented: Bool = false
     @Published var inputSamples: [SampleModel]?
     @Published var trackTimer: Double = 0.0
+    @Published var metronomeBpm: Int = 120
     
     @Published var errorMessage: String?
     @Published var selectedSession: Session?
@@ -29,16 +30,7 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
-    
-    @Published var metronomeBpm: Double {
-        didSet {
-            Task {
-                await metronome.setBpm(newBpm: metronomeBpm)
-                await metronome.saveSettings()
-            }
-        }
-    }
-    
+        
     @Published var metronomeVolume: Float {
         didSet {
             Task {
@@ -120,14 +112,8 @@ class HomeViewModel: ObservableObject {
         self.metronomeBpm = 120
         self.metronomeVolume = 1
         self.isCountInActive = false
-        recordingManager.sessions
-            .compactMap { $0.first { $0.id == self.selectedSession?.id }}
-            .assign(to: &$selectedSession)  
-        audioManager.inputSamples
-            .assign(to: &$inputSamples)
-        audioManager.playerProgress
-            .assign(to: &$trackTimer)
         
+        setAssignments()
         setVariables()
         
     }
@@ -139,9 +125,23 @@ class HomeViewModel: ObservableObject {
     private func setVariables() {
         Task {
             await isMetronomeArmed = metronome.isArmed
-            await metronomeBpm = metronome.bpm
+            //await metronomeBpm = metronome.bpm
             await metronomeVolume = metronome.volume
             await isCountInActive = metronome.isCountInActive
+        }
+    }
+    
+    private func setAssignments() {
+        recordingManager.sessions
+            .compactMap { $0.first { $0.id == self.selectedSession?.id }}
+            .assign(to: &$selectedSession)
+        audioManager.inputSamples
+            .assign(to: &$inputSamples)
+        audioManager.playerProgress
+            .assign(to: &$trackTimer)
+        Task {
+            await metronome.bpm
+                .assign(to: &$metronomeBpm)
         }
     }
 }

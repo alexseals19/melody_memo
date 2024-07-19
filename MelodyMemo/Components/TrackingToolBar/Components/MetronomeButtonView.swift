@@ -17,7 +17,7 @@ struct MetronomeButtonView: View {
     
     init(
         isMetronomeArmed: Binding<Bool>,
-        metronomeBpm: Double,
+        metronomeBpm: Int,
         isRecording: Bool
     ) {
         _isMetronomeArmed = isMetronomeArmed
@@ -29,7 +29,7 @@ struct MetronomeButtonView: View {
     
     @Namespace private var namespace
     
-    private var metronomeBpm: Double
+    private var metronomeBpm: Int
             
     //MARK: - Body
     

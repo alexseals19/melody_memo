@@ -54,7 +54,6 @@ struct HomeView: View {
             AppSettingsView(
                 metronome: viewModel.metronome,
                 audioManager: viewModel.audioManager,
-                metronomeBpm: $viewModel.metronomeBpm,
                 metronomeVolume: $viewModel.metronomeVolume,
                 isCountInActive: $viewModel.isCountInActive
             )

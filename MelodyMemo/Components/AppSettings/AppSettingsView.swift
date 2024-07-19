@@ -11,20 +11,17 @@ struct AppSettingsView: View {
     
     //MARK: - API
     
-    @Binding var metronomeBpm: Double
     @Binding var metronomeVolume: Float
     @Binding var isCountInActive: Bool
         
     init(metronome: Metronome,
          audioManager: AudioManager,
-         metronomeBpm: Binding<Double>,
          metronomeVolume: Binding<Float>,
          isCountInActive: Binding<Bool>
     ) {
         _viewModel = StateObject(
             wrappedValue: AppSettingsViewModel(metronome: metronome, audioManager: audioManager)
         )
-        _metronomeBpm = metronomeBpm
         _metronomeVolume = metronomeVolume
         _isCountInActive = isCountInActive
     }
@@ -51,10 +48,9 @@ struct AppSettingsView: View {
                     .font(.title2)
                     .padding(.top, 15)
                 HStack {
-                    
                     Button {
-                        if metronomeBpm > 1 {
-                            metronomeBpm -= 1
+                        if viewModel.metronomeBpm > 1 {
+                            viewModel.setBpm(bpm: viewModel.metronomeBpm - 1)
                         }
                     } label: {
                         bpmAdjustmentLabelView(name: "minus")
@@ -64,12 +60,12 @@ struct AppSettingsView: View {
                     VStack {
                         Text("BPM")
                             .font(.caption)
-                        Text("\(Int(metronomeBpm))")
+                        Text("\(Int(viewModel.metronomeBpm))")
                     }
                     .foregroundStyle(.secondary)
                     Button {
-                        if metronomeBpm < 300 {
-                            metronomeBpm += 1
+                        if viewModel.metronomeBpm < 300 {
+                            viewModel.setBpm(bpm: viewModel.metronomeBpm + 1)
                         }
                     } label: {
                         bpmAdjustmentLabelView(name: "plus")
@@ -84,6 +80,22 @@ struct AppSettingsView: View {
                     }
                 }
                 .foregroundStyle(.primary)
+                
+                HStack {
+                    Text("Tap In")
+                        .foregroundStyle(.primary)
+                    
+                    Button {
+                        viewModel.addTap()
+                    } label: {
+                        Circle()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 40, height: 40)
+                            .shadow(color: Color(UIColor.systemBackground), radius: 2)
+                    }
+                    .foregroundStyle(.primary)
+                }
+                
                 HStack {
                     bpmAdjustmentLabelView(name: "speaker.wave.2")
                         .foregroundStyle(.secondary)
@@ -175,7 +187,7 @@ struct AppSettingsView: View {
                 .padding(.horizontal, 20)
                 Spacer()
             }
-            .presentationDetents([.height(500)])
+            .presentationDetents([.height(570)])
             Spacer()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
@@ -267,7 +279,6 @@ extension Color {
     AppSettingsView(
         metronome: Metronome.shared,
         audioManager: MockAudioManager(),
-        metronomeBpm: .constant(120),
         metronomeVolume: .constant(1.0),
         isCountInActive: .constant(false)
     )
