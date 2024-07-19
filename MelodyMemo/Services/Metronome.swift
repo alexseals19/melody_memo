@@ -10,6 +10,11 @@ import AVFoundation
 import SwiftUI
 import Combine
 
+struct TapInModel {
+    var date = Date()
+    var interval: TimeInterval
+}
+
 struct Beat {
     var player: AVAudioPlayerNode
     var number: Int
@@ -41,7 +46,10 @@ actor Metronome {
     
     static let shared = Metronome()
     
-    var bpm: Double
+    var bpm: CurrentValueSubject<Int, Never>
+    
+    var taps: [TapInModel] = []
+    
     var timeSignature: Int
     var isArmed: Bool
     var isCountInActive: Bool
@@ -51,7 +59,7 @@ actor Metronome {
     
     var countInDelay: Double {
         if isArmed, isCountInActive {
-            return 60 / bpm * Double(timeSignature)
+            return 60 / Double(bpm.value) * Double(timeSignature)
         }
         return 0.0
     }
@@ -160,7 +168,7 @@ actor Metronome {
     
     func saveSettings() {
         do {
-            try DataPersistenceManager.save(bpm, to: "bpm")
+            try DataPersistenceManager.save(bpm.value, to: "bpm")
             try DataPersistenceManager.save(timeSignature, to: "timeSignature")
             try DataPersistenceManager.save(isArmed, to: "isArmed")
             try DataPersistenceManager.save(isCountInActive, to: "isCountInActive")
@@ -168,8 +176,34 @@ actor Metronome {
         } catch {}
     }
     
-    func setBpm(newBpm: Double) {
-        bpm = newBpm
+    func tapInCalculator() {
+        if taps.isEmpty {
+            taps.append(TapInModel(interval: 0.0))
+        } else {
+            taps.append(TapInModel(interval: Date().timeIntervalSince(taps[taps.count - 1].date)))
+            
+            var intervalTotal: Double = 0.0
+            
+            for tap in taps {
+                intervalTotal += tap.interval
+            }
+            let averageInterval = intervalTotal / Double(taps.count)
+            let newBpm = 60 / averageInterval
+            
+            Task { @MainActor in
+                await bpm.send(Int(newBpm))
+            }
+        }
+        
+        if taps.count == 5 {
+            taps.removeFirst()
+        }
+    }
+    
+    func setBpm(newBpm: Int) {
+        Task { @MainActor in
+            await bpm.send(newBpm)
+        }
     }
     
     func setIsArmed(value: Bool) {
@@ -195,7 +229,7 @@ actor Metronome {
     private var subscription: AnyCancellable?
     
     private var beatInterval: Double {
-        60.0 / bpm
+        60.0 / Double(bpm.value)
     }
     
     private var beatSetLength: Int {
@@ -218,16 +252,16 @@ actor Metronome {
     }
         
     // MARK: - Functions
-    
     private init() {
         do {
-            bpm = try DataPersistenceManager.retrieve(Double.self, from: "bpm")
+            bpm = CurrentValueSubject(try DataPersistenceManager.retrieve(Int.self, from: "bpm"))
+            bpm.send(bpm.value)
             timeSignature = try DataPersistenceManager.retrieve(Int.self, from: "timeSignature")
             isArmed = try DataPersistenceManager.retrieve(Bool.self, from: "isArmed")
             isCountInActive = try DataPersistenceManager.retrieve(Bool.self, from: "isCountInActive")
             volume = try DataPersistenceManager.retrieve(Float.self, from: "volume")
         } catch {
-            bpm = 120
+            bpm = CurrentValueSubject(130)
             timeSignature = 4
             isArmed = false
             isCountInActive = false

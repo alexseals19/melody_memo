@@ -12,14 +12,8 @@ class AppSettingsViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var metronomeBpm: Double {
-        didSet {
-            Task {
-                await metronome.setBpm(newBpm: metronomeBpm)
-            }
-        }
-    }
-    
+    @Published var metronomeBpm: Int = 120
+        
     @Published var trackLengthLimit: Int {
         didSet {
             audioManager.trackLengthLimit = trackLengthLimit
@@ -30,8 +24,7 @@ class AppSettingsViewModel: ObservableObject {
         self.metronome = metronome
         self.audioManager = audioManager
         self.trackLengthLimit = audioManager.trackLengthLimit
-        self.metronomeBpm = 120
-        setBpm()
+        setAssignment()
     }
     
     func saveSettings() {
@@ -50,17 +43,29 @@ class AppSettingsViewModel: ObservableObject {
         }
     }
     
+    func setBpm(bpm: Int) {
+        Task {
+            await metronome.setBpm(newBpm: bpm)
+        }
+    }
+    
+    func addTap() {
+        Task {
+            await metronome.tapInCalculator()
+        }
+    }
+    
     // MARK: - Variables
     
     private var metronome: Metronome
-    
     private var audioManager: AudioManager
     
     // MARK: - Functions
     
-    private func setBpm() {
+    private func setAssignment() {
         Task {
-            metronomeBpm = await metronome.bpm
+            await metronome.bpm
+                .assign(to: &$metronomeBpm)
         }
     }
     

@@ -14,7 +14,7 @@ struct TrackingToolbarView: View {
     @Binding var isRecording: Bool
     @Binding var isMetronomeArmed: Bool
     
-    var metronomeBpm: Double
+    var metronomeBpm: Int
     var inputSamples: [SampleModel]?
     
     init(
@@ -23,7 +23,7 @@ struct TrackingToolbarView: View {
         inputSamples: [SampleModel]?,
         trackTimer: Double,
         isMetronomeArmed: Binding<Bool>,
-        metronomeBpm: Double
+        metronomeBpm: Int
     ) {
         _isRecording = isRecording
         _isSettingsPresented = isSettingsPresented
