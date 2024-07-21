@@ -64,12 +64,8 @@ struct SessionDetailView: View {
                         viewModel.sessionTrashButtonTapped()
                         dismiss()
                     } label: {
-                        Image(systemName: "trash")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 24, height: 24)
+                        AppButtonLabelView(name: "trash", color: .secondary)
                     }
-                    .foregroundStyle(.secondary)
                     .padding(15)
                 }
                 .background(Color(UIColor.systemBackground).opacity(0.3))
@@ -78,10 +74,13 @@ struct SessionDetailView: View {
                 MasterCellView(
                     session: viewModel.session,
                     currentlyPlaying: viewModel.currentlyPlaying,
+                    useGlobalBpm: $viewModel.isUsingGlobalBpm,
+                    sessionBpm: $viewModel.sessionBpm,
                     playButtonAction: viewModel.trackCellPlayButtonTapped,
                     stopButtonAction: viewModel.trackCellStopButtonTapped,
                     globalSoloButtonAction: viewModel.masterCellSoloButtonTapped,
-                    restartButtonAction: viewModel.masterCellRestartButtonTapped
+                    restartButtonAction: viewModel.masterCellRestartButtonTapped,
+                    setBpmButtonAction: viewModel.setSessionBpm
                 )
                 GeometryReader { proxy in
                     ScrollView {

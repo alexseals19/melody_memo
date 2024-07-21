@@ -85,9 +85,8 @@ struct TrackingToolbarView: View {
                 isSettingsPresented.toggle()
             }
         } label: {
-            Image(systemName: "slider.horizontal.3")
+            AppButtonLabelView(name: "slider.horizontal.3", color: .primary, size: 22)
         }
-        .foregroundStyle(.primary)
         
     }
     

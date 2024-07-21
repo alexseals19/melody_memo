@@ -22,6 +22,20 @@ class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var selectedSession: Session?
     
+    var sessionBpm: Int {
+        if let selectedSession, selectedSession.sessionBpm != 0, !selectedSession.isUsingGlobalBpm {
+            Task {
+                await metronome.setSessionBpm(selectedSession.sessionBpm)
+            }
+            return selectedSession.sessionBpm
+        } else {
+            Task {
+                await metronome.setSessionBpm(nil)
+            }
+            return metronomeBpm
+        }
+    }
+    
     @Published var isMetronomeArmed: Bool {
         didSet {
             Task {
@@ -97,6 +111,18 @@ class HomeViewModel: ObservableObject {
     func sessionDetailDismissButtonTapped() {
         if isRecording {
             isRecording.toggle()
+        }
+    }
+    
+    func saveSettings() {
+        Task {
+            await metronome.saveSettings()
+        }
+    }
+    
+    func resetTapIn() {
+        Task {
+            await metronome.resetTapIn()
         }
     }
     

@@ -27,6 +27,8 @@ extension Session {
                                             length: 4,
                                             tracks: [:],
                                             absoluteTrackCount: 0,
+                                            sessionBpm: 120,
+                                            isUsingGlobalBpm: false,
                                             id: UUID(),
                                             isGlobalSoloActive: true)
     
@@ -41,6 +43,8 @@ extension Session {
                     length: 4,
                     tracks: [:],
                     absoluteTrackCount: 0,
+                    sessionBpm: 120,
+                    isUsingGlobalBpm: false,
                     id: UUID(),
                     isGlobalSoloActive: false
                 )

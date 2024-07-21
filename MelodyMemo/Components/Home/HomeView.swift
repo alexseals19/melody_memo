@@ -46,7 +46,7 @@ struct HomeView: View {
                     inputSamples: viewModel.inputSamples,
                     trackTimer: viewModel.trackTimer,
                     isMetronomeArmed: $viewModel.isMetronomeArmed,
-                    metronomeBpm: viewModel.metronomeBpm
+                    metronomeBpm: viewModel.sessionBpm
                 )
             }
         }
@@ -58,10 +58,8 @@ struct HomeView: View {
                 isCountInActive: $viewModel.isCountInActive
             )
             .onDisappear {
-                Task {
-                    await viewModel.metronome.saveSettings()
-                }
-                
+                viewModel.saveSettings()
+                viewModel.resetTapIn()
             }
         }
     }
