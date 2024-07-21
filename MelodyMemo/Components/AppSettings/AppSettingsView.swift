@@ -53,8 +53,7 @@ struct AppSettingsView: View {
                             viewModel.setBpm(bpm: viewModel.metronomeBpm - 1)
                         }
                     } label: {
-                        bpmAdjustmentLabelView(name: "minus")
-                            .foregroundStyle(.primary)
+                        AppButtonLabelView(name: "minus", color: .primary)
                     }
                     .buttonRepeatBehavior(.enabled)
                     VStack {
@@ -62,14 +61,14 @@ struct AppSettingsView: View {
                             .font(.caption)
                         Text("\(Int(viewModel.metronomeBpm))")
                     }
+                    .frame(width: 33)
                     .foregroundStyle(.secondary)
                     Button {
                         if viewModel.metronomeBpm < 300 {
                             viewModel.setBpm(bpm: viewModel.metronomeBpm + 1)
                         }
                     } label: {
-                        bpmAdjustmentLabelView(name: "plus")
-                            .foregroundStyle(.primary)
+                        AppButtonLabelView(name: "plus", color: .primary)
                     }
                     .buttonRepeatBehavior(.enabled)
                     .padding(.trailing, 10)
@@ -97,8 +96,7 @@ struct AppSettingsView: View {
                 }
                 
                 HStack {
-                    bpmAdjustmentLabelView(name: "speaker.wave.2")
-                        .foregroundStyle(.secondary)
+                    AppButtonLabelView(name: "speaker.wave.2", color: .secondary)
                     Slider(value: $metronomeVolume)
                         .tint(.primary)
                 }
@@ -118,9 +116,8 @@ struct AppSettingsView: View {
                             viewModel.trackLengthLimit -= 1
                         }
                     } label: {
-                        bpmAdjustmentLabelView(name: "minus")
+                        AppButtonLabelView(name: "minus", color: .primary)
                     }
-                    .foregroundStyle(.primary)
                     VStack {
                         if viewModel.trackLengthLimit > 0 {
                             Text("\(viewModel.trackLengthLimit)")
@@ -137,9 +134,8 @@ struct AppSettingsView: View {
                             viewModel.trackLengthLimit += 1
                         }
                     } label: {
-                        bpmAdjustmentLabelView(name: "plus")
+                        AppButtonLabelView(name: "plus", color: .primary)
                     }
-                    .foregroundStyle(.primary)
                     .padding(.trailing, 10)
                 }
                 Text("Only keep new recordings longer than this.")
@@ -231,18 +227,6 @@ struct AppSettingsView: View {
             let method = unsafeBitCast(imp, to: setAlternateIconNameClosure.self)
             method(UIApplication.shared, selector, name as NSString?, { _ in })
         }
-    }
-}
-
-struct bpmAdjustmentLabelView: View {
-    
-    var name: String
-    
-    var body: some View {
-        Image(systemName: name)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 24, height: 24)
     }
 }
 

@@ -50,17 +50,13 @@ struct MetronomeButtonView: View {
         Group {
             if isMetronomeArmed {
                 VStack(spacing: -2) {
-                    Image(systemName: "metronome.fill")
-                        .resizable()
-                        .frame(width: 21.5, height: 20)
+                    AppButtonLabelView(name: "metronome.fill", color: .primary, size: 22)
                         .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
                     Text("\(Int(metronomeBpm))")
                         .font(.caption)
                 }
             } else {
-                Image(systemName: "metronome")
-                    .resizable()
-                    .frame(width: 21.5, height: 20)
+                AppButtonLabelView(name: "metronome", color: .primary, size: 22)
                     .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
             }
         }

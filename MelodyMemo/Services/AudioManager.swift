@@ -155,6 +155,8 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
+        let sessionBpm = await metronome.isArmed ? metronome.bpm.value : 0
+        
         let track = Track(
             name: "Track 1",
             fileName: currentFileName,
@@ -173,6 +175,8 @@ class DefaultAudioManager: AudioManager {
             length: durationInSeconds,
             tracks: [track.id : track],
             absoluteTrackCount: 1,
+            sessionBpm: sessionBpm,
+            isUsingGlobalBpm: false,
             id: UUID(),
             isGlobalSoloActive: false
         )

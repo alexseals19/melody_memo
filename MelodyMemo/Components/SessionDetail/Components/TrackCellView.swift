@@ -120,11 +120,7 @@ struct TrackCellView: View {
                             Button {
                                 trashButtonAction(track)
                             } label: {
-                                Image(systemName: "trash")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 18, height: 18)
-                                    .foregroundStyle(.primary)
+                                AppButtonLabelView(name: "trash", color: .primary, size: 18)
                             }
                         }
                         Spacer()
@@ -145,10 +141,9 @@ struct TrackCellView: View {
                             soloButtonAction(track)
                         } label: {
                             if track.isSolo, isGlobalSoloActive {
-                                TrackCellButtonImage("s.square.fill")
-                                    .foregroundStyle(.purple)
+                                AppButtonLabelView(name: "s.square.fill", color: .purple)
                             } else {
-                                TrackCellButtonImage("s.square")
+                                AppButtonLabelView(name: "s.square", color: .primary)
                             }
                         }
                         
@@ -156,8 +151,7 @@ struct TrackCellView: View {
                             muteButtonAction(track)
                         } label: {
                             if track.isMuted, track.soloOverride {
-                                TrackCellButtonImage("m.square.fill")
-                                    .foregroundStyle(.pink)
+                                AppButtonLabelView(name: "m.square.fill", color: .pink)
                                     .opacity(muteButtonOpacity)
                                     .onAppear {
                                         withAnimation(
@@ -170,10 +164,9 @@ struct TrackCellView: View {
                                         muteButtonOpacity = 0.75
                                     }
                             } else if track.isMuted {
-                                TrackCellButtonImage("m.square.fill")
-                                    .foregroundStyle(.pink)
+                                AppButtonLabelView(name: "m.square.fill", color: .pink)
                             } else {
-                                TrackCellButtonImage("m.square")
+                                AppButtonLabelView(name: "m.square", color: .primary)
                             }
                         }
                     }
@@ -181,8 +174,7 @@ struct TrackCellView: View {
                 }
                 Divider()
                 HStack {
-                    TrackCellButtonImage("speaker.wave.2")
-                        .foregroundStyle(.secondary)
+                    AppButtonLabelView(name: "speaker.wave.2", color: .secondary)
                     Slider(value: $volumeSliderValue)
                         .tint(appTheme.accentColor)
                         .padding(.trailing, 10)
@@ -192,8 +184,7 @@ struct TrackCellView: View {
                 }
                 .padding(.bottom, 7)
                 HStack {
-                    TrackCellButtonImage("l.circle")
-                        .foregroundStyle(.secondary)
+                    AppButtonLabelView(name: "l.circle", color: .secondary)
                     ZStack {
                         Capsule()
                             .frame(maxWidth: .infinity, maxHeight: 5)
@@ -217,8 +208,7 @@ struct TrackCellView: View {
                         panSliderValue = 0.0
                         onTrackPanChange(track, 0.0)
                     }
-                    TrackCellButtonImage("r.circle")
-                        .foregroundStyle(.secondary)
+                    AppButtonLabelView(name: "r.circle", color: .secondary)
                 }
             }
             .padding(.horizontal, 20)
@@ -240,21 +230,6 @@ struct TrackCellView: View {
         .onAppear {
             waveform = getWaveformImage(track.fileName, colorScheme)
         }
-    }
-}
-
-struct TrackCellButtonImage: View {
-    let imageName: String
-    
-    init(_ imageName: String) {
-        self.imageName = imageName
-    }
-    
-    var body: some View {
-        Image(systemName: imageName)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 24, height: 24)
     }
 }
 

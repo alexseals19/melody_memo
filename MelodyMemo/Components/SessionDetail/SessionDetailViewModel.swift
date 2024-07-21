@@ -19,7 +19,34 @@ class SessionDetailViewModel: ObservableObject {
     @Published var trackTimer: Double = 0.0
     @Published var errorMessage: String?
     
+    @Published var isUsingGlobalBpm: Bool {
+        didSet {
+            session.isUsingGlobalBpm = isUsingGlobalBpm
+            do {
+                try recordingManager.updateSession(session)
+            } catch {}
+            if currentlyPlaying != nil {
+                currentlyPlaying = session
+            }
+        }
+    }
+    
+    @Published var sessionBpm: Int {
+        didSet {
+            session.sessionBpm = sessionBpm
+            do {
+                try recordingManager.updateSession(session)
+            } catch {
+                errorMessage = "ERROR: Could not update session."
+            }
+            if currentlyPlaying != nil {
+                currentlyPlaying = session
+            }
+        }
+    }
+    
     let audioManager: AudioManager
+    
     var isSessionPlaying: Bool {
         if let currentlyPlaying, currentlyPlaying == session {
             return true
@@ -32,6 +59,8 @@ class SessionDetailViewModel: ObservableObject {
         self.session = session
         self.recordingManager = recordingManager
         self.audioManager = audioManager
+        self.isUsingGlobalBpm = session.isUsingGlobalBpm
+        self.sessionBpm = session.sessionBpm
         recordingManager.sessions
             .compactMap { $0.first { $0.id == session.id }}
             .assign(to: &$session)
@@ -254,6 +283,11 @@ class SessionDetailViewModel: ObservableObject {
         } catch {
             errorMessage = "ERROR: Could not update session."
         }
+    }
+    
+    func setSessionBpm(newBpm: Int) {
+        session.sessionBpm = newBpm
+        
     }
     
     func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {

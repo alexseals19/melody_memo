@@ -48,6 +48,8 @@ actor Metronome {
     
     var bpm: CurrentValueSubject<Int, Never>
     
+    var sessionBpm: Int?
+    
     var taps: [TapInModel] = []
     
     var timeSignature: Int
@@ -59,7 +61,11 @@ actor Metronome {
     
     var countInDelay: Double {
         if isArmed, isCountInActive {
-            return 60 / Double(bpm.value) * Double(timeSignature)
+            if let sessionBpm, sessionBpm != 0 {
+                return 60 / Double(sessionBpm)
+            } else {
+                return 60 / Double(bpm.value) * Double(timeSignature)
+            }
         }
         return 0.0
     }
@@ -188,22 +194,30 @@ actor Metronome {
                 intervalTotal += tap.interval
             }
             let averageInterval = intervalTotal / Double(taps.count)
-            let newBpm = 60 / averageInterval
-            
+            let newBpm = min(60 / averageInterval, 300)
+                    
             Task { @MainActor in
                 await bpm.send(Int(newBpm))
             }
         }
         
-        if taps.count == 5 {
+        if taps.count == 10 {
             taps.removeFirst()
         }
+    }
+    
+    func resetTapIn() {
+        taps.removeAll()
     }
     
     func setBpm(newBpm: Int) {
         Task { @MainActor in
             await bpm.send(newBpm)
         }
+    }
+    
+    func setSessionBpm(_ newBpm: Int?) {
+        sessionBpm = newBpm
     }
     
     func setIsArmed(value: Bool) {
@@ -229,7 +243,11 @@ actor Metronome {
     private var subscription: AnyCancellable?
     
     private var beatInterval: Double {
-        60.0 / Double(bpm.value)
+        if let sessionBpm, sessionBpm != 0 {
+            return 60.0 / Double(sessionBpm)
+        } else {
+            return 60.0 / Double(bpm.value)
+        }
     }
     
     private var beatSetLength: Int {
@@ -256,15 +274,27 @@ actor Metronome {
         do {
             bpm = CurrentValueSubject(try DataPersistenceManager.retrieve(Int.self, from: "bpm"))
             bpm.send(bpm.value)
+        } catch {
+            bpm = CurrentValueSubject(120)
+        }
+        do {
             timeSignature = try DataPersistenceManager.retrieve(Int.self, from: "timeSignature")
+        } catch {
+            timeSignature = 4
+        }
+        do {
             isArmed = try DataPersistenceManager.retrieve(Bool.self, from: "isArmed")
+        } catch {
+            isArmed = false
+        }
+        do {
             isCountInActive = try DataPersistenceManager.retrieve(Bool.self, from: "isCountInActive")
+        } catch {
+            isCountInActive = false
+        }
+        do {
             volume = try DataPersistenceManager.retrieve(Float.self, from: "volume")
         } catch {
-            bpm = CurrentValueSubject(130)
-            timeSignature = 4
-            isArmed = false
-            isCountInActive = false
             volume = 1.0
         }
     }

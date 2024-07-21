@@ -34,6 +34,12 @@ class AppSettingsViewModel: ObservableObject {
         
     }
     
+    func resetTapIn() {
+        Task {
+            await metronome.resetTapIn()
+        }
+    }
+    
     func setTrackLengthLimit(increase: Bool) {
         let limit = audioManager.trackLengthLimit
         if increase, limit < 5 {

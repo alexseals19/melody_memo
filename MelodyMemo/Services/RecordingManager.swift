@@ -25,6 +25,7 @@ final class DefaultRecordingManager: RecordingManager {
     var sessions: CurrentValueSubject<[Session], Never>
     
     var absoluteSessionCount: Int
+    var sessionsAreUpdated: Bool
     
     func removeSession(_ session: Session) throws {
         Task { @MainActor in
@@ -135,17 +136,69 @@ final class DefaultRecordingManager: RecordingManager {
                 return lhs.date > rhs.date
             }
             )
-            
-            absoluteSessionCount = try DataPersistenceManager.retrieve(Int.self, from: "session_count")
-            
         } catch {
             sessions = CurrentValueSubject([])
+        }
+        do {
+            absoluteSessionCount = try DataPersistenceManager.retrieve(Int.self, from: "session_count")
+        } catch {
             absoluteSessionCount = 0
+        }
+        do {
+            sessionsAreUpdated = try DataPersistenceManager.retrieve(Bool.self, from: "sessionsAreUpdated")
+        } catch {
+            sessionsAreUpdated = false
+            updateSessionModel()
         }
     }
     
     // MARK: - Variables
     
+    // MARK: - Functions
     
+    private func updateSessionModel() {
+                
+        var oldSessions: [SessionModelOne]
+        var newSessions: [Session] = []
+        
+        do {
+            oldSessions = try DataPersistenceManager.retrieve([SessionModelOne].self, from: "sessions")
+        } catch {
+            oldSessions = []
+        }
+        
+        for session in oldSessions {
+            newSessions.append(Session(
+                name: session.name,
+                date: session.date,
+                length: session.length,
+                tracks: session.tracks,
+                absoluteTrackCount: session.absoluteTrackCount,
+                sessionBpm: 0, 
+                isUsingGlobalBpm: false,
+                id: session.id,
+                isGlobalSoloActive: session.isGlobalSoloActive
+            )
+            )
+        }
+        
+        do {
+            try DataPersistenceManager.save(newSessions, to: "sessions")
+        } catch {
+            print("Session model could not be updated.")
+        }
+        
+        sessions.send(
+            newSessions.sorted { (lhs: Session, rhs: Session) -> Bool in
+                return lhs.date > rhs.date
+            }
+        )
+        
+        sessionsAreUpdated = true
+        do {
+            try DataPersistenceManager.save(sessionsAreUpdated, to: "sessionsAreUpdated")
+        } catch {}
+        
+    }
         
 }
