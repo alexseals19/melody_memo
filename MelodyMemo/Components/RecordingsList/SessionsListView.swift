@@ -47,7 +47,7 @@ struct SessionsListView: View {
             GeometryReader { proxy in
                 NavigationStack {
                     ZStack {
-                        ScrollView {
+                        ScrollView(showsIndicators: false) {
                             LazyVStack(alignment: .leading, spacing: 3.0) {
                                 ForEach(viewModel.sessions) { session in
                                     SessionCellView(

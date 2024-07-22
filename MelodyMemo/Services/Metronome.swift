@@ -62,7 +62,7 @@ actor Metronome {
     var countInDelay: Double {
         if isArmed, isCountInActive {
             if let sessionBpm, sessionBpm != 0 {
-                return 60 / Double(sessionBpm)
+                return 60 / Double(sessionBpm) * Double(timeSignature)
             } else {
                 return 60 / Double(bpm.value) * Double(timeSignature)
             }
