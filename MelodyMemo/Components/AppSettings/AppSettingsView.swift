@@ -150,33 +150,32 @@ struct AppSettingsView: View {
                     .padding(.top, 15)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 60, maximum: 60))]) {
                     ForEach(AppTheme.Theme.allCases) { theme in
-                        Group {
-                            if theme == appTheme.theme {
-                                ZStack {
-                                    Circle()
-                                        .stroke(lineWidth: 2)
-                                        .foregroundStyle(Color[theme.rawValue])
-                                        .frame(width: 40)
-                                        .aspectRatio(contentMode: .fit)
-                                    Circle()
-                                        .frame(width: 36)
-                                        .foregroundStyle(Color[theme.rawValue])
-                                        .aspectRatio(contentMode: .fit)
-                                        .foregroundStyle(.primary)
-                                }
-                            } else {
+                        if theme == appTheme.theme {
+                            ZStack {
                                 Circle()
                                     .stroke(lineWidth: 2)
                                     .foregroundStyle(Color[theme.rawValue])
                                     .frame(width: 40)
                                     .aspectRatio(contentMode: .fit)
+                                Circle()
+                                    .frame(width: 36)
+                                    .foregroundStyle(Color[theme.rawValue])
+                                    .aspectRatio(contentMode: .fit)
+                                    .foregroundStyle(.primary)
                             }
-                        }
-                        .padding(.bottom, 10)
-                        .foregroundStyle(.primary)
-                        .onTapGesture {
-                            changeIcon(to: "Icon_\(theme.rawValue)")
-                            appTheme.theme = theme
+                            .padding(.bottom, 10)
+                        } else {
+                            Button {
+                                changeIcon(to: "Icon_\(theme.rawValue)")
+                                appTheme.theme = theme
+                            } label: {
+                                Circle()
+                                    .stroke(lineWidth: 2)
+                                    .foregroundStyle(Color[theme.rawValue])
+                                    .frame(width: 40)
+                                    .aspectRatio(contentMode: .fit)
+                                    .padding(.bottom, 10)
+                            }
                         }
                     }
                 }
@@ -189,7 +188,6 @@ struct AppSettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
                 viewModel.saveSettings()
         }
-        
     }
     
     var countInButtonLabel: some View {
