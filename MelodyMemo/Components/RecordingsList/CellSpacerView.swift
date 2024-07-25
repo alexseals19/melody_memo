@@ -14,6 +14,7 @@ struct CellSpacerView: View {
     var screenHeight: CGFloat
     var numberOfSessions: Int
     var showMessage: Bool
+    var isUpdatingSessionModels: Bool?
         
     // MARK: - Variables
     
@@ -37,7 +38,11 @@ struct CellSpacerView: View {
                 .frame(height: height)
                 .ignoresSafeArea()
                 .padding(.bottom, -height + 150)
-            if numberOfSessions == 0, showMessage {
+            if isUpdatingSessionModels != nil {
+                Text("Currently updating sessions...")
+                    .font(.title)
+                    .offset(y: 300)
+            } else if numberOfSessions == 0, showMessage {
                 Text("Create your first recording!")
                     .font(.title)
                     .offset(y: 300)

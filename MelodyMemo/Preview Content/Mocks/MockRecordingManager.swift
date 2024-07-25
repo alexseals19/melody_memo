@@ -10,7 +10,7 @@ import Foundation
 
 class MockRecordingManager: RecordingManager {
     var sessions: CurrentValueSubject<[Session], Never>
-        
+    var isUpdatingSessionModels: CurrentValueSubject<Bool?, Never>
     func removeSession(_ session: Session) throws {}
     func removeTrack(_ session: Session, _ track: Track) throws {}
     func saveSession(_ recording: Session) throws {}
@@ -18,5 +18,6 @@ class MockRecordingManager: RecordingManager {
 
     init() {
         sessions = CurrentValueSubject(Session.sessionsFixture)
+        isUpdatingSessionModels = CurrentValueSubject(nil)
     }
 }

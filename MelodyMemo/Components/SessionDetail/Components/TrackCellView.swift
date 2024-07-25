@@ -22,7 +22,6 @@ struct TrackCellView: View {
         soloButtonAction: @escaping (_: Track) -> Void,
         onTrackVolumeChange: @escaping (_: Track, _: Float) -> Void,
         onTrackPanChange: @escaping (_: Track, _: Float) -> Void,
-        getWaveformImage: @escaping (_: String, _: ColorScheme) -> Image,
         trashButtonAction: @escaping (_: Track) -> Void
     ) {
         self.track = track
@@ -33,7 +32,6 @@ struct TrackCellView: View {
         self.soloButtonAction = soloButtonAction
         self.onTrackVolumeChange = onTrackVolumeChange
         self.onTrackPanChange = onTrackPanChange
-        self.getWaveformImage = getWaveformImage
         self.trashButtonAction = trashButtonAction
         self.volumeSliderValue = Double(track.volume)
         self.panSliderValue = Double(track.pan)
@@ -80,7 +78,6 @@ struct TrackCellView: View {
     private let soloButtonAction: (_: Track) -> Void
     private let onTrackVolumeChange: (_: Track, _ : Float) -> Void
     private let onTrackPanChange: (_: Track, _ : Float) -> Void
-    private let getWaveformImage: (_: String, _: ColorScheme) -> Image
     private let trashButtonAction: (_: Track) -> Void
     
     //MARK: - Body
@@ -228,7 +225,13 @@ struct TrackCellView: View {
                 .animation(.linear(duration: 0.25), value: trackOpacity)
         }
         .onAppear {
-            waveform = getWaveformImage(track.fileName, colorScheme)
+            guard let lightImage = UIImage(data: track.lightWaveformImage) else {
+                return
+            }
+            guard let darkImage = UIImage(data: track.darkWaveformImage) else {
+                return
+            }
+            waveform = colorScheme == .dark ? Image(uiImage: lightImage) : Image(uiImage: darkImage)
         }
     }
 }
@@ -243,6 +246,5 @@ struct TrackCellView: View {
         soloButtonAction: { _ in },
         onTrackVolumeChange: { _, _ in },
         onTrackPanChange: {_, _ in },
-        getWaveformImage: { _,_ in return Image("") },
         trashButtonAction: { _ in })
 }

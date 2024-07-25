@@ -15,6 +15,7 @@ class SessionsListViewModel: ObservableObject {
     //MARK: - API
     
     @Published var currentlyPlaying: Session?
+    @Published var isUpdatingSessionModels: Bool?
     @Published var sessions: [Session] = []
     @Published var playerProgress: Double = 0.0
     
@@ -28,6 +29,8 @@ class SessionsListViewModel: ObservableObject {
         self.recordingManager = recordingManager
         recordingManager.sessions
             .assign(to: &$sessions)
+        recordingManager.isUpdatingSessionModels
+            .assign(to: &$isUpdatingSessionModels)
         audioManager.currentlyPlaying
             .assign(to: &$currentlyPlaying)
         audioManager.playerProgress

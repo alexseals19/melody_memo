@@ -29,18 +29,18 @@ final class DataPersistenceManager {
     }
     
     static func retrieve<T: Codable>(_ type: T.Type, from fileName: String) throws -> T {
-        let url = createDocumentURL(withFileName: fileName)
-        return try retrieve(T.self, from: url)
+        do {
+            let url = createDocumentURL(withFileName: fileName)
+            return try retrieve(T.self, from: url)
+        } catch(let error) {
+            print("Could not find \(fileName)")
+            throw error
+        }
     }
     
     static func retrieve<T: Codable>(_ type: T.Type, from url: URL) throws -> T {
-        do {
-            let data = try Data(contentsOf: url)
-            return try decoder.decode(T.self, from: data)
-        } catch (let error) {
-            print("Retrieve failed: URL: `\(url)`, Error: `\(error)`")
-            throw error
-        }
+        let data = try Data(contentsOf: url)
+        return try decoder.decode(T.self, from: data)
     }
     
     static func createDocumentURL(withFileName fileName: String, fileType: FileType = .json) -> URL {

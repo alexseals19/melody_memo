@@ -22,26 +22,20 @@ class SessionDetailViewModel: ObservableObject {
     @Published var isUsingGlobalBpm: Bool {
         didSet {
             session.isUsingGlobalBpm = isUsingGlobalBpm
-            do {
-                try recordingManager.updateSession(session)
-            } catch {}
             if currentlyPlaying != nil {
-                currentlyPlaying = session
+                audioManager.updateCurrentlyPlaying(session)
             }
+            updateSession()
         }
     }
     
     @Published var sessionBpm: Int {
         didSet {
             session.sessionBpm = sessionBpm
-            do {
-                try recordingManager.updateSession(session)
-            } catch {
-                errorMessage = "ERROR: Could not update session."
-            }
             if currentlyPlaying != nil {
-                currentlyPlaying = session
+                audioManager.updateCurrentlyPlaying(session)
             }
+            updateSession()
         }
     }
     
@@ -73,13 +67,10 @@ class SessionDetailViewModel: ObservableObject {
             .sink { track in
                 self.session.tracks[track.id]?.volume = track.volume
                 if self.currentlyPlaying != nil {
-                    self.currentlyPlaying = self.session
+                    self.audioManager.updateCurrentlyPlaying(self.session)
                 }
-                do {
-                    try recordingManager.updateSession(self.session)
-                } catch {
-                    
-                }
+                self.updateSession()
+                
             }
             .store(in: &cancellables)
         
@@ -88,13 +79,10 @@ class SessionDetailViewModel: ObservableObject {
             .sink { track in
                 self.session.tracks[track.id]?.pan = track.pan
                 if self.currentlyPlaying != nil {
-                    self.currentlyPlaying = self.session
+                    self.audioManager.updateCurrentlyPlaying(self.session)
                 }
-                do {
-                    try recordingManager.updateSession(self.session)
-                } catch {
-                    
-                }
+                self.updateSession()
+                
             }
             .store(in: &cancellables)
     }
@@ -115,7 +103,6 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func masterCellSoloButtonTapped() {
-        
         session.isGlobalSoloActive.toggle()
         for track in session.tracks.values {
             if track.soloOverride {
@@ -124,21 +111,15 @@ class SessionDetailViewModel: ObservableObject {
                 session.tracks[track.id]?.soloOverride.toggle()
             }
         }
-        
+                
         if currentlyPlaying != nil {
             var tracksToToggle: [Track] = []
             tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } ))
             tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } ))
             audioManager.toggleMute(for: tracksToToggle)
-            currentlyPlaying = session
-            
+            audioManager.updateCurrentlyPlaying(session)
         }
-        
-        do {
-            try recordingManager.updateSession(session)
-        } catch {
-            errorMessage = "ERROR: Could not update session."
-        }
+        updateSession()
     }
     
     func trackCellPlayButtonTapped(for session: Session) {
@@ -152,21 +133,25 @@ class SessionDetailViewModel: ObservableObject {
     func trackCellMuteButtonTapped(for track: Track) {
         session.tracks[track.id]?.isMuted.toggle()
         session.tracks[track.id]?.soloOverride = false
-        if currentlyPlaying != nil {
+                
+        if currentlyPlaying != nil, session.isGlobalSoloActive, track.isSolo {
             if !track.soloOverride {
                 audioManager.toggleMute(for: Array(arrayLiteral: track))
             }
-            currentlyPlaying = session
+            audioManager.updateCurrentlyPlaying(session)
+        } else if currentlyPlaying != nil, !session.isGlobalSoloActive {
+            if !track.soloOverride {
+                audioManager.toggleMute(for: Array(arrayLiteral: track))
+            }
+            audioManager.updateCurrentlyPlaying(session)
+        } else if currentlyPlaying != nil {
+            audioManager.updateCurrentlyPlaying(session)
         }
-        do {
-            try recordingManager.updateSession(session)
-        } catch {
-            errorMessage = "ERROR: Could not update session."
-        }
+        updateSession()
+        
     }
     
     func trackCellSoloButtonTapped(for track: Track) {
-        
         if !session.isGlobalSoloActive {
             session.isGlobalSoloActive = true
             session.tracks[track.id]?.isSolo = true
@@ -177,13 +162,14 @@ class SessionDetailViewModel: ObservableObject {
             if track.isMuted {
                 session.tracks[track.id]?.soloOverride = true
             }
+                        
             if currentlyPlaying != nil {
                 var tracksToToggle = session.tracks.values.filter { $0.id != track.id && !$0.isMuted }
                 if track.isMuted {
                     tracksToToggle.append(track)
                 }
                 audioManager.toggleMute(for: tracksToToggle)
-                currentlyPlaying = session
+                audioManager.updateCurrentlyPlaying(session)
             }
         } else {
             session.tracks[track.id]?.isSolo.toggle()
@@ -196,6 +182,7 @@ class SessionDetailViewModel: ObservableObject {
             } else {
                 session.tracks[track.id]?.soloOverride = false
             }
+                        
             if currentlyPlaying != nil {
                 if allSoloTracks.isEmpty {
                     var tracksToToggle = session.tracks.values.filter { $0.id != track.id && !$0.isMuted}
@@ -203,21 +190,15 @@ class SessionDetailViewModel: ObservableObject {
                         tracksToToggle.append(track)
                     }
                     audioManager.toggleMute(for: tracksToToggle)
-                    currentlyPlaying = session
+                    audioManager.updateCurrentlyPlaying(session)
                 } else {
                     let tracksToToggle = [track]
                     audioManager.toggleMute(for: tracksToToggle)
-                    currentlyPlaying = session
+                    audioManager.updateCurrentlyPlaying(session)
                 }
             }
         }
-        
-        
-        do {
-            try recordingManager.updateSession(session)
-        } catch {
-            errorMessage = "ERROR: Could not update session."
-        }
+        updateSession()
     }
     
     func trackCellStopButtonTapped() {
@@ -261,40 +242,32 @@ class SessionDetailViewModel: ObservableObject {
         var updatedTrack = track
         updatedTrack.volume = volume
         trackVolumeSubject.send(updatedTrack)
-        if currentlyPlaying != nil, !track.isMuted {
+        if currentlyPlaying != nil, !track.isMuted, session.isGlobalSoloActive, track.isSolo {
+            audioManager.setTrackVolume(for: updatedTrack)
+        } else if currentlyPlaying != nil, session.isGlobalSoloActive, track.soloOverride {
+            audioManager.setTrackVolume(for: updatedTrack)
+        } else if currentlyPlaying != nil, !track.isMuted, !session.isGlobalSoloActive {
             audioManager.setTrackVolume(for: updatedTrack)
         }
-        do {
-            try recordingManager.updateSession(session)
-        } catch {
-            errorMessage = "ERROR: Could not update session."
-        }
+        updateSession()
     }
     
     func setTrackPan(for track: Track, pan: Float) {
         var updatedTrack = track
         updatedTrack.pan = pan
         trackPanSubject.send(updatedTrack)
-        if currentlyPlaying != nil {
+        if currentlyPlaying != nil, !track.isMuted, session.isGlobalSoloActive, track.isSolo {
+            audioManager.setTrackPan(for: updatedTrack)
+        } else if currentlyPlaying != nil, session.isGlobalSoloActive, track.soloOverride {
+            audioManager.setTrackPan(for: updatedTrack)
+        } else if currentlyPlaying != nil, !track.isMuted, !session.isGlobalSoloActive {
             audioManager.setTrackPan(for: updatedTrack)
         }
-        do {
-            try recordingManager.updateSession(session)
-        } catch {
-            errorMessage = "ERROR: Could not update session."
-        }
-    }
+        updateSession()
+            }
     
     func setSessionBpm(newBpm: Int) {
         session.sessionBpm = newBpm
-        
-    }
-    
-    func getWaveformImage(for fileName: String, colorScheme: ColorScheme) -> Image {
-        do {
-            return try audioManager.getImage(for: fileName, colorScheme: colorScheme)
-        } catch {}
-        return Image(systemName: "waveform")
     }
     
     // MARK: - Variables
@@ -305,4 +278,12 @@ class SessionDetailViewModel: ObservableObject {
     private var recordingManager: RecordingManager
     
     // MARK: - Functions
+
+    private func updateSession() {
+        do {
+            try recordingManager.updateSession(session)
+        } catch {
+            errorMessage = "ERROR: Could not save session."
+        }
+    }
 }

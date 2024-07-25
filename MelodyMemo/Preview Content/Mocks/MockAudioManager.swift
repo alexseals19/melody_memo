@@ -29,7 +29,8 @@ class MockAudioManager: AudioManager {
     func toggleMute(for tracks: [Track]) {}
     func setTrackVolume(for track: Track) {}
     func setTrackPan(for track: Track) {}
-    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {Image(systemName: "doc")}
+    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage {UIImage(imageLiteralResourceName: "waveform")}
+    func updateCurrentlyPlaying(_ session: Session) {}
     
     init() {
         trackLengthLimit = 0

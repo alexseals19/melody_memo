@@ -11,8 +11,6 @@ struct SessionDetailView: View {
     
     //MARK: - API
     
-    private var isRecording: Bool
-    
     init(
         recordingManager: RecordingManager,
         audioManager: AudioManager,
@@ -37,6 +35,8 @@ struct SessionDetailView: View {
 
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
+    
+    private var isRecording: Bool
     
     private var tracks: [Track] {
         viewModel.session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
@@ -95,7 +95,6 @@ struct SessionDetailView: View {
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     onTrackVolumeChange: viewModel.setTrackVolume,
                                     onTrackPanChange: viewModel.setTrackPan,
-                                    getWaveformImage: viewModel.getWaveformImage,
                                     trashButtonAction: viewModel.trackCellTrashButtonTapped
                                 )
                             }

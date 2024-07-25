@@ -37,7 +37,8 @@ protocol AudioManager {
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
     func setTrackPan(for track: Track)
-    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image
+    func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage
+    func updateCurrentlyPlaying(_ session: Session)
 }
 
 @MainActor
@@ -157,6 +158,13 @@ class DefaultAudioManager: AudioManager {
         
         let sessionBpm = await metronome.isArmed ? metronome.bpm.value : 0
         
+        guard let lightWaveforomData = try getImage(for: currentFileName, colorScheme: .dark).pngData() else {
+            return
+        }
+        guard let darkWaveformData = try getImage(for: currentFileName, colorScheme: .light).pngData() else {
+            return
+        }
+        
         let track = Track(
             name: "Track 1",
             fileName: currentFileName,
@@ -167,7 +175,9 @@ class DefaultAudioManager: AudioManager {
             pan: 0.0,
             isMuted: false,
             isSolo: false,
-            soloOverride: false
+            soloOverride: false,
+            darkWaveformImage: darkWaveformData,
+            lightWaveformImage: lightWaveforomData
         )
         let session = Session(
             name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
@@ -219,6 +229,13 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
+        guard let lightWaveforomData = try getImage(for: currentFileName, colorScheme: .dark).pngData() else {
+            return
+        }
+        guard let darkWaveformData = try getImage(for: currentFileName, colorScheme: .light).pngData() else {
+            return
+        }
+        
         let track = Track(
             name: name,
             fileName: currentFileName,
@@ -229,7 +246,9 @@ class DefaultAudioManager: AudioManager {
             pan: 0.0,
             isMuted: false,
             isSolo: false,
-            soloOverride: false
+            soloOverride: false,
+            darkWaveformImage: darkWaveformData,
+            lightWaveformImage: lightWaveforomData
         )
         
         updatedSession.tracks[track.id] = track
@@ -312,7 +331,7 @@ class DefaultAudioManager: AudioManager {
         newPlayer.player.pan = track.pan
     }
     
-    @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> Image {
+    @MainActor func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage {
         let samples = try getWaveform(for: fileName)
         
         var color: Color {
@@ -331,12 +350,15 @@ class DefaultAudioManager: AudioManager {
         )
         
         guard let uiImage = renderer.uiImage else  {
-            return Image(systemName: "doc")
+            return UIImage(imageLiteralResourceName: "waveform")
         }
         
-        return Image(uiImage: uiImage)
+        return uiImage
     }
     
+    func updateCurrentlyPlaying(_ session: Session) {
+        currentlyPlaying.send(session)
+    }
     
     // MARK: - Variables
     
@@ -346,6 +368,7 @@ class DefaultAudioManager: AudioManager {
     private var engine: AVAudioEngine
     private var playbackEngine: AVAudioEngine
     private var mixerNode: AVAudioMixerNode
+    
     private var currentFileName: String?
     private var currentTrackLength: Double?
     
@@ -381,7 +404,6 @@ class DefaultAudioManager: AudioManager {
         self.mixerNode = mixerNode
         setUpSession()
         setupNotifications()
-            
     }
     
     private func setUpSession() {
