@@ -62,7 +62,8 @@ struct SessionsListView: View {
                                 CellSpacerView(
                                     screenHeight: proxy.size.height,
                                     numberOfSessions: viewModel.sessions.count, 
-                                    showMessage: true
+                                    showMessage: true,
+                                    isUpdatingSessionModels: viewModel.isUpdatingSessionModels
                                 )
                             }
                             .padding(.top, 78)

@@ -19,7 +19,10 @@ extension Session {
                                         pan: 0.0,
                                         isMuted: false,
                                         isSolo: false,
-                                        soloOverride: false)
+                                        soloOverride: false,
+                                        darkWaveformImage: Data(),
+                                        lightWaveformImage: Data()
+    )
     
     static let sessionFixture: Session = Session(
                                             name: "SessionFixture",
