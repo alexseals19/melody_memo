@@ -26,12 +26,13 @@ protocol AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
+    var lastPlayheadPosition: CurrentValueSubject<Double, Never> { get }
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never> { get }
     func startTracking() async throws
     func startTracking(for session: Session) async throws
     func stopTracking() async throws
     func stopTracking(for session: Session) async throws
-    func startPlayback(for session: Session) throws
+    func startPlayback(for session: Session, at time: Double) throws
     func stopPlayback(stopTimer: Bool) throws
     func removeTrack(track: Track)
     func toggleMute(for tracks: [Track])
@@ -39,6 +40,9 @@ protocol AudioManager {
     func setTrackPan(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage
     func updateCurrentlyPlaying(_ session: Session)
+    func updatePlayheadPosition(position: Double)
+    func stopTimerToSeek()
+    func setLastPlayheadPosition(_ position: Double)
 }
 
 @MainActor
@@ -60,6 +64,7 @@ class DefaultAudioManager: AudioManager {
     var currentlyPlaying: CurrentValueSubject<Session?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
+    var lastPlayheadPosition: CurrentValueSubject<Double, Never>
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
     var progressTimerSubscription: AnyCancellable?
     var meterTimerSubscription: AnyCancellable?
@@ -87,7 +92,7 @@ class DefaultAudioManager: AudioManager {
     }
     
     func startTracking(for session: Session) async throws {
-        try setupPlayers(for: session, stopTimer: false)
+        try setupPlayers(for: session, at: 0, stopTimer: false)
                 
         try setupRecorder()
         
@@ -261,8 +266,8 @@ class DefaultAudioManager: AudioManager {
         try DefaultRecordingManager.shared.saveSession(updatedSession)
     }
     
-    func startPlayback(for session: Session) throws {
-        try setupPlayers(for: session)
+    func startPlayback(for session: Session, at time: Double) throws {
+        try setupPlayers(for: session, at: time)
         
         let startTimeInSeconds = CACurrentMediaTime() + 0.25
         
@@ -273,7 +278,7 @@ class DefaultAudioManager: AudioManager {
         )
         
         currentlyPlaying.send(session)
-        playerProgress.send(0.0)
+//        playerProgress.send(0.0)
         
         for player in players {
             player.player.play(at: startTime)
@@ -360,6 +365,19 @@ class DefaultAudioManager: AudioManager {
         currentlyPlaying.send(session)
     }
     
+    func updatePlayheadPosition(position: Double) {
+        playerProgress.send(position)
+    }
+    
+    func stopTimerToSeek() {
+        lastPlayheadPosition.send(playerProgress.value)
+        self.progressTimerSubscription?.cancel()
+    }
+    
+    func setLastPlayheadPosition(_ position: Double) {
+        lastPlayheadPosition.send(position)
+    }
+    
     // MARK: - Variables
     
     private var audioSession: AVAudioSession
@@ -377,6 +395,7 @@ class DefaultAudioManager: AudioManager {
     private var startDate: Date = Date()
     private var metronome = Metronome.shared
     private var bluetoothDelay: Double = 0.0
+    private var currentPort: AVAudioSession.Port = .builtInSpeaker
     
     private let progressTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
     private let meterTimer = Timer.publish(every: 0.03, on: .main, in: .common).autoconnect()
@@ -395,6 +414,7 @@ class DefaultAudioManager: AudioManager {
         currentlyPlaying = CurrentValueSubject(nil)
         isRecording = CurrentValueSubject(false)
         playerProgress = CurrentValueSubject(0.0)
+        lastPlayheadPosition = CurrentValueSubject(0.0)
         inputSamples = CurrentValueSubject(nil)
         self.audioSession = audioSession
         self.recorder = recorder
@@ -432,7 +452,7 @@ class DefaultAudioManager: AudioManager {
         
     }
         
-    private func setupPlayers(for session: Session, stopTimer: Bool = true) throws {
+    private func setupPlayers(for session: Session, at time: Double,  stopTimer: Bool = true) throws {
         
         if session.tracks.values.isEmpty {
             return
@@ -477,19 +497,29 @@ class DefaultAudioManager: AudioManager {
             }
             
             try audioFile.read(into: buffer)
+            
+            let offset = AVAudioFramePosition(playerProgress.value * audioFile.processingFormat.sampleRate)
+            let audioLengthSamples: AVAudioFramePosition = audioFile.length
+            var seekFrame: AVAudioFramePosition = offset
+            seekFrame = max(offset, 0)
+            seekFrame = min(offset, audioLengthSamples)
+            let frameCount = AVAudioFrameCount(audioLengthSamples - seekFrame)
 
-            player.player.scheduleBuffer(buffer,
-                                  at: nil,
-                                  options: .interrupts,
-                                  completionCallbackType: .dataPlayedBack
-            ) { _ in
-                Task{ @MainActor in
-                    if player.player == self.players.last?.player {
-                        try self.stopPlayback(stopTimer: stopTimer)
+            if frameCount > 0 {
+                player.player.scheduleSegment(audioFile,
+                                              startingFrame: seekFrame,
+                                              frameCount: frameCount,
+                                              at: nil,
+                                              completionCallbackType: .dataPlayedBack
+                ) { _ in
+                    Task{ @MainActor in
+                        if player.player == self.players.last?.player {
+                            try self.stopPlayback(stopTimer: stopTimer)
+                        }
                     }
                 }
+                player.player.prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
             }
-            player.player.prepare(withFrameCount: AVAudioFrameCount(audioFile.length))
         }
         
         playbackEngine.prepare()
@@ -636,11 +666,16 @@ class DefaultAudioManager: AudioManager {
         let delay: Double = startTime - CACurrentMediaTime()
         
         let start: Date = Date() + delay
+        let startPosition = playerProgress.value
         
         self.progressTimerSubscription = self.progressTimer.sink { date in
             let interval = date.timeIntervalSince(start)
             if interval > 0 {
-                self.playerProgress.send(interval)
+                self.playerProgress.send(interval + startPosition)
+                self.lastPlayheadPosition.send(interval + startPosition)
+            } else {
+                self.playerProgress.send(startPosition)
+                self.lastPlayheadPosition.send(startPosition)
             }
         }
     }
@@ -648,6 +683,7 @@ class DefaultAudioManager: AudioManager {
     private func stopTimer() {
         self.progressTimerSubscription?.cancel()
         self.playerProgress.send(0.0)
+        self.lastPlayheadPosition.send(0.0)
     }
     
     private func setupNotifications() {
@@ -672,17 +708,18 @@ class DefaultAudioManager: AudioManager {
 
     @objc private func handleRouteChange(notification: Notification) {
         
+        let newPort = audioSession.currentRoute.outputs[0].portType
                 
-        if audioSession.currentRoute.outputs[0].portType == .builtInSpeaker {
+        if newPort == .builtInSpeaker, (currentPort == .bluetoothA2DP || currentPort == .headphones)  {
             do {
                 try stopPlayback(stopTimer: true)
             } catch {
                 assertionFailure("Could not stop playback.")
             }
-        } else if audioSession.currentRoute.outputs[0].portType == .bluetoothA2DP {
+        } else if newPort == .bluetoothA2DP {
             bluetoothDelay = 0.15
         }
-        if audioSession.currentRoute.outputs[0].portType != .bluetoothA2DP {
+        if newPort != .bluetoothA2DP {
             bluetoothDelay = 0.0
         }
         
@@ -695,6 +732,9 @@ class DefaultAudioManager: AudioManager {
         } catch {
             assertionFailure("Could not set preferred input.")
         }
+        
+        currentPort = newPort
+        
     }
 }
 

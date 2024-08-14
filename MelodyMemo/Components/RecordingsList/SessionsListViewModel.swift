@@ -39,7 +39,7 @@ class SessionsListViewModel: ObservableObject {
     
     func sessionCellPlayButtonTapped(for session: Session) {
         do {
-            try audioManager.startPlayback(for: session)
+            try audioManager.startPlayback(for: session, at: 0.0)
         } catch {
             errorMessage = "ERROR: Cannot play session."
         }

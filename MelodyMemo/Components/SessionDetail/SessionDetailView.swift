@@ -76,8 +76,9 @@ struct SessionDetailView: View {
                     currentlyPlaying: viewModel.currentlyPlaying,
                     useGlobalBpm: $viewModel.isUsingGlobalBpm,
                     sessionBpm: $viewModel.sessionBpm,
-                    playButtonAction: viewModel.trackCellPlayButtonTapped,
-                    stopButtonAction: viewModel.trackCellStopButtonTapped,
+                    playButtonAction: viewModel.masterCellPlayButtonTapped,
+                    pauseButtonAction: viewModel.masterCellPauseButtonTapped,
+                    stopButtonAction: viewModel.masterCellStopButtonTapped,
                     globalSoloButtonAction: viewModel.masterCellSoloButtonTapped,
                     restartButtonAction: viewModel.masterCellRestartButtonTapped,
                     setBpmButtonAction: viewModel.setSessionBpm
@@ -91,10 +92,16 @@ struct SessionDetailView: View {
                                     isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
                                     isSessionPlaying: viewModel.isSessionPlaying,
                                     trackTimer: viewModel.trackTimer,
+                                    lastPlayheadPosition: viewModel.lastPlayheadPosition,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
-                                    onTrackVolumeChange: viewModel.setTrackVolume,
-                                    onTrackPanChange: viewModel.setTrackPan,
+                                    trackVolumeDidChange: viewModel.trackVolumeDidChange,
+                                    trackPanDidChange: viewModel.trackPanDidChange,
+                                    playheadPositionDidChange: viewModel.playheadPositionDidChange,
+                                    setLastPlayheadPosition: viewModel.setLastPlayheadPosition,
+                                    restartPlaybackFromPosition: viewModel.restartPlaybackFromPosition,
+                                    trackCellPlayPauseAction: viewModel.trackCellPlayPauseAction,
+                                    stopTimer: viewModel.stopTimer,
                                     trashButtonAction: viewModel.trackCellTrashButtonTapped
                                 )
                             }
@@ -142,6 +149,10 @@ struct SessionDetailView: View {
     var backButton: some View {
         Button {
             if !isRecording {
+                if viewModel.currentlyPlaying == nil {
+                    viewModel.playheadPositionDidChange(position: 0.0)
+                    viewModel.setLastPlayheadPosition(position: 0.0)
+                }
                 viewModel.saveSession()
                 dismiss()
             }

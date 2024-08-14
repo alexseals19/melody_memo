@@ -33,6 +33,7 @@ struct AppButtonLabelView: View {
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
             .foregroundStyle(color)
+            .animation(.linear(duration: 0.3), value: color)
     }
 }
 

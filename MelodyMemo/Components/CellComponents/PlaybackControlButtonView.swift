@@ -16,12 +16,12 @@ struct PlaybackControlButtonView: View {
     init(session: Session, 
          currentlyPlaying: Session?,
          playButtonAction: @escaping (_: Session) -> Void,
-         stopButtonAction: @escaping () -> Void
+         pauseButtonAction: @escaping () -> Void
     ) {
         self.session = session
         self.currentlyPlaying = currentlyPlaying
         self.playButtonAction = playButtonAction
-        self.stopButtonAction = stopButtonAction
+        self.pauseButtonAction = pauseButtonAction
     }
     
     //MARK: - Variables
@@ -30,14 +30,14 @@ struct PlaybackControlButtonView: View {
     private var currentlyPlaying: Session?
     
     private let playButtonAction: (_ session: Session) -> Void
-    private let stopButtonAction: () -> Void
+    private let pauseButtonAction: () -> Void
     
     //MARK: - Body
     
     var body: some View {
         Button {
             if let currentlyPlaying, currentlyPlaying == session {
-                stopButtonAction()
+                pauseButtonAction()
             } else {
                 playButtonAction(session)
             }
@@ -66,6 +66,6 @@ struct PlaybackControlButtonView: View {
         session: Session.sessionFixture,
         currentlyPlaying: nil,
         playButtonAction: { _ in },
-        stopButtonAction: {}
+        pauseButtonAction: {}
     )
 }

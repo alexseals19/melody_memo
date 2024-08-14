@@ -16,6 +16,7 @@ struct MasterCellView: View {
          useGlobalBpm: Binding<Bool>,
          sessionBpm: Binding<Int>,
          playButtonAction: @escaping (_: Session) -> Void,
+         pauseButtonAction: @escaping () -> Void,
          stopButtonAction: @escaping () -> Void,
          globalSoloButtonAction: @escaping () -> Void,
          restartButtonAction: @escaping () -> Void,
@@ -26,6 +27,7 @@ struct MasterCellView: View {
         _isUsingGlobalBpm = useGlobalBpm
         _sessionBpm = sessionBpm
         self.playButtonAction = playButtonAction
+        self.pauseButtonAction = pauseButtonAction
         self.stopButtonAction = stopButtonAction
         self.globalSoloButtonAction = globalSoloButtonAction
         self.restartButtonAction = restartButtonAction
@@ -50,6 +52,7 @@ struct MasterCellView: View {
     }
         
     private let playButtonAction: (_ session: Session) -> Void
+    private let pauseButtonAction: () -> Void
     private let stopButtonAction: () -> Void
     private let globalSoloButtonAction: () -> Void
     private let restartButtonAction: () -> Void
@@ -135,16 +138,18 @@ struct MasterCellView: View {
                                 Button {
                                     restartButtonAction()
                                 } label: {
-                                    Image(systemName: "gobackward")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 24, height: 24)
+                                    AppButtonLabelView(name: "gobackward", color: .primary)
+                                }
+                                Button {
+                                    stopButtonAction()
+                                } label: {
+                                    AppButtonLabelView(name: "stop", color: currentlyPlaying != nil ? .red : .primary)
                                 }
                                 PlaybackControlButtonView(
                                     session: session,
                                     currentlyPlaying: currentlyPlaying,
                                     playButtonAction: playButtonAction,
-                                    stopButtonAction: stopButtonAction
+                                    pauseButtonAction: pauseButtonAction
                                 )
                             }
                         }
@@ -193,6 +198,7 @@ struct MasterCellView: View {
         useGlobalBpm: .constant(false),
         sessionBpm: .constant(120),
         playButtonAction: { _ in },
+        pauseButtonAction: {},
         stopButtonAction: {},
         globalSoloButtonAction: {},
         restartButtonAction: {},
