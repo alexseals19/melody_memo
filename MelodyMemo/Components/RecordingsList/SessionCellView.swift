@@ -180,7 +180,7 @@ struct SessionCellView: View {
                         session: session,
                         currentlyPlaying: currentlyPlaying,
                         playButtonAction: playButtonAction,
-                        stopButtonAction: stopButtonAction
+                        pauseButtonAction: stopButtonAction
                     )
                 }
             }

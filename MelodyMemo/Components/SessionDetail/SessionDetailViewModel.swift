@@ -18,6 +18,9 @@ class SessionDetailViewModel: ObservableObject {
     @Published var session: Session
     @Published var trackTimer: Double = 0.0
     @Published var errorMessage: String?
+    @Published var playbackPosition: Double = 0.0
+    @Published var currentPlayheadPosition: Double = 0.0
+    @Published var lastPlayheadPosition: Double = 0.0
     
     @Published var isUsingGlobalBpm: Bool {
         didSet {
@@ -62,6 +65,8 @@ class SessionDetailViewModel: ObservableObject {
             .assign(to: &$currentlyPlaying)
         audioManager.playerProgress
             .assign(to: &$trackTimer)
+        audioManager.lastPlayheadPosition
+            .assign(to: &$lastPlayheadPosition)
         trackVolumeSubject
             .debounce(for: 0.25, scheduler: RunLoop.main)
             .sink { track in
@@ -95,11 +100,13 @@ class SessionDetailViewModel: ObservableObject {
                 errorMessage = "ERROR: Could not stop playback for restart."
             }
             do {
-                try audioManager.startPlayback(for: session)
+                try audioManager.startPlayback(for: session, at: 0.0)
             } catch {
                 errorMessage = "ERROR: Could not play session."
             }
         }
+        playheadPositionDidChange(position: 0.0)
+        setLastPlayheadPosition(position: 0.0)
     }
     
     func masterCellSoloButtonTapped() {
@@ -122,9 +129,9 @@ class SessionDetailViewModel: ObservableObject {
         updateSession()
     }
     
-    func trackCellPlayButtonTapped(for session: Session) {
+    func masterCellPlayButtonTapped(for session: Session) {
         do {
-            try audioManager.startPlayback(for: session)
+            try audioManager.startPlayback(for: session, at: playbackPosition)
         } catch {
             errorMessage = "ERROR: Could not play session."
         }
@@ -201,9 +208,19 @@ class SessionDetailViewModel: ObservableObject {
         updateSession()
     }
     
-    func trackCellStopButtonTapped() {
+    func masterCellStopButtonTapped() {
+        setLastPlayheadPosition(position: 0.0)
         do {
             try audioManager.stopPlayback(stopTimer: true)
+        } catch {
+            errorMessage = "ERROR: Could not stop playback."
+        }
+    }
+    
+    func masterCellPauseButtonTapped() {
+        audioManager.stopTimerToSeek()
+        do {
+            try audioManager.stopPlayback(stopTimer: false)
         } catch {
             errorMessage = "ERROR: Could not stop playback."
         }
@@ -223,6 +240,8 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func sessionTrashButtonTapped() {
+        playheadPositionDidChange(position: 0.0)
+        setLastPlayheadPosition(position: 0.0)
         do {
             try recordingManager.removeSession(session)
         } catch {
@@ -238,7 +257,7 @@ class SessionDetailViewModel: ObservableObject {
         }
     }
     
-    func setTrackVolume(for track: Track, volume: Float) {
+    func trackVolumeDidChange(for track: Track, volume: Float) {
         var updatedTrack = track
         updatedTrack.volume = volume
         trackVolumeSubject.send(updatedTrack)
@@ -252,7 +271,7 @@ class SessionDetailViewModel: ObservableObject {
         updateSession()
     }
     
-    func setTrackPan(for track: Track, pan: Float) {
+    func trackPanDidChange(for track: Track, pan: Float) {
         var updatedTrack = track
         updatedTrack.pan = pan
         trackPanSubject.send(updatedTrack)
@@ -264,10 +283,45 @@ class SessionDetailViewModel: ObservableObject {
             audioManager.setTrackPan(for: updatedTrack)
         }
         updateSession()
-            }
+    }
+    
+    func trackCellPlayPauseAction() {
+        if isSessionPlaying {
+            masterCellPauseButtonTapped()
+        } else {
+            masterCellPlayButtonTapped(for: session)
+        }
+    }
     
     func setSessionBpm(newBpm: Int) {
         session.sessionBpm = newBpm
+    }
+    
+    func playheadPositionDidChange(position: Double) {
+        audioManager.updatePlayheadPosition(position: position)
+    }
+    
+    func setLastPlayheadPosition(position: Double) {
+        audioManager.setLastPlayheadPosition(position)
+    }
+    
+    func restartPlaybackFromPosition(position: Double) {
+        if currentlyPlaying != nil {
+            do {
+                try audioManager.stopPlayback(stopTimer: false)
+            } catch {
+                errorMessage = "ERROR: Could not stop playback for restart."
+            }
+            do {
+                try audioManager.startPlayback(for: session, at: position)
+            } catch {
+                errorMessage = "ERROR: Could not play session."
+            }
+        }
+    }
+    
+    func stopTimer() {
+        audioManager.stopTimerToSeek()
     }
     
     // MARK: - Variables

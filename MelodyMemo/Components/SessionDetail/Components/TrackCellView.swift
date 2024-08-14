@@ -18,20 +18,32 @@ struct TrackCellView: View {
         isGlobalSoloActive: Bool,
         isSessionPlaying: Bool,
         trackTimer: Double,
+        lastPlayheadPosition: Double,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
-        onTrackVolumeChange: @escaping (_: Track, _: Float) -> Void,
-        onTrackPanChange: @escaping (_: Track, _: Float) -> Void,
+        trackVolumeDidChange: @escaping (_: Track, _: Float) -> Void,
+        trackPanDidChange: @escaping (_: Track, _: Float) -> Void,
+        playheadPositionDidChange: @escaping( _: Double) -> Void,
+        setLastPlayheadPosition: @escaping( _: Double) -> Void,
+        restartPlaybackFromPosition: @escaping( _: Double) -> Void,
+        trackCellPlayPauseAction: @escaping() -> Void,
+        stopTimer: @escaping() -> Void,
         trashButtonAction: @escaping (_: Track) -> Void
     ) {
         self.track = track
         self.isGlobalSoloActive = isGlobalSoloActive
         self.isSessionPlaying = isSessionPlaying
         self.trackTimer = trackTimer
+        self.lastPlayheadPosition = lastPlayheadPosition
         self.muteButtonAction = muteButtonAction
         self.soloButtonAction = soloButtonAction
-        self.onTrackVolumeChange = onTrackVolumeChange
-        self.onTrackPanChange = onTrackPanChange
+        self.trackVolumeDidChange = trackVolumeDidChange
+        self.trackPanDidChange = trackPanDidChange
+        self.playheadPositionDidChange = playheadPositionDidChange
+        self.setLastPlayheadPosition = setLastPlayheadPosition
+        self.restartPlaybackFromPosition = restartPlaybackFromPosition
+        self.trackCellPlayPauseAction = trackCellPlayPauseAction
+        self.stopTimer = stopTimer
         self.trashButtonAction = trashButtonAction
         self.volumeSliderValue = Double(track.volume)
         self.panSliderValue = Double(track.pan)
@@ -50,19 +62,20 @@ struct TrackCellView: View {
     @State private var waveform: Image = Image(systemName: "waveform")
     @State private var muteButtonOpacity: Double = 0.75
     @State private var panSliderWidth: Double = 0.0
+    @State private var isTimerStopped: Bool = false
     
     private var track: Track
     private var isGlobalSoloActive: Bool
     private var trackTimer: Double
-    
+    private var lastPlayheadPosition: Double
     
     private let isSessionPlaying: Bool
     
     private var progressPercentage: Double {
-        isSessionPlaying ? min(trackTimer / track.length, 1.0) : 0.0
+        min(trackTimer / track.length, 1.0)
     }
     
-    private var offset: Double {
+    private var playheadPosition: Double {
         return (waveformWidth / -2.0) + (waveformWidth * progressPercentage) + 5
     }
     
@@ -76,8 +89,13 @@ struct TrackCellView: View {
     
     private let muteButtonAction: (_: Track) -> Void
     private let soloButtonAction: (_: Track) -> Void
-    private let onTrackVolumeChange: (_: Track, _ : Float) -> Void
-    private let onTrackPanChange: (_: Track, _ : Float) -> Void
+    private let trackVolumeDidChange: (_: Track, _ : Float) -> Void
+    private let trackPanDidChange: (_: Track, _ : Float) -> Void
+    private let playheadPositionDidChange: ( _: Double) -> Void
+    private let setLastPlayheadPosition: ( _: Double) -> Void
+    private let restartPlaybackFromPosition: ( _: Double) -> Void
+    private let trackCellPlayPauseAction: () -> Void
+    private let stopTimer: () -> Void
     private let trashButtonAction: (_: Track) -> Void
     
     //MARK: - Body
@@ -88,19 +106,52 @@ struct TrackCellView: View {
             .onChanged() { gesture in
                 if panSliderValue <= 1.0, panSliderValue >= -1.0 {
                     panSliderValue = (gesture.translation.width / panSliderWidth) + lastPanValue
-                    onTrackPanChange(track, Float(panSliderValue))
+                    trackPanDidChange(track, Float(panSliderValue))
                 }
                 
             }
             .onEnded { _ in
                 if panSliderValue < -1.0 {
                     panSliderValue = -1.0
-                    onTrackPanChange(track, Float(panSliderValue))
+                    trackPanDidChange(track, Float(panSliderValue))
                 } else if panSliderValue > 1.0 {
                     panSliderValue = 1.0
-                    onTrackPanChange(track, Float(panSliderValue))
+                    trackPanDidChange(track, Float(panSliderValue))
                 }
                 lastPanValue = panSliderValue
+            }
+        
+        let scrub = DragGesture()
+            .onChanged() { gesture in
+                if !isTimerStopped {
+                    stopTimer()
+                    isTimerStopped = true
+                }
+                let newPosition = ((gesture.translation.width + (lastPlayheadPosition / track.length * waveformWidth)) / waveformWidth) * track.length
+                if newPosition > track.length {
+                    playheadPositionDidChange(track.length)
+                    setLastPlayheadPosition(track.length)
+                } else if newPosition < 0.0 {
+                    playheadPositionDidChange(0.0)
+                } else {
+                    playheadPositionDidChange(newPosition)
+                }
+                
+            }
+            .onEnded { _ in
+                if trackTimer < 0.0 {
+                    playheadPositionDidChange(0.0)
+                    setLastPlayheadPosition(0.0)
+                } else if trackTimer > track.length {
+                    playheadPositionDidChange(track.length)
+                    setLastPlayheadPosition(track.length)
+                } else {
+                    setLastPlayheadPosition(trackTimer)
+                }
+                if isSessionPlaying {
+                    restartPlaybackFromPosition(trackTimer)
+                }
+                isTimerStopped = false
             }
         
         ZStack {
@@ -130,6 +181,17 @@ struct TrackCellView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: waveformWidth, height: 70)
                         .animation(.linear(duration: 0.25), value: trackOpacity)
+                        .gesture(scrub)
+                        .onTapGesture(count: 2) {
+                            setLastPlayheadPosition(0.0)
+                            playheadPositionDidChange(0.0)
+                            if isSessionPlaying {
+                                restartPlaybackFromPosition(0.0)
+                            }
+                        }
+                        .onTapGesture {
+                            trackCellPlayPauseAction()
+                        }
                         
                     Spacer()
                     HStack {
@@ -176,7 +238,7 @@ struct TrackCellView: View {
                         .tint(appTheme.accentColor)
                         .padding(.trailing, 10)
                         .onChange(of: volumeSliderValue) {
-                            onTrackVolumeChange(track, Float(volumeSliderValue))
+                            trackVolumeDidChange(track, Float(volumeSliderValue))
                         }
                 }
                 .padding(.bottom, 7)
@@ -203,7 +265,7 @@ struct TrackCellView: View {
                     .onTapGesture(count: 2) {
                         lastPanValue = 0.0
                         panSliderValue = 0.0
-                        onTrackPanChange(track, 0.0)
+                        trackPanDidChange(track, 0.0)
                     }
                     AppButtonLabelView(name: "r.circle", color: .secondary)
                 }
@@ -216,11 +278,7 @@ struct TrackCellView: View {
             Rectangle()
                 .frame(maxWidth: 1, maxHeight: 87)
                 .foregroundStyle(.red)
-                .offset(x: offset, y: -45)
-                .animation(
-                    isSessionPlaying ? .none : .linear(duration: 0.5).delay(0.25),
-                    value: offset
-                )
+                .offset(x: playheadPosition, y: -45)
                 .opacity(trackOpacity)
                 .animation(.linear(duration: 0.25), value: trackOpacity)
         }
@@ -242,9 +300,15 @@ struct TrackCellView: View {
         isGlobalSoloActive: false,
         isSessionPlaying: false,
         trackTimer: 0.0,
+        lastPlayheadPosition: 0.0,
         muteButtonAction: { _ in },
         soloButtonAction: { _ in },
-        onTrackVolumeChange: { _, _ in },
-        onTrackPanChange: {_, _ in },
+        trackVolumeDidChange: {  _, _ in },
+        trackPanDidChange: { _, _ in },
+        playheadPositionDidChange: { _ in },
+        setLastPlayheadPosition: { _ in },
+        restartPlaybackFromPosition: { _ in },
+        trackCellPlayPauseAction: {},
+        stopTimer: {},
         trashButtonAction: { _ in })
 }
