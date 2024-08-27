@@ -11,7 +11,7 @@ import SwiftUI
 class AppTheme: ObservableObject {
 
     @AppStorage("appTheme") var theme: Theme = .red
-
+    
     enum Theme: String, CaseIterable, Identifiable {
         case red
         case orange

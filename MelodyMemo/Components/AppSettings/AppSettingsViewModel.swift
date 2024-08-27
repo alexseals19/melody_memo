@@ -13,6 +13,13 @@ class AppSettingsViewModel: ObservableObject {
     //MARK: - API
     
     @Published var metronomeBpm: Int = 120
+    @Published var timeSignature: Int = 4 {
+        didSet {
+            Task {
+                await metronome.setTimeSignature(timeSignature)
+            }
+        }
+    }
         
     @Published var trackLengthLimit: Int {
         didSet {
@@ -70,6 +77,7 @@ class AppSettingsViewModel: ObservableObject {
     
     private func setAssignment() {
         Task {
+            timeSignature = await metronome.timeSignature
             await metronome.bpm
                 .assign(to: &$metronomeBpm)
         }

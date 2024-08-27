@@ -80,7 +80,7 @@ class HomeViewModel: ObservableObject {
                     }
                     Task {
                         do {
-                            try await audioManager.startTracking()
+                            try await audioManager.startTracking(for: nil)
                         } catch {
                             errorMessage = "ERROR: Could not begin recording."
                         }
@@ -98,7 +98,7 @@ class HomeViewModel: ObservableObject {
                 } else {
                     Task {
                         do {
-                            try await audioManager.stopTracking()
+                            try await audioManager.stopTracking(for: nil)
                         } catch {
                             errorMessage = "ERROR: Could not stop recording."
                         }

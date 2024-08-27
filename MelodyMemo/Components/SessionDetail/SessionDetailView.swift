@@ -31,7 +31,7 @@ struct SessionDetailView: View {
     
     @EnvironmentObject private var appTheme: AppTheme
         
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
@@ -76,6 +76,7 @@ struct SessionDetailView: View {
                     currentlyPlaying: viewModel.currentlyPlaying,
                     useGlobalBpm: $viewModel.isUsingGlobalBpm,
                     sessionBpm: $viewModel.sessionBpm,
+                    playheadPosition: viewModel.trackTimer,
                     playButtonAction: viewModel.masterCellPlayButtonTapped,
                     pauseButtonAction: viewModel.masterCellPauseButtonTapped,
                     stopButtonAction: viewModel.masterCellStopButtonTapped,
@@ -83,16 +84,33 @@ struct SessionDetailView: View {
                     restartButtonAction: viewModel.masterCellRestartButtonTapped,
                     setBpmButtonAction: viewModel.setSessionBpm
                 )
+                LoopBarView(
+                    leftIndicatorFraction: viewModel.session.leftIndicatorFraction,
+                    rightIndicatorFraction: viewModel.session.rightIndicatorFraction,
+                    leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
+                    rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
+                    isLoopActive: viewModel.session.isLoopActive,
+                    sessionTracks: viewModel.session.tracks,
+                    loopReferenceTrack: $viewModel.loopReferenceTrack,
+                    leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
+                    rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange,
+                    loopToggleButtonAction: viewModel.toggleIsLoopActive
+                )
+                .frame(height: 28)
                 GeometryReader { proxy in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 3.0) {
                             ForEach(tracks) { track in
                                 TrackCellView(
                                     track: track,
+                                    session: viewModel.session,
                                     isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
                                     isSessionPlaying: viewModel.isSessionPlaying,
                                     trackTimer: viewModel.trackTimer,
                                     lastPlayheadPosition: viewModel.lastPlayheadPosition,
+                                    leftIndicatorDragOffset: viewModel.leftIndicatorDragOffset,
+                                    rightIndicatorDragOffset: viewModel.rightIndicatorDragOffset,
+                                    waveformWidth: $viewModel.waveformWidth,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
                                     trackVolumeDidChange: viewModel.trackVolumeDidChange,
@@ -102,7 +120,8 @@ struct SessionDetailView: View {
                                     restartPlaybackFromPosition: viewModel.restartPlaybackFromPosition,
                                     trackCellPlayPauseAction: viewModel.trackCellPlayPauseAction,
                                     stopTimer: viewModel.stopTimer,
-                                    trashButtonAction: viewModel.trackCellTrashButtonTapped
+                                    trashButtonAction: viewModel.trackCellTrashButtonTapped,
+                                    getExpandedWaveform: viewModel.getExpandedWaveform
                                 )
                             }
                             CellSpacerView(

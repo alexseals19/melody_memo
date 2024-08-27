@@ -18,10 +18,8 @@ class MockAudioManager: AudioManager {
     var lastPlayheadPosition: CurrentValueSubject<Double, Never>
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
     
-    func startTracking() {}
-    func startTracking(for session: Session) throws {}
-    func stopTracking() async  {}
-    func stopTracking(for _: Session) async {}
+    func startTracking(for session: Session?) throws {}
+    func stopTracking(for _: Session?) async {}
     func startPlayback(for session: Session, at time: Double) throws {}
     func stopPlayback(stopTimer: Bool) {}
     func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
@@ -33,8 +31,10 @@ class MockAudioManager: AudioManager {
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage {UIImage(imageLiteralResourceName: "waveform")}
     func updateCurrentlyPlaying(_ session: Session) {}
     func updatePlayheadPosition(position: Double) {}
-    func stopTimerToSeek() {}
+    func stopTimer(willReset: Bool) {}
     func setLastPlayheadPosition(_ position: Double) {}
+    func loopIndicatorChangedPosition() throws {}
+    func restartPlayback(from position: Double) throws {}
     
     init() {
         trackLengthLimit = 0

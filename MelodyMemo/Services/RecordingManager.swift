@@ -165,24 +165,32 @@ final class DefaultRecordingManager: RecordingManager {
             case none
             case one
             case two
+            case three
         }
         
         var updateFromSessionModel: SessionModel = .none
         
         var modelOneSessions: [SessionModelOne] = []
         var modelTwoSessions: [SessionModelTwo] = []
+        var modelThreeSessions: [SessionModelThree] = []
         var newSessions: [Session] = []
         
         do {
-            modelTwoSessions = try DataPersistenceManager.retrieve([SessionModelTwo].self, from: "sessions")
-            updateFromSessionModel = .two
+            modelThreeSessions = try DataPersistenceManager.retrieve([SessionModelThree].self, from: "sessions")
+            updateFromSessionModel = .three
         } catch {
-            print("No sessions to update for model two.")
+            print("No sessions to update for model three.")
             do {
-                modelOneSessions = try DataPersistenceManager.retrieve([SessionModelOne].self, from: "sessions")
-                updateFromSessionModel = .one
+                modelTwoSessions = try DataPersistenceManager.retrieve([SessionModelTwo].self, from: "sessions")
+                updateFromSessionModel = .two
             } catch {
-                print("No sessions to update for model one.")
+                print("No sessions to update for model two.")
+                do {
+                    modelOneSessions = try DataPersistenceManager.retrieve([SessionModelOne].self, from: "sessions")
+                    updateFromSessionModel = .one
+                } catch {
+                    print("No sessions to update for model one.")
+                }
             }
         }
         
@@ -198,7 +206,6 @@ final class DefaultRecordingManager: RecordingManager {
                         }
                         guard let darkImage = try DefaultAudioManager.shared.getImage(for: track.fileName, colorScheme: .dark).pngData() else {
                             assertionFailure("Could not get png data for dark image.")
-                            isUpdatingSessionModels.send(nil)
                             return
                         }
                         
@@ -219,17 +226,24 @@ final class DefaultRecordingManager: RecordingManager {
                         print("Cannot get images.")
                     }
                 }
+                let sortedTracks = Array(newTracks.values).sorted { (lhs: Track, rhs: Track) -> Bool in
+                    return rhs.name > lhs.name
+                }
                 newSessions.append(Session(
-                    name: session.name,
-                    date: session.date,
-                    length: session.length,
-                    tracks: newTracks,
-                    absoluteTrackCount: session.absoluteTrackCount,
-                    sessionBpm: 0,
-                    isUsingGlobalBpm: false,
-                    id: session.id,
-                    isGlobalSoloActive: session.isGlobalSoloActive
-                )
+                        name: session.name,
+                        date: session.date,
+                        length: session.length,
+                        tracks: newTracks,
+                        absoluteTrackCount: session.absoluteTrackCount,
+                        sessionBpm: 0,
+                        isUsingGlobalBpm: false,
+                        id: session.id,
+                        isGlobalSoloActive: session.isGlobalSoloActive,
+                        isLoopActive: false,
+                        leftIndicatorFraction: 0.0,
+                        rightIndicatorFraction: 1.0,
+                        loopReferenceTrack: sortedTracks[0]
+                    )
                 )
             }
             
@@ -244,7 +258,6 @@ final class DefaultRecordingManager: RecordingManager {
                         }
                         guard let darkImage = try DefaultAudioManager.shared.getImage(for: track.fileName, colorScheme: .dark).pngData() else {
                             assertionFailure("Could not get png data for dark image.")
-                            isUpdatingSessionModels.send(nil)
                             return
                         }
                         
@@ -265,27 +278,88 @@ final class DefaultRecordingManager: RecordingManager {
                         print("Cannot get images.")
                     }
                 }
+                
+                let sortedTracks = Array(newTracks.values).sorted { (lhs: Track, rhs: Track) -> Bool in
+                    return rhs.name > lhs.name
+                }
+                
                 newSessions.append(Session(
-                    name: session.name,
-                    date: session.date,
-                    length: session.length,
-                    tracks: newTracks,
-                    absoluteTrackCount: session.absoluteTrackCount,
-                    sessionBpm: session.sessionBpm,
-                    isUsingGlobalBpm: session.isUsingGlobalBpm,
-                    id: session.id,
-                    isGlobalSoloActive: session.isGlobalSoloActive
-                )
+                        name: session.name,
+                        date: session.date,
+                        length: session.length,
+                        tracks: newTracks,
+                        absoluteTrackCount: session.absoluteTrackCount,
+                        sessionBpm: session.sessionBpm,
+                        isUsingGlobalBpm: session.isUsingGlobalBpm,
+                        id: session.id,
+                        isGlobalSoloActive: session.isGlobalSoloActive,
+                        isLoopActive: false,
+                        leftIndicatorFraction: 0.0,
+                        rightIndicatorFraction: 1.0,
+                        loopReferenceTrack: sortedTracks[0]
+                    )
                 )
             }
             
-        case.none:
+        case .three:
+            for session in modelThreeSessions {
+                
+                var newTracks: [UUID: Track] = [:]
+                for track in session.tracks.values {
+                    do {
+                        guard let lightImage = try DefaultAudioManager.shared.getImage(for: track.fileName, colorScheme: .light).pngData() else {
+                            assertionFailure("Could not get png data for light image.")
+                            return
+                        }
+                        guard let darkImage = try DefaultAudioManager.shared.getImage(for: track.fileName, colorScheme: .dark).pngData() else {
+                            assertionFailure("Could not get png data for dark image.")
+                            return
+                        }
+                        
+                        newTracks[track.id] = Track(
+                            name: track.name,
+                            fileName: track.fileName,
+                            date: track.date,
+                            length: track.length,
+                            id: track.id,
+                            volume: track.volume,
+                            pan: track.pan,
+                            isMuted: track.isMuted,
+                            isSolo: track.isSolo,
+                            soloOverride: track.soloOverride,
+                            darkWaveformImage: lightImage,
+                            lightWaveformImage: darkImage)
+                    } catch {
+                        print("Cannot get images.")
+                    }
+                }
+                
+                let sortedTracks = Array(session.tracks.values).sorted { (lhs: Track, rhs: Track) -> Bool in
+                    return rhs.name > lhs.name
+                }
+                newSessions.append(Session(
+                        name: session.name,
+                        date: session.date,
+                        length: session.length,
+                        tracks: newTracks,
+                        absoluteTrackCount: session.absoluteTrackCount,
+                        sessionBpm: session.sessionBpm,
+                        isUsingGlobalBpm: session.isUsingGlobalBpm,
+                        id: session.id,
+                        isGlobalSoloActive: session.isGlobalSoloActive,
+                        isLoopActive: false,
+                        leftIndicatorFraction: 0.0,
+                        rightIndicatorFraction: 1.0,
+                        loopReferenceTrack: sortedTracks[0]
+                    )
+                )
+            }
+            
+        case .none:
             print("No sessions to update. Returning.")
             isUpdatingSessionModels.send(nil)
             return
         }
-        
-        
         
         do {
             try DataPersistenceManager.save(newSessions, to: "sessions")
@@ -298,5 +372,7 @@ final class DefaultRecordingManager: RecordingManager {
                 return lhs.date > rhs.date
             }
         )
+        
+        isUpdatingSessionModels.send(nil)
     }
 }
