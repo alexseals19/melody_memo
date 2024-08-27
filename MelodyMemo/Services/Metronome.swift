@@ -60,7 +60,7 @@ actor Metronome {
     var lockEngine: Bool = false
     
     var countInDelay: Double {
-        if isArmed, isCountInActive {
+        if isArmed, isCountInActive, timeSignature > 1 {
             if let sessionBpm, sessionBpm != 0 {
                 return 60 / Double(sessionBpm) * Double(timeSignature)
             } else {
@@ -92,7 +92,7 @@ actor Metronome {
                 return
             }
             
-            if index % timeSignature == 0 {
+            if index % timeSignature == 0, timeSignature > 1 {
                 beatSetOne.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
                 beatSetOne[index].player.volume = volume
                 engine?.attach(beatSetOne[index].player)
@@ -131,7 +131,7 @@ actor Metronome {
                 return
             }
             
-            if index % timeSignature == 0 {
+            if index % timeSignature == 0, timeSignature > 1 {
                 beatSetTwo.append(Beat(player: AVAudioPlayerNode(), number: 0, buffer: bufferHigh, playTime: CACurrentMediaTime()))
                 beatSetTwo[index].player.volume = volume
                 engine?.attach(beatSetTwo[index].player)
@@ -228,6 +228,10 @@ actor Metronome {
         volume = newVolume
     }
     
+    func setTimeSignature(_ newTimeSignature: Int) {
+        timeSignature = newTimeSignature
+    }
+    
     func setIsCountInActive(value: Bool) {
         isCountInActive = value
     }
@@ -251,7 +255,7 @@ actor Metronome {
     }
     
     private var beatSetLength: Int {
-        timeSignature * 2
+        timeSignature == 1 ? 8 : timeSignature * 2
     }
     
     private var beatHighUrl: URL {
@@ -320,9 +324,7 @@ actor Metronome {
                     Task { @MainActor in
                         await self.beatSetOne[index].player.stop()
                         if await self.isMetronomePlaying {
-                            if await index == self.beatSetLength - 2 {
-                                
-                            } else if await index == self.beatSetLength / 2 {
+                            if await index == self.beatSetLength / 2 {
                                 await self.playSetTwo()
                                 
                             }
@@ -348,9 +350,7 @@ actor Metronome {
                     Task { @MainActor in
                         await self.beatSetTwo[index].player.stop()
                         if await self.isMetronomePlaying {
-                            if await index == self.beatSetLength - 2 {
-                                
-                            } else if await index == self.beatSetLength / 2 {
+                            if await index == self.beatSetLength / 2 {
                                 await self.playSetOne()
                             }
                         }

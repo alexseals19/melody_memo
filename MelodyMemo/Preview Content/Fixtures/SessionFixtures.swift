@@ -33,7 +33,12 @@ extension Session {
                                             sessionBpm: 120,
                                             isUsingGlobalBpm: false,
                                             id: UUID(),
-                                            isGlobalSoloActive: true)
+                                            isGlobalSoloActive: true,
+                                            isLoopActive: false,
+                                            leftIndicatorFraction: 0.0,
+                                            rightIndicatorFraction: 1.0,
+                                            loopReferenceTrack: trackFixture
+                                        )
     
     static let sessionsFixture: [Session] = {
         var recs: [Session] = []
@@ -49,7 +54,11 @@ extension Session {
                     sessionBpm: 120,
                     isUsingGlobalBpm: false,
                     id: UUID(),
-                    isGlobalSoloActive: false
+                    isGlobalSoloActive: false,
+                    isLoopActive: false,
+                    leftIndicatorFraction: 0.0,
+                    rightIndicatorFraction: 1.0,
+                    loopReferenceTrack: trackFixture
                 )
             )
         }

@@ -13,7 +13,7 @@ import SwiftUI
 class SessionDetailViewModel: ObservableObject {
     
     //MARK: - API
-        
+            
     @Published var currentlyPlaying: Session?
     @Published var session: Session
     @Published var trackTimer: Double = 0.0
@@ -21,28 +21,39 @@ class SessionDetailViewModel: ObservableObject {
     @Published var playbackPosition: Double = 0.0
     @Published var currentPlayheadPosition: Double = 0.0
     @Published var lastPlayheadPosition: Double = 0.0
+    @Published var leftIndicatorDragOffset: CGFloat = 0.0
+    @Published var rightIndicatorDragOffset: CGFloat = 0.0
+    @Published var waveformWidth: Double = 130.0
+    
+    @Published var loopReferenceTrack: Track {
+        didSet {
+            session.loopReferenceTrack = loopReferenceTrack
+            updateSession()
+            if currentlyPlaying != nil {
+                audioManager.updateCurrentlyPlaying(session)
+            }
+        }
+    }
     
     @Published var isUsingGlobalBpm: Bool {
         didSet {
             session.isUsingGlobalBpm = isUsingGlobalBpm
+            updateSession()
             if currentlyPlaying != nil {
                 audioManager.updateCurrentlyPlaying(session)
             }
-            updateSession()
         }
     }
     
     @Published var sessionBpm: Int {
         didSet {
             session.sessionBpm = sessionBpm
+            updateSession()
             if currentlyPlaying != nil {
                 audioManager.updateCurrentlyPlaying(session)
             }
-            updateSession()
         }
     }
-    
-    let audioManager: AudioManager
     
     var isSessionPlaying: Bool {
         if let currentlyPlaying, currentlyPlaying == session {
@@ -58,6 +69,7 @@ class SessionDetailViewModel: ObservableObject {
         self.audioManager = audioManager
         self.isUsingGlobalBpm = session.isUsingGlobalBpm
         self.sessionBpm = session.sessionBpm
+        self.loopReferenceTrack = session.loopReferenceTrack
         recordingManager.sessions
             .compactMap { $0.first { $0.id == session.id }}
             .assign(to: &$session)
@@ -107,34 +119,6 @@ class SessionDetailViewModel: ObservableObject {
         }
         playheadPositionDidChange(position: 0.0)
         setLastPlayheadPosition(position: 0.0)
-    }
-    
-    func masterCellSoloButtonTapped() {
-        session.isGlobalSoloActive.toggle()
-        for track in session.tracks.values {
-            if track.soloOverride {
-                session.tracks[track.id]?.soloOverride.toggle()
-            } else if track.isMuted, track.isSolo, session.isGlobalSoloActive {
-                session.tracks[track.id]?.soloOverride.toggle()
-            }
-        }
-                
-        if currentlyPlaying != nil {
-            var tracksToToggle: [Track] = []
-            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } ))
-            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } ))
-            audioManager.toggleMute(for: tracksToToggle)
-            audioManager.updateCurrentlyPlaying(session)
-        }
-        updateSession()
-    }
-    
-    func masterCellPlayButtonTapped(for session: Session) {
-        do {
-            try audioManager.startPlayback(for: session, at: playbackPosition)
-        } catch {
-            errorMessage = "ERROR: Could not play session."
-        }
     }
     
     func trackCellMuteButtonTapped(for track: Track) {
@@ -208,6 +192,37 @@ class SessionDetailViewModel: ObservableObject {
         updateSession()
     }
     
+    func masterCellPlayButtonTapped(for session: Session) {
+        if session.isLoopActive {
+            playheadPositionDidChange(position: session.leftIndicatorTime)
+        }
+        do {
+            try audioManager.startPlayback(for: session, at: session.isLoopActive ? session.leftIndicatorTime : 0.0)
+        } catch {
+            errorMessage = "ERROR: Could not play session."
+        }
+    }
+    
+    func masterCellSoloButtonTapped() {
+        session.isGlobalSoloActive.toggle()
+        for track in session.tracks.values {
+            if track.soloOverride {
+                session.tracks[track.id]?.soloOverride.toggle()
+            } else if track.isMuted, track.isSolo, session.isGlobalSoloActive {
+                session.tracks[track.id]?.soloOverride.toggle()
+            }
+        }
+                
+        if currentlyPlaying != nil {
+            var tracksToToggle: [Track] = []
+            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } ))
+            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } ))
+            audioManager.toggleMute(for: tracksToToggle)
+            audioManager.updateCurrentlyPlaying(session)
+        }
+        updateSession()
+    }
+    
     func masterCellStopButtonTapped() {
         setLastPlayheadPosition(position: 0.0)
         do {
@@ -218,7 +233,7 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func masterCellPauseButtonTapped() {
-        audioManager.stopTimerToSeek()
+        audioManager.stopTimer(willReset: false)
         do {
             try audioManager.stopPlayback(stopTimer: false)
         } catch {
@@ -306,22 +321,60 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func restartPlaybackFromPosition(position: Double) {
-        if currentlyPlaying != nil {
-            do {
-                try audioManager.stopPlayback(stopTimer: false)
-            } catch {
-                errorMessage = "ERROR: Could not stop playback for restart."
-            }
-            do {
-                try audioManager.startPlayback(for: session, at: position)
-            } catch {
-                errorMessage = "ERROR: Could not play session."
-            }
+        do {
+            try audioManager.restartPlayback(from: position)
+        } catch {
+            errorMessage = "ERROR: Could not stop playback for restart."
         }
     }
     
     func stopTimer() {
-        audioManager.stopTimerToSeek()
+        audioManager.stopTimer(willReset: false)
+    }
+    
+    func leftIndicatorPositionDidChange(position: Double) {
+
+        session.leftIndicatorFraction = position
+        updateSession()
+        if currentlyPlaying != nil {
+            audioManager.updateCurrentlyPlaying(session)
+            do {
+                try audioManager.loopIndicatorChangedPosition()
+            } catch {}
+        }
+        leftIndicatorDragOffset = 0.0
+    }
+    
+    func rightIndicatorPositionDidChange(position: Double) {
+                
+        session.rightIndicatorFraction = position
+        updateSession()
+        if currentlyPlaying != nil {
+            audioManager.updateCurrentlyPlaying(session)
+            do {
+                try audioManager.loopIndicatorChangedPosition()
+            } catch {}
+        }
+        rightIndicatorDragOffset = 0.0
+    }
+    
+    func toggleIsLoopActive() {
+        session.isLoopActive.toggle()
+        updateSession()
+        if currentlyPlaying != nil {
+            audioManager.updateCurrentlyPlaying(session)
+        }
+    }
+    
+    func getExpandedWaveform(track: Track, colorScheme: ColorScheme) -> Image {
+        var uiImage: UIImage
+        do {
+            uiImage = try audioManager.getImage(for: track.fileName, colorScheme: colorScheme)
+        } catch {
+            return Image(systemName: "waveform")
+        }
+        
+        return Image(uiImage: uiImage)
     }
     
     // MARK: - Variables
@@ -330,6 +383,7 @@ class SessionDetailViewModel: ObservableObject {
     private var trackPanSubject = PassthroughSubject<Track, Never>()
     private var cancellables = Set<AnyCancellable>()
     private var recordingManager: RecordingManager
+    private let audioManager: AudioManager
     
     // MARK: - Functions
 

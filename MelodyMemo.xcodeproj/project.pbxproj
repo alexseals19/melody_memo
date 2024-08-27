@@ -41,6 +41,7 @@
 		99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F9EE542B6EC9DE003308D2 /* HomeView.swift */; };
 		99F9EE572B6EC9E0003308D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE562B6EC9E0003308D2 /* Assets.xcassets */; };
 		99F9EE5A2B6EC9E0003308D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */; };
+		99FB91902C6D04E80015C508 /* LoopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99FB918F2C6D04E80015C508 /* LoopBarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +80,7 @@
 		99F9EE542B6EC9DE003308D2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		99F9EE562B6EC9E0003308D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		99F9EE592B6EC9E0003308D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		99FB918F2C6D04E80015C508 /* LoopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +143,7 @@
 			children = (
 				99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */,
 				99A0784E2C1A5E11008EE21B /* MasterCellView.swift */,
+				99FB918F2C6D04E80015C508 /* LoopBarView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -375,6 +378,7 @@
 				99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */,
 				99F9EE532B6EC9DE003308D2 /* MelodyMemoApp.swift in Sources */,
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
+				99FB91902C6D04E80015C508 /* LoopBarView.swift in Sources */,
 				99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */,
 				4521F4532C18B11000246189 /* MockAudioManager.swift in Sources */,
 				99A0784D2C1A5DE8008EE21B /* TrackCellView.swift in Sources */,

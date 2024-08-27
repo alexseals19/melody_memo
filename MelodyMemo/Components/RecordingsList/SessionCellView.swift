@@ -182,6 +182,7 @@ struct SessionCellView: View {
                         playButtonAction: playButtonAction,
                         pauseButtonAction: stopButtonAction
                     )
+                    .padding(.trailing, 20)
                 }
             }
             .offset(x: gestureOffset + offset)

@@ -32,7 +32,7 @@ struct AppSettingsView: View {
     
     @StateObject private var viewModel: AppSettingsViewModel
     
-    @State var isOn: Bool = false
+    @State private var isOn: Bool = false
         
     //MARK: - Body
     
@@ -94,6 +94,40 @@ struct AppSettingsView: View {
                     }
                     .foregroundStyle(.primary)
                 }
+                
+                HStack {
+                    Text("Time Signature")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        if viewModel.timeSignature > 1 {
+                            viewModel.timeSignature -= 1
+                        }
+                    } label: {
+                        AppButtonLabelView(name: "minus", color: .primary)
+                    }
+                    VStack(spacing: 0.5) {
+                        Text("\(viewModel.timeSignature)")
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                        Capsule()
+                            .frame(width: 15, height: 1)
+                        Text("4")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Button {
+                        if viewModel.timeSignature < 7 {
+                            viewModel.timeSignature += 1
+                        }
+                    } label: {
+                        AppButtonLabelView(name: "plus", color: .primary)
+                    }
+                }
+                
+                Text("Set to 1 for monotone.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 
                 HStack {
                     AppButtonLabelView(name: "speaker.wave.2", color: .secondary)
@@ -182,7 +216,7 @@ struct AppSettingsView: View {
                 .padding(.horizontal, 20)
                 Spacer()
             }
-            .presentationDetents([.height(570)])
+            .presentationDetents([.height(600)])
             Spacer()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
