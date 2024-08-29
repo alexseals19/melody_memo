@@ -133,6 +133,7 @@ final class DefaultRecordingManager: RecordingManager {
     
     private init() {
         isUpdatingSessionModels = CurrentValueSubject(nil)
+        
         do {
             absoluteSessionCount = try DataPersistenceManager.retrieve(Int.self, from: "session_count")
         } catch {
