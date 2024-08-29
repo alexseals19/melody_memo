@@ -77,8 +77,8 @@ struct TrackCellView: View {
     
     @EnvironmentObject private var appTheme: AppTheme
     
-    @State private var volumeSliderValue: Double
-    @State private var panSliderValue: CGFloat
+    @State private var volumeSliderValue: Double = 0
+    @State private var panSliderValue: CGFloat = 0
     @State private var lastPanValue: CGFloat = 0.0
     @State private var waveform: Image = Image(systemName: "waveform")
     @State private var muteButtonOpacity: Double = 0.75
