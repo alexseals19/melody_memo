@@ -197,7 +197,10 @@ class SessionDetailViewModel: ObservableObject {
             playheadPositionDidChange(position: session.leftIndicatorTime)
         }
         do {
-            try audioManager.startPlayback(for: session, at: session.isLoopActive ? session.leftIndicatorTime : 0.0)
+            try audioManager.startPlayback(
+                for: session,
+                at: session.isLoopActive ? session.leftIndicatorTime : 0.0
+            )
         } catch {
             errorMessage = "ERROR: Could not play session."
         }
@@ -215,8 +218,12 @@ class SessionDetailViewModel: ObservableObject {
                 
         if currentlyPlaying != nil {
             var tracksToToggle: [Track] = []
-            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } ))
-            tracksToToggle.append(contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } ))
+            tracksToToggle.append(
+                contentsOf: session.tracks.values.filter( { $0.isSolo == false && $0.isMuted == false  } )
+            )
+            tracksToToggle.append(
+                contentsOf: session.tracks.values.filter( { $0.isSolo == true && $0.isMuted == true } )
+            )
             audioManager.toggleMute(for: tracksToToggle)
             audioManager.updateCurrentlyPlaying(session)
         }
@@ -333,7 +340,6 @@ class SessionDetailViewModel: ObservableObject {
     }
     
     func leftIndicatorPositionDidChange(position: Double) {
-
         session.leftIndicatorFraction = position
         updateSession()
         if currentlyPlaying != nil {

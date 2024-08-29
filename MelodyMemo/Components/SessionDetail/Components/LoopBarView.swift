@@ -70,11 +70,15 @@ struct LoopBarView: View {
     }
     
     private var loopWidth: Double {
-        return (rightIndicatorPosition + rightIndicatorDragOffset) - (leftIndicatorPosition + leftIndicatorDragOffset)
+        let rightPosition = rightIndicatorPosition + rightIndicatorDragOffset
+        let leftPosition = leftIndicatorPosition + leftIndicatorDragOffset
+        return rightPosition - leftPosition
     }
     
     private var loopPosisition: Double {
-        return (rightIndicatorPosition + rightIndicatorDragOffset) + (leftIndicatorPosition + leftIndicatorDragOffset)
+        let rightPosition = rightIndicatorPosition + rightIndicatorDragOffset
+        let leftPosition = leftIndicatorPosition + leftIndicatorDragOffset
+        return rightPosition + leftPosition
     }
     
     private var sortedSessionTracks: [Track] {
@@ -97,17 +101,17 @@ struct LoopBarView: View {
                 
                 if leftIndicatorPosition + delta < leftIndicatorBound {
                     delta = leftIndicatorBound - leftIndicatorPosition
-                } else if leftIndicatorPosition + delta > rightIndicatorPosition {
+                } else if leftIndicatorPosition + delta > rightIndicatorPosition - 3 {
                     delta = (rightIndicatorPosition - 3) - leftIndicatorPosition
                 }
                 leftIndicatorDragOffset = delta
             }
-            .onEnded { gestureState in
-                let delta = gestureState.location.x - gestureState.startLocation.x
+            .onEnded { gesture in
+                let delta = gesture.translation.width
                 
                 if leftIndicatorPosition + delta < leftIndicatorBound {
                     leftIndicatorPositionDidChange(0.0)
-                } else if leftIndicatorPosition + delta > rightIndicatorPosition {
+                } else if leftIndicatorPosition + delta > rightIndicatorPosition - 3 {
                     let newPosition = rightIndicatorPosition - 3
                     leftIndicatorPositionDidChange((newPosition - leftIndicatorBound) / waveformWidth)
                 } else {
@@ -122,18 +126,17 @@ struct LoopBarView: View {
                 var delta = gesture.translation.width
                 if rightIndicatorPosition + delta > rightIndicatorBound {
                     delta = rightIndicatorBound - rightIndicatorPosition
-                } else if rightIndicatorPosition + delta < leftIndicatorPosition {
+                } else if rightIndicatorPosition + delta < leftIndicatorPosition + 3 {
                     delta = (leftIndicatorPosition + 3) - rightIndicatorPosition
                 }
                 rightIndicatorDragOffset = delta
                 
             }
             .onEnded { gesture in
-                
                 let delta = gesture.translation.width
                 if rightIndicatorPosition + delta > rightIndicatorBound {
                     rightIndicatorPositionDidChange(1.0)
-                } else if rightIndicatorPosition + delta < leftIndicatorPosition {
+                } else if rightIndicatorPosition + delta < leftIndicatorPosition + 3 {
                     let newPosition = leftIndicatorPosition + 3
                     rightIndicatorPositionDidChange((newPosition - leftIndicatorBound) / waveformWidth)
                 } else {

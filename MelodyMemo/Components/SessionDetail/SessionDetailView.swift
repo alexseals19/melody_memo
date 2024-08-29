@@ -108,8 +108,8 @@ struct SessionDetailView: View {
                                     isSessionPlaying: viewModel.isSessionPlaying,
                                     trackTimer: viewModel.trackTimer,
                                     lastPlayheadPosition: viewModel.lastPlayheadPosition,
-                                    leftIndicatorDragOffset: viewModel.leftIndicatorDragOffset,
-                                    rightIndicatorDragOffset: viewModel.rightIndicatorDragOffset,
+                                    leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
+                                    rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
                                     waveformWidth: $viewModel.waveformWidth,
                                     muteButtonAction: viewModel.trackCellMuteButtonTapped,
                                     soloButtonAction: viewModel.trackCellSoloButtonTapped,
@@ -121,7 +121,9 @@ struct SessionDetailView: View {
                                     trackCellPlayPauseAction: viewModel.trackCellPlayPauseAction,
                                     stopTimer: viewModel.stopTimer,
                                     trashButtonAction: viewModel.trackCellTrashButtonTapped,
-                                    getExpandedWaveform: viewModel.getExpandedWaveform
+                                    getExpandedWaveform: viewModel.getExpandedWaveform,
+                                    leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
+                                    rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange
                                 )
                             }
                             CellSpacerView(

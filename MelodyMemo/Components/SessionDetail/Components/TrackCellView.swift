@@ -20,8 +20,8 @@ struct TrackCellView: View {
         isSessionPlaying: Bool,
         trackTimer: Double,
         lastPlayheadPosition: Double,
-        leftIndicatorDragOffset: CGFloat,
-        rightIndicatorDragOffset: CGFloat,
+        leftIndicatorDragOffset: Binding<CGFloat>,
+        rightIndicatorDragOffset: Binding<CGFloat>,
         waveformWidth: Binding<Double>,
         muteButtonAction: @escaping (_: Track) -> Void,
         soloButtonAction: @escaping (_: Track) -> Void,
@@ -33,7 +33,9 @@ struct TrackCellView: View {
         trackCellPlayPauseAction: @escaping() -> Void,
         stopTimer: @escaping() -> Void,
         trashButtonAction: @escaping (_: Track) -> Void,
-        getExpandedWaveform: @escaping (_: Track, _: ColorScheme) -> Image
+        getExpandedWaveform: @escaping (_: Track, _: ColorScheme) -> Image,
+        leftIndicatorPositionDidChange: @escaping (_: Double) -> Void,
+        rightIndicatorPositionDidChange: @escaping (_: Double) -> Void
     ) {
         self.track = track
         self.session = session
@@ -41,8 +43,8 @@ struct TrackCellView: View {
         self.isSessionPlaying = isSessionPlaying
         self.trackTimer = trackTimer
         self.lastPlayheadPosition = lastPlayheadPosition
-        self.leftIndicatorDragOffset = leftIndicatorDragOffset
-        self.rightIndicatorDragOffset = rightIndicatorDragOffset
+        _leftIndicatorDragOffset = leftIndicatorDragOffset
+        _rightIndicatorDragOffset = rightIndicatorDragOffset
         _waveformWidth = waveformWidth
         
         self.muteButtonAction = muteButtonAction
@@ -56,6 +58,8 @@ struct TrackCellView: View {
         self.stopTimer = stopTimer
         self.trashButtonAction = trashButtonAction
         self.getExpandedWaveform = getExpandedWaveform
+        self.leftIndicatorPositionDidChange = leftIndicatorPositionDidChange
+        self.rightIndicatorPositionDidChange = rightIndicatorPositionDidChange
         
         self.volumeSliderValue = Double(track.volume)
         self.panSliderValue = Double(track.pan)
@@ -63,6 +67,9 @@ struct TrackCellView: View {
     }
     
     @Binding var waveformWidth: Double
+    
+    @Binding var leftIndicatorDragOffset: CGFloat
+    @Binding var rightIndicatorDragOffset: CGFloat
     
     //MARK: - Variables
     
@@ -85,40 +92,99 @@ struct TrackCellView: View {
     private var isGlobalSoloActive: Bool
     private var trackTimer: Double
     private var lastPlayheadPosition: Double
-    private var leftIndicatorDragOffset: CGFloat
-    private var rightIndicatorDragOffset: CGFloat
+    
     
     private let isSessionPlaying: Bool
     
+    private var loopOffset: Double {
+        loopWidth / 2.0 + leftIndicatorPosition
+    }
+    
+    private var expandedLoopOffset: Double {
+        let width = loopWidth * expandedWaveformRatio
+        return width / 2.0 + leftIndicatorPositionZoomed
+    }
+    
+    private var loopWidth: Double {
+        rightIndicatorPosition - leftIndicatorPosition
+    }
+    
+    private var expandedWaveformWidth: Double {
+        max(500, waveformWidth)
+    }
+    
+    private var expandedWaveformRatio: Double {
+        expandedWaveformWidth / waveformWidth
+    }
+    
+    private var leftIndicatorBound: Double {
+        expandedWaveformWidth / -2.0
+    }
+    
+    private var rightIndicatorBound: Double {
+        expandedWaveformWidth / 2.0
+    }
+    
     private var leftIndicatorPosition: CGFloat {
         
-        let dragOffset = leftIndicatorDragOffset / waveformWidth
-        let timeOffset = dragOffset * session.loopReferenceTrack.length
-        let dragPercentage = timeOffset / track.length
-        let finalDragOffset = dragPercentage * waveformWidth
+        let dragOffset = getDistanceForCurrentTrack(
+            for: leftIndicatorDragOffset,
+            width: waveformWidth
+        )
         
         let timePercentage = session.leftIndicatorTime / track.length
         let relativePosition = timePercentage * waveformWidth
         
-        var position = relativePosition + finalDragOffset + (waveformWidth / -2.0) + 5
-        position = max(position, (waveformWidth / -2.0) + 5)
-        position = min(position, (waveformWidth / 2.0) + 3)
+        var position = relativePosition + dragOffset + (waveformWidth / -2.0)
+        position = max(position, (waveformWidth / -2.0))
+        position = min(position, (waveformWidth / 2.0))
         
         return position
     }
     
     private var rightIndicatorPosition: CGFloat {
+        
+        let dragOffset = getDistanceForCurrentTrack(
+            for: rightIndicatorDragOffset,
+            width: waveformWidth
+        )
+        
         let timePercentage = session.rightIndicatorTime / track.length
         let relativePosition = timePercentage * waveformWidth
         
-        let dragOffset = rightIndicatorDragOffset / waveformWidth
-        let timeOffset = dragOffset * session.loopReferenceTrack.length
-        let dragPercentage = timeOffset / track.length
-        let finalDragOffset = dragPercentage * waveformWidth
+        let position = relativePosition + dragOffset + (waveformWidth / -2.0)
         
-        let position = relativePosition + finalDragOffset + (waveformWidth / -2.0) + 5
+        return min(position, (waveformWidth / 2.0))
+    }
+    
+    private var leftIndicatorPositionZoomed: CGFloat {
         
-        return min(position, (waveformWidth / 2.0) + 5)
+        let dragOffset = getDistanceForCurrentTrack(
+            for: leftIndicatorDragOffset,
+            width: expandedWaveformWidth
+        )
+        
+        let timePercentage = session.leftIndicatorTime / track.length
+        let relativePosition = timePercentage * expandedWaveformWidth
+        
+        let position = relativePosition + dragOffset + (expandedWaveformWidth / -2.0)
+        
+        return position
+    }
+    
+    private var rightIndicatorPositionZoomed: CGFloat {
+        
+        let dragOffset = getDistanceForCurrentTrack(
+            for: rightIndicatorDragOffset,
+            width: expandedWaveformWidth
+        )
+        
+        let timePercentage = session.rightIndicatorTime / track.length
+        let relativePosition = timePercentage * expandedWaveformWidth
+        
+        let position = relativePosition + dragOffset + (expandedWaveformWidth / -2.0)
+        
+        return position
     }
     
     private var progressPercentage: Double {
@@ -127,6 +193,10 @@ struct TrackCellView: View {
     
     private var playheadPosition: Double {
         return (waveformWidth / -2.0) + (waveformWidth * progressPercentage) + 5
+    }
+    
+    private var playheadPositionZoomed: Double {
+        return (expandedWaveformWidth * progressPercentage) - (expandedWaveformWidth / 2.0)
     }
     
     private var trackOpacity: Double {
@@ -148,6 +218,8 @@ struct TrackCellView: View {
     private let stopTimer: () -> Void
     private let trashButtonAction: (_: Track) -> Void
     private let getExpandedWaveform: (_: Track, _: ColorScheme) -> Image
+    private let leftIndicatorPositionDidChange: (_: Double) -> Void
+    private let rightIndicatorPositionDidChange: (_: Double) -> Void
     
     //MARK: - Body
         
@@ -176,7 +248,12 @@ struct TrackCellView: View {
                     stopTimer()
                     isTimerStopped = true
                 }
-                let newPosition = ((gesture.translation.width + (lastPlayheadPosition / track.length * waveformWidth)) / waveformWidth) * track.length
+                
+                let localTimeRatio = lastPlayheadPosition / track.length
+                let distance = localTimeRatio * waveformWidth
+                let newDistanceRatio = (gesture.translation.width + distance) / waveformWidth
+                
+                let newPosition = newDistanceRatio * track.length
                 if newPosition > track.length {
                     playheadPositionDidChange(track.length)
                     setLastPlayheadPosition(track.length)
@@ -203,6 +280,51 @@ struct TrackCellView: View {
                 isTimerStopped = false
             }
         
+        let leftIndicatorDrag = DragGesture(minimumDistance: 1)
+            .onChanged() { gesture in
+                let delta = gesture.translation.width
+                
+                leftIndicatorDragOffset = getDistanceForRefernceTrack(delta)
+                
+                if leftIndicatorPositionZoomed < leftIndicatorBound {
+                    let spaceToZero = leftIndicatorBound - leftIndicatorPositionZoomed
+                    
+                    leftIndicatorDragOffset += getDistanceForRefernceTrack(spaceToZero)
+                } else if leftIndicatorPositionZoomed > rightIndicatorPositionZoomed - 3 * expandedWaveformRatio {
+                    let distance = (rightIndicatorPositionZoomed - 3 * expandedWaveformRatio) - leftIndicatorPositionZoomed
+                    leftIndicatorDragOffset += getDistanceForRefernceTrack(distance)
+                }
+            }
+            .onEnded { _ in
+                leftIndicatorPositionDidChange(
+                    (leftIndicatorPositionZoomed - leftIndicatorBound) / expandedWaveformWidth
+                )
+            }
+        
+        let rightIndicatorDrag = DragGesture(minimumDistance: 1)
+            .onChanged() { gesture in
+                
+                let delta = gesture.translation.width
+                
+                rightIndicatorDragOffset = getDistanceForRefernceTrack(delta)
+                
+                if rightIndicatorPositionZoomed > rightIndicatorBound {
+                    let distance = rightIndicatorPositionZoomed - rightIndicatorBound
+                    
+                    rightIndicatorDragOffset -= getDistanceForRefernceTrack(distance)
+                } else if rightIndicatorPositionZoomed < (leftIndicatorPositionZoomed + 3 * expandedWaveformRatio) {
+                    let distance = (leftIndicatorPositionZoomed + 3 * expandedWaveformRatio) - rightIndicatorPositionZoomed
+                    
+                    rightIndicatorDragOffset += getDistanceForRefernceTrack(distance)
+                }
+            }
+            .onEnded { _ in
+                rightIndicatorPositionDidChange(
+                    (rightIndicatorPositionZoomed - leftIndicatorBound) / expandedWaveformWidth
+                )
+                
+            }
+        
         ZStack {
             VStack {
                 HStack(alignment: .center, spacing: 0.0) {
@@ -221,16 +343,14 @@ struct TrackCellView: View {
                                     AppButtonLabelView(name: "trash", color: .primary, size: 18)
                                 }
                                 .padding(.trailing, 10)
-//                                Button {
-//                                    isTrackZoomed.toggle()
-//                                    if isTrackZoomed {
-//                                        expandedWaveform = getExpandedWaveform(track, colorScheme)
-//                                    } else {
-//                                        expandedWaveform = nil
-//                                    }
-//                                } label: {
-//                                    AppButtonLabelView(name: isTrackZoomed ? "minus.magnifyingglass" : "plus.magnifyingglass", color: .primary, size: 18)
-//                                }
+                                Button {
+                                    isTrackZoomed.toggle()
+                                } label: {
+                                    AppButtonLabelView(
+                                        name: isTrackZoomed ? "minus.magnifyingglass" : "plus.magnifyingglass",
+                                        color: .primary, size: 18
+                                    )
+                                }
                             }
                         }
                         .padding(.leading, 20)
@@ -239,32 +359,142 @@ struct TrackCellView: View {
                     .frame(width: 110.0)
                     GeometryReader { proxy in
                         Group {
-                            if let expandedWaveform, waveformWidth < 500 {
+                            if isTrackZoomed {
                                 ScrollView(.horizontal) {
                                     ZStack {
-                                        expandedWaveform
-                                            .resizable()
+                                        if session.isLoopActive {
+                                            
+                                            waveform
+                                                .resizable()
+                                                .opacity(0.4)
+                                                .frame(width: expandedWaveformWidth, height: 70)
+                                            
+                                            HStack {
+                                                waveform
+                                                    .resizable()
+                                                    .opacity(trackOpacity)
+                                                    .frame(width: expandedWaveformWidth, height: 70)
+                                                    .offset(x: 0 - expandedLoopOffset)
+                                                    .animation(.linear(duration: 0.25), value: trackOpacity)
+                                            }
+                                            .frame(width: loopWidth * expandedWaveformRatio)
+                                            .clipped()
+                                            .offset(x: expandedLoopOffset)
+                                            
+                                            Rectangle()
+                                                .frame(maxWidth: 1, maxHeight: 70)
+                                                .foregroundStyle(appTheme.accentColor)
+                                                .offset(x: leftIndicatorPositionZoomed)
+                                                .opacity(trackOpacity)
+                                                .animation(.linear(duration: 0.25), value: trackOpacity)
+                                            
+                                            Rectangle()
+                                                .frame(maxWidth: 1, maxHeight: 70)
+                                                .foregroundStyle(appTheme.accentColor)
+                                                .offset(x: rightIndicatorPositionZoomed)
+                                                .opacity(trackOpacity)
+                                                .animation(.linear(duration: 0.25), value: trackOpacity)
+                                            
+                                            Rectangle()
+                                                .frame(maxWidth: 100, maxHeight: 70)
+                                                .foregroundStyle(.white.opacity(0.001))
+                                                .offset(x: leftIndicatorPositionZoomed)
+                                                .animation(
+                                                    isSessionPlaying ? .none : .linear(duration: 0.3), 
+                                                    value: lastPlayheadPosition
+                                                )
+                                                .gesture(leftIndicatorDrag)
+                                            
+                                            Rectangle()
+                                                .frame(maxWidth: 100, maxHeight: 70)
+                                                .foregroundStyle(.white.opacity(0.001))
+                                                .offset(x: rightIndicatorPositionZoomed)
+                                                .animation(
+                                                    isSessionPlaying ? .none : .linear(duration: 0.3),
+                                                    value: lastPlayheadPosition
+                                                )
+                                                .gesture(rightIndicatorDrag)
+                                        } else {
+                                            waveform
+                                                .resizable()
+                                                .opacity(trackOpacity)
+                                                .frame(width: expandedWaveformWidth, height: 70)
+                                                .animation(.linear(duration: 0.25), value: trackOpacity)
+                                        }
+                                        
+                                        Rectangle()
+                                            .frame(maxWidth: 1, maxHeight: 70)
+                                            .foregroundStyle(.red)
+                                            .offset(x: playheadPositionZoomed)
                                             .opacity(trackOpacity)
-                                            .frame(width: 500, height: 70)
                                             .animation(.linear(duration: 0.25), value: trackOpacity)
+                                            .animation(
+                                                isSessionPlaying ? .none : .linear(duration: 0.3),
+                                                value: lastPlayheadPosition
+                                            )
                                     }
                                 }
                             } else {
-                                waveform
-                                    .resizable()
-                                    .opacity(trackOpacity)
-                                    .frame(width: waveformWidth, height: 70)
-                                    .animation(.linear(duration: 0.25), value: trackOpacity)
-                                    .onTapGesture(count: 2) {
-                                        setLastPlayheadPosition(0.0)
-                                        playheadPositionDidChange(0.0)
-                                        if isSessionPlaying {
-                                            restartPlaybackFromPosition(0.0)
+                                ZStack {
+                                    if session.isLoopActive {
+                                        waveform
+                                            .resizable()
+                                            .opacity(0.4)
+                                            .frame(width: waveformWidth, height: 70)
+                                        
+                                        HStack {
+                                            waveform
+                                                .resizable()
+                                                .opacity(trackOpacity)
+                                                .frame(width: waveformWidth, height: 70)
+                                                .offset(x: 0 - loopOffset)
+                                                .animation(.linear(duration: 0.25), value: trackOpacity)
+                                                .onTapGesture(count: 2) {
+                                                    setLastPlayheadPosition(0.0)
+                                                    playheadPositionDidChange(0.0)
+                                                    if isSessionPlaying {
+                                                        restartPlaybackFromPosition(0.0)
+                                                    }
+                                                }
+                                                .onTapGesture {
+                                                    trackCellPlayPauseAction()
+                                                }
                                         }
+                                        .frame(width: loopWidth)
+                                        .clipped()
+                                        .offset(x: loopOffset)
+                                        
+                                        Rectangle()
+                                            .frame(maxWidth: 1, maxHeight: 70)
+                                            .foregroundStyle(appTheme.accentColor)
+                                            .offset(x: leftIndicatorPosition)
+                                            .opacity(trackOpacity)
+                                            .animation(.linear(duration: 0.25), value: trackOpacity)
+                                        
+                                        Rectangle()
+                                            .frame(maxWidth: 1, maxHeight: 70)
+                                            .foregroundStyle(appTheme.accentColor)
+                                            .offset(x: rightIndicatorPosition)
+                                            .opacity(trackOpacity)
+                                            .animation(.linear(duration: 0.25), value: trackOpacity)
+                                    } else {
+                                        waveform
+                                            .resizable()
+                                            .opacity(trackOpacity)
+                                            .frame(width: waveformWidth, height: 70)
+                                            .animation(.linear(duration: 0.25), value: trackOpacity)
+                                            .onTapGesture(count: 2) {
+                                                setLastPlayheadPosition(0.0)
+                                                playheadPositionDidChange(0.0)
+                                                if isSessionPlaying {
+                                                    restartPlaybackFromPosition(0.0)
+                                                }
+                                            }
+                                            .onTapGesture {
+                                                trackCellPlayPauseAction()
+                                            }
                                     }
-                                    .onTapGesture {
-                                        trackCellPlayPauseAction()
-                                    }
+                                }
                             }
                         }
                         .onAppear {
@@ -362,36 +592,23 @@ struct TrackCellView: View {
             .foregroundColor(.primary)
             .background(Color(UIColor.systemBackground).opacity(0.3))
             
-            if session.isLoopActive, !isTrackZoomed {
+            if !isTrackZoomed {
                 Rectangle()
-                    .frame(maxWidth: 1, maxHeight: 50)
-                    .foregroundStyle(appTheme.accentColor)
-                    .offset(x: leftIndicatorPosition, y: -42.5)
+                    .frame(maxWidth: 1, maxHeight: 87)
+                    .foregroundStyle(.red)
+                    .offset(x: playheadPosition, y: -45)
                     .opacity(trackOpacity)
                     .animation(.linear(duration: 0.25), value: trackOpacity)
+                    .animation(isSessionPlaying ? .none : .linear(duration: 0.3), value: lastPlayheadPosition)
                 
                 Rectangle()
-                    .frame(maxWidth: 1, maxHeight: 50)
-                    .foregroundStyle(appTheme.accentColor)
-                    .offset(x: rightIndicatorPosition, y: -42.5)
-                    .opacity(trackOpacity)
-                    .animation(.linear(duration: 0.25), value: trackOpacity)
+                    .frame(maxWidth: 50, maxHeight: 87)
+                    .foregroundStyle(.white.opacity(0.001))
+                    .offset(x: playheadPosition, y: -45)
+                    .animation(isSessionPlaying ? .none : .linear(duration: 0.3), value: lastPlayheadPosition)
+                    .gesture(scrub)
             }
             
-            Rectangle()
-                .frame(maxWidth: 1, maxHeight: 87)
-                .foregroundStyle(.red)
-                .offset(x: playheadPosition, y: -45)
-                .opacity(trackOpacity)
-                .animation(.linear(duration: 0.25), value: trackOpacity)
-                .animation(isSessionPlaying ? .none : .linear(duration: 0.3), value: lastPlayheadPosition)
-            
-            Rectangle()
-                .frame(maxWidth: 50, maxHeight: 87)
-                .foregroundStyle(.white.opacity(0.001))
-                .offset(x: playheadPosition, y: -45)
-                .animation(isSessionPlaying ? .none : .linear(duration: 0.3), value: lastPlayheadPosition)
-                .gesture(scrub)
         }
         .onAppear {
             guard let lightImage = UIImage(data: track.lightWaveformImage) else {
@@ -403,6 +620,23 @@ struct TrackCellView: View {
             waveform = colorScheme == .dark ? Image(uiImage: lightImage) : Image(uiImage: darkImage)
         }
     }
+    
+    func getDistanceForRefernceTrack(_ distance: Double) -> Double {
+        let localRatio = distance / expandedWaveformWidth
+        let distanceInTime = localRatio * track.length
+        let referenceTrackRatio = distanceInTime / session.loopReferenceTrack.length
+        
+        return referenceTrackRatio * waveformWidth
+    }
+    
+    func getDistanceForCurrentTrack(for distance: Double, width: Double) -> Double {
+        let referenceTrackRatio = distance / waveformWidth
+        let distanceInTime = referenceTrackRatio * session.loopReferenceTrack.length
+        let localRatio = distanceInTime / track.length
+        
+        return localRatio * width
+    }
+    
 }
 
 #Preview {
@@ -413,8 +647,8 @@ struct TrackCellView: View {
         isSessionPlaying: false,
         trackTimer: 0.0,
         lastPlayheadPosition: 0.0,
-        leftIndicatorDragOffset: 0.0,
-        rightIndicatorDragOffset: 0.0,
+        leftIndicatorDragOffset: .constant(0.0),
+        rightIndicatorDragOffset: .constant(0.0),
         waveformWidth: .constant(200),
         muteButtonAction: { _ in },
         soloButtonAction: { _ in },
@@ -426,6 +660,8 @@ struct TrackCellView: View {
         trackCellPlayPauseAction: {},
         stopTimer: {},
         trashButtonAction: { _ in },
-        getExpandedWaveform: { _, _ in return Image(systemName: "waveform")}
+        getExpandedWaveform: { _, _ in return Image(systemName: "waveform")},
+        leftIndicatorPositionDidChange: { _ in },
+        rightIndicatorPositionDidChange: { _ in }
     )
 }
