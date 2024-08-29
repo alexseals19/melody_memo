@@ -61,13 +61,12 @@ struct TrackCellView: View {
         self.leftIndicatorPositionDidChange = leftIndicatorPositionDidChange
         self.rightIndicatorPositionDidChange = rightIndicatorPositionDidChange
         
-        self.volumeSliderValue = Double(track.volume)
-        self.panSliderValue = Double(track.pan)
+        _volumeSliderValue = State(initialValue: Double(track.volume))
+        _panSliderValue = State(initialValue: Double(track.pan))
         
     }
     
     @Binding var waveformWidth: Double
-    
     @Binding var leftIndicatorDragOffset: CGFloat
     @Binding var rightIndicatorDragOffset: CGFloat
     
@@ -77,8 +76,9 @@ struct TrackCellView: View {
     
     @EnvironmentObject private var appTheme: AppTheme
     
-    @State private var volumeSliderValue: Double = 0
-    @State private var panSliderValue: CGFloat = 0
+    @State private var volumeSliderValue: Double
+    @State private var panSliderValue: CGFloat
+    
     @State private var lastPanValue: CGFloat = 0.0
     @State private var waveform: Image = Image(systemName: "waveform")
     @State private var muteButtonOpacity: Double = 0.75
