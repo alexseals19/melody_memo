@@ -91,18 +91,18 @@ class DefaultAudioManager: AudioManager {
             
             if !session.tracks.isEmpty {
                 for player in players {
-                    await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay - 0.28)))
+                    await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay)))
                 }
             }
         }
         
         if await metronome.isArmed {
-            await metronome.start(at: startTime - 0.25)
+            await metronome.start(at: startTime)
         }
-        await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay) - 0.25)
+        await recorder.record(atTime: (startTime + metronome.countInDelay + bluetoothDelay))
         
-        try await startMetering(at: (startTime +  metronome.countInDelay + bluetoothDelay) - 0.25)
-        try await startTimer(at: (startTime +  metronome.countInDelay + bluetoothDelay) - 0.25)
+        try await startMetering(at: (startTime +  metronome.countInDelay + bluetoothDelay))
+        try await startTimer(at: (startTime +  metronome.countInDelay + bluetoothDelay))
     }
     
     func stopTracking(for session: Session?) async throws {
