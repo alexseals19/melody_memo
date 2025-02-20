@@ -13,9 +13,11 @@ protocol RecordingManager {
     var sessions: CurrentValueSubject<[Session], Never> { get }
     var isUpdatingSessionModels: CurrentValueSubject<Bool?, Never> { get }
     func removeSession(_ recording: Session) throws
-    func removeTrack(_ session: Session, _ track: Track) throws
+    func removeTrack(_ session: Session, _ group: SessionGroup, _ track: Track) throws
     func saveSession(_ recording: Session) throws
     func updateSession(_ session: Session) throws
+    func addGroup(for session: Session) throws
+    func deleteGroup(_ group: SessionGroup) throws
 }
 
 final class DefaultRecordingManager: RecordingManager {
@@ -36,30 +38,51 @@ final class DefaultRecordingManager: RecordingManager {
             if updatedSessions.isEmpty {
                 zeroAbsoluteSessionCount()
             }
-            for track in session.tracks.values {
-                try DataPersistenceManager.delete(track.fileName, fileType: .m4a)
+            
+            for group in session.groups.values {
+                for track in group.tracks.values {
+                    try DataPersistenceManager.delete(track.fileName, fileType: .m4a)
+                }
             }
+
             try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(updatedSessions)
         }
     }
     
-    func removeTrack(_ session: Session, _ track: Track) throws {
+    func removeTrack(_ session: Session, _ group: SessionGroup, _ track: Track) throws {
         Task { @MainActor in
             
             var updatedSession = session
-            updatedSession.tracks.removeValue(forKey: track.id)
+            var updatedGroup = group
             
-            if !updatedSession.tracks.isEmpty {
-                guard let longestTrack = updatedSession.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
-                    return lhs.date > rhs.date
+            updatedGroup.tracks.removeValue(forKey: track.id)
+            
+            if !updatedGroup.tracks.isEmpty {
+                guard let longestTrack = updatedGroup.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
+                    return lhs.length < rhs.length
                 }).last else {
                     return
                 }
                 
+                if group.loopReferenceTrack == track {
+                    guard let loopTrack = updatedGroup.tracks.values.sorted(by: { (lhs: Track, rhs: Track) -> Bool in
+                        return lhs.date < rhs.date
+                    }).last else {
+                        return
+                    }
+                    updatedGroup.loopReferenceTrack = loopTrack
+                }
+                
                 updatedSession.length = longestTrack.length
             } else {
-                updatedSession.absoluteTrackCount = 0
+                updatedGroup.loopReferenceTrack = nil
+                updatedGroup.absoluteTrackCount = 0
+            }
+            
+            updatedSession.groups[group.id] = updatedGroup
+            if session.armedGroup == group {
+                updatedSession.armedGroup = updatedGroup
             }
             
             var updatedSessions = sessions.value
@@ -71,9 +94,32 @@ final class DefaultRecordingManager: RecordingManager {
             try DataPersistenceManager.save(updatedSessions, to: "sessions")
             sessions.send(updatedSessions)
             if DefaultAudioManager.shared.currentlyPlaying.value != nil {
-                DefaultAudioManager.shared.currentlyPlaying.send(updatedSession)
+                DefaultAudioManager.shared.currentlyPlaying.send(updatedGroup)
             }
         }
+    }
+    
+    func deleteGroup(_ group: SessionGroup) throws {
+        
+        guard let session = sessions.value.first(where: { $0.id == group.sessionId } ) else {
+            assertionFailure("Could not find associated session.")
+            return
+        }
+        
+        var updatedSession = session
+        updatedSession.groups.removeValue(forKey: group.id)
+        
+        for track in group.tracks.values {
+            try DataPersistenceManager.delete(track.fileName, fileType: .m4a)
+        }
+        
+        var updatedSessions = sessions.value
+        updatedSessions.removeAll { $0.id == session.id }
+        updatedSessions.append(updatedSession)
+        
+        try DataPersistenceManager.save(updatedSessions, to: "sessions")
+        sessions.send(updatedSessions)
+        
     }
     
     func saveSession(_ session: Session) throws {
@@ -101,6 +147,39 @@ final class DefaultRecordingManager: RecordingManager {
                 }
             )
         }
+    }
+    
+    func updateGroup(_ group: SessionGroup) throws {
+        guard let session = sessions.value.first(where: { $0.id == group.sessionId }) else {
+            return
+        }
+        var updatedSession = session
+        updatedSession.groups[group.id] = group
+        if session.armedGroup.id == group.id {
+            updatedSession.armedGroup = group
+        }
+        try updateSession(updatedSession)
+    }
+    
+    func addGroup(for session: Session) throws {
+        var updatedSession = session
+        let group = SessionGroup(
+            label: .basic,
+            tracks: [:],
+            absoluteTrackCount: 0,
+            id: UUID(),
+            sessionId: session.id,
+            groupNumber: session.absoluteGroupCount + 1,
+            isGroupExpanded: true,
+            isGroupSoloActive: false,
+            isLoopActive: false,
+            leftIndicatorFraction: 0.0,
+            rightIndicatorFraction: 1.0,
+            loopReferenceTrack: nil
+        )
+        updatedSession.absoluteGroupCount += 1
+        updatedSession.groups[group.id] = group
+        try saveSession(updatedSession)
     }
     
     func saveTrack(_ session: Session) throws {
@@ -167,6 +246,7 @@ final class DefaultRecordingManager: RecordingManager {
             case one
             case two
             case three
+            case four
         }
         
         var updateFromSessionModel: SessionModel = .none
@@ -174,23 +254,30 @@ final class DefaultRecordingManager: RecordingManager {
         var modelOneSessions: [SessionModelOne] = []
         var modelTwoSessions: [SessionModelTwo] = []
         var modelThreeSessions: [SessionModelThree] = []
+        var modelFourSessions: [SessionModelFour] = []
         var newSessions: [Session] = []
         
         do {
-            modelThreeSessions = try DataPersistenceManager.retrieve([SessionModelThree].self, from: "sessions")
-            updateFromSessionModel = .three
+            modelFourSessions = try DataPersistenceManager.retrieve([SessionModelFour].self, from: "sessions")
+            updateFromSessionModel = .four
         } catch {
-            print("No sessions to update for model three.")
+            print("No sessions to update for model four.")
             do {
-                modelTwoSessions = try DataPersistenceManager.retrieve([SessionModelTwo].self, from: "sessions")
-                updateFromSessionModel = .two
+                modelThreeSessions = try DataPersistenceManager.retrieve([SessionModelThree].self, from: "sessions")
+                updateFromSessionModel = .three
             } catch {
-                print("No sessions to update for model two.")
+                print("No sessions to update for model three.")
                 do {
-                    modelOneSessions = try DataPersistenceManager.retrieve([SessionModelOne].self, from: "sessions")
-                    updateFromSessionModel = .one
+                    modelTwoSessions = try DataPersistenceManager.retrieve([SessionModelTwo].self, from: "sessions")
+                    updateFromSessionModel = .two
                 } catch {
-                    print("No sessions to update for model one.")
+                    print("No sessions to update for model two.")
+                    do {
+                        modelOneSessions = try DataPersistenceManager.retrieve([SessionModelOne].self, from: "sessions")
+                        updateFromSessionModel = .one
+                    } catch {
+                        print("No sessions to update for model one.")
+                    }
                 }
             }
         }
@@ -230,20 +317,34 @@ final class DefaultRecordingManager: RecordingManager {
                 let sortedTracks = Array(newTracks.values).sorted { (lhs: Track, rhs: Track) -> Bool in
                     return rhs.name > lhs.name
                 }
+                
+                var groups: [UUID: SessionGroup] = [:]
+                let group = SessionGroup(
+                    label: .basic,
+                    tracks: newTracks,
+                    absoluteTrackCount: session.absoluteTrackCount,
+                    id: UUID(),
+                    sessionId: session.id,
+                    groupNumber: 1,
+                    isGroupExpanded: true,
+                    isGroupSoloActive: session.isGlobalSoloActive,
+                    isLoopActive: false,
+                    leftIndicatorFraction: 0.0,
+                    rightIndicatorFraction: 1.0,
+                    loopReferenceTrack: sortedTracks[0]
+                )
+                groups[group.id] = group
+                                
                 newSessions.append(Session(
                         name: session.name,
                         date: session.date,
                         length: session.length,
-                        tracks: newTracks,
-                        absoluteTrackCount: session.absoluteTrackCount,
+                        groups: groups,
+                        absoluteGroupCount: 1,
                         sessionBpm: 0,
                         isUsingGlobalBpm: false,
-                        id: session.id,
-                        isGlobalSoloActive: session.isGlobalSoloActive,
-                        isLoopActive: false,
-                        leftIndicatorFraction: 0.0,
-                        rightIndicatorFraction: 1.0,
-                        loopReferenceTrack: sortedTracks[0]
+                        armedGroup: group,
+                        id: session.id
                     )
                 )
             }
@@ -284,20 +385,33 @@ final class DefaultRecordingManager: RecordingManager {
                     return rhs.name > lhs.name
                 }
                 
+                var groups: [UUID: SessionGroup] = [:]
+                let group = SessionGroup(
+                    label: .basic,
+                    tracks: newTracks,
+                    absoluteTrackCount: session.absoluteTrackCount,
+                    id: UUID(),
+                    sessionId: session.id,
+                    groupNumber: 1,
+                    isGroupExpanded: true,
+                    isGroupSoloActive: session.isGlobalSoloActive,
+                    isLoopActive: false,
+                    leftIndicatorFraction: 0.0,
+                    rightIndicatorFraction: 1.0,
+                    loopReferenceTrack: sortedTracks[0]
+                )
+                groups[group.id] = group
+                
                 newSessions.append(Session(
                         name: session.name,
                         date: session.date,
                         length: session.length,
-                        tracks: newTracks,
-                        absoluteTrackCount: session.absoluteTrackCount,
+                        groups: groups,
+                        absoluteGroupCount: 1,
                         sessionBpm: session.sessionBpm,
                         isUsingGlobalBpm: session.isUsingGlobalBpm,
-                        id: session.id,
-                        isGlobalSoloActive: session.isGlobalSoloActive,
-                        isLoopActive: false,
-                        leftIndicatorFraction: 0.0,
-                        rightIndicatorFraction: 1.0,
-                        loopReferenceTrack: sortedTracks[0]
+                        armedGroup: group,
+                        id: session.id
                     )
                 )
             }
@@ -338,20 +452,67 @@ final class DefaultRecordingManager: RecordingManager {
                 let sortedTracks = Array(session.tracks.values).sorted { (lhs: Track, rhs: Track) -> Bool in
                     return rhs.name > lhs.name
                 }
+                
+                var groups: [UUID: SessionGroup] = [:]
+                let group = SessionGroup(
+                    label: .basic,
+                    tracks: newTracks,
+                    absoluteTrackCount: session.absoluteTrackCount,
+                    id: UUID(),
+                    sessionId: session.id,
+                    groupNumber: 1,
+                    isGroupExpanded: true,
+                    isGroupSoloActive: session.isGlobalSoloActive,
+                    isLoopActive: false,
+                    leftIndicatorFraction: 0.0,
+                    rightIndicatorFraction: 1.0,
+                    loopReferenceTrack: sortedTracks[0]
+                )
+                groups[group.id] = group
+                
                 newSessions.append(Session(
                         name: session.name,
                         date: session.date,
                         length: session.length,
-                        tracks: newTracks,
-                        absoluteTrackCount: session.absoluteTrackCount,
+                        groups: groups,
+                        absoluteGroupCount: 1,
                         sessionBpm: session.sessionBpm,
                         isUsingGlobalBpm: session.isUsingGlobalBpm,
-                        id: session.id,
-                        isGlobalSoloActive: session.isGlobalSoloActive,
-                        isLoopActive: false,
-                        leftIndicatorFraction: 0.0,
-                        rightIndicatorFraction: 1.0,
-                        loopReferenceTrack: sortedTracks[0]
+                        armedGroup: group,
+                        id: session.id
+                    )
+                )
+            }
+            
+        case .four:
+            for session in modelFourSessions {
+                var groups: [UUID: SessionGroup] = [:]
+                let group = SessionGroup(
+                    label: .basic,
+                    tracks: session.tracks,
+                    absoluteTrackCount: session.absoluteTrackCount,
+                    id: UUID(),
+                    sessionId: session.id,
+                    groupNumber: 1,
+                    isGroupExpanded: true,
+                    isGroupSoloActive: session.isGlobalSoloActive,
+                    isLoopActive: session.isLoopActive,
+                    leftIndicatorFraction: session.leftIndicatorFraction,
+                    rightIndicatorFraction: session.rightIndicatorFraction,
+                    loopReferenceTrack: session.loopReferenceTrack
+                )
+                groups[group.id] = group
+                
+                newSessions.append(Session(
+                        name: session.name,
+                        date: session.date,
+                        length: session.length,
+                        groups: groups,
+                        absoluteGroupCount: 1,
+                        sessionBpm: session.sessionBpm,
+                        isUsingGlobalBpm: session.isUsingGlobalBpm,
+                        armedGroup: group,
+                        id: session.id
                     )
                 )
             }

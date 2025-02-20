@@ -11,20 +11,37 @@ struct HomeViewNavBarView: View {
     
     //MARK: - API
     
+    @Binding var isSettingsPresented: Bool
+    
+    init(
+        isSettingsPresented: Binding<Bool>,
+        isRecording: Bool
+    ) {
+        _isSettingsPresented = isSettingsPresented
+        self.isRecording = isRecording
+    }
+    
     //MARK: - Variables
         
     @EnvironmentObject private var appTheme: AppTheme
     
+    private var isRecording: Bool
+    
     //MARK: - Body
     
     var body: some View {
-        Color(UIColor.systemBackground).opacity(0.4)
-            .background(.ultraThinMaterial)
-            .frame(maxWidth: .infinity, maxHeight: 75.0)
-            .ignoresSafeArea()
+        VStack(alignment: .leading) {
+            Color(UIColor.systemBackground).opacity(0.4)
+                .background(.ultraThinMaterial)
+                .frame(maxWidth: .infinity, maxHeight: 75.0)
+        }
+        .ignoresSafeArea()
     }
 }
 
 #Preview {
-    HomeViewNavBarView()
+    HomeViewNavBarView(
+        isSettingsPresented: .constant(false),
+        isRecording: false
+    )
 }

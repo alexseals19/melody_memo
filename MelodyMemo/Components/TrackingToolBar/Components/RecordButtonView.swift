@@ -26,12 +26,13 @@ struct RecordButtonView: View {
     @State private var stopButtonDimensions: CGFloat = 25
     @State private var stopButtonCornerRadius: CGFloat = 5
     @State private var reordButtonOpacity = 1.0
-    @State private var recordButtonDimensions: CGFloat = 65
-    @State private var recordButtonCornerRadius: CGFloat = 32.5
+    @State private var recordButtonDimensions: CGFloat = 80
+    @State private var recordButtonCornerRadius: CGFloat = 40
     @State private var recordButtonOffset: CGFloat = 0.0
     @State private var inputMeterWidth: CGFloat = 0.0
     
     private var inputSamples: [SampleModel]?
+    
     private var samples: [SampleModel] {
         if let inputSamples {
             return inputSamples
@@ -49,8 +50,8 @@ struct RecordButtonView: View {
             
             withAnimation(.easeInOut(duration: 0.25)) {
                 if isRecording {
-                    recordButtonDimensions = 65
-                    recordButtonCornerRadius = 32.5
+                    recordButtonDimensions = 80
+                    recordButtonCornerRadius = 40
                     reordButtonOpacity = 1.0
                     recordButtonOffset = 0.0
                     inputMeterWidth = 0.0
@@ -72,11 +73,10 @@ struct RecordButtonView: View {
     private var buttonLabel: some View {
         ZStack {
             RoundedRectangle(cornerRadius: recordButtonCornerRadius)
-                .stroke(lineWidth: 4.0)
+                .stroke(lineWidth: 2.0)
                 .opacity(reordButtonOpacity)
                 .frame(width: recordButtonDimensions, height: recordButtonDimensions)
                 .foregroundStyle(appTheme.accentColor)
-                .shadow(color: appTheme.accentColor, radius: 2)
                 .offset(x: recordButtonOffset)
                 .padding(25)
             
@@ -109,6 +109,20 @@ struct RecordButtonView: View {
                         }
                         .padding(.trailing, 25)
                 }
+                .background(
+                    .ultraThinMaterial
+                )
+                .matchedGeometryEffect(id: "back", in: namespace)
+                .cornerRadius(15)
+            }
+            else {
+                RoundedRectangle(cornerRadius: 75 / 2)
+                    .opacity(reordButtonOpacity)
+                    .frame(width: 75, height: 75)
+                    .foregroundStyle(.ultraThinMaterial)
+                    .offset(x: recordButtonOffset)
+                    .padding(25)
+                    .matchedGeometryEffect(id: "back", in: namespace)
             }
         }
     }

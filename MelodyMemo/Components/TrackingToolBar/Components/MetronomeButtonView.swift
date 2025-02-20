@@ -47,9 +47,9 @@ struct MetronomeButtonView: View {
     }
     
     private var metronomeLabel: some View {
-        Group {
+        ZStack {
             if isMetronomeArmed {
-                VStack(spacing: -2) {
+                HStack(spacing: -2) {
                     AppButtonLabelView(name: "metronome.fill", color: .primary, size: 22)
                         .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
                     Text("\(Int(metronomeBpm))")
@@ -60,6 +60,9 @@ struct MetronomeButtonView: View {
                     .matchedGeometryEffect(id: "metro", in: namespace, properties: .position)
             }
         }
+        .padding(8)
+        .background(.ultraThinMaterial)
+        .cornerRadius(20)
     }
 }
 

@@ -18,7 +18,6 @@
 		99A078462C1A01EC008EE21B /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078452C1A01EC008EE21B /* Track.swift */; };
 		99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078492C1A085B008EE21B /* SessionDetailView.swift */; };
 		99A0784D2C1A5DE8008EE21B /* TrackCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */; };
-		99A0784F2C1A5E11008EE21B /* MasterCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A0784E2C1A5E11008EE21B /* MasterCellView.swift */; };
 		99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A078502C1A78D7008EE21B /* HomeViewModel.swift */; };
 		99A384C42C1CB72B00736BA8 /* CellSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */; };
 		99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */; };
@@ -29,6 +28,9 @@
 		99C364EB2C0F61AE00873213 /* SessionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EA2C0F61AE00873213 /* SessionsListView.swift */; };
 		99C364ED2C0F627800873213 /* SessionsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EC2C0F627800873213 /* SessionsListViewModel.swift */; };
 		99C364F02C0F642B00873213 /* SessionFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C364EF2C0F642B00873213 /* SessionFixtures.swift */; };
+		99C645562CEE3F310080F011 /* PreviousSessionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C645552CEE3F310080F011 /* PreviousSessionModels.swift */; };
+		99C645582CEE41190080F011 /* SessionGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C645572CEE41190080F011 /* SessionGroup.swift */; };
+		99C6455A2CEE55A80080F011 /* GroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C645592CEE55A80080F011 /* GroupView.swift */; };
 		99DBF3762C225D2A002B6419 /* metrolow.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3742C225D2A002B6419 /* metrolow.wav */; };
 		99DBF3772C225D2A002B6419 /* metrohigh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 99DBF3752C225D2A002B6419 /* metrohigh.wav */; };
 		99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DBF3782C235F3D002B6419 /* Metronome.swift */; };
@@ -56,7 +58,6 @@
 		99A078452C1A01EC008EE21B /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
 		99A078492C1A085B008EE21B /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
 		99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackCellView.swift; sourceTree = "<group>"; };
-		99A0784E2C1A5E11008EE21B /* MasterCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterCellView.swift; sourceTree = "<group>"; };
 		99A078502C1A78D7008EE21B /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSpacerView.swift; sourceTree = "<group>"; };
 		99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewNavBarView.swift; sourceTree = "<group>"; };
@@ -67,6 +68,9 @@
 		99C364EA2C0F61AE00873213 /* SessionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListView.swift; sourceTree = "<group>"; };
 		99C364EC2C0F627800873213 /* SessionsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionsListViewModel.swift; sourceTree = "<group>"; };
 		99C364EF2C0F642B00873213 /* SessionFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionFixtures.swift; sourceTree = "<group>"; };
+		99C645552CEE3F310080F011 /* PreviousSessionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviousSessionModels.swift; sourceTree = "<group>"; };
+		99C645572CEE41190080F011 /* SessionGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionGroup.swift; sourceTree = "<group>"; };
+		99C645592CEE55A80080F011 /* GroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupView.swift; sourceTree = "<group>"; };
 		99DBF3742C225D2A002B6419 /* metrolow.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrolow.wav; sourceTree = "<group>"; };
 		99DBF3752C225D2A002B6419 /* metrohigh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = metrohigh.wav; sourceTree = "<group>"; };
 		99DBF3782C235F3D002B6419 /* Metronome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metronome.swift; sourceTree = "<group>"; };
@@ -124,6 +128,8 @@
 			children = (
 				991F56D62C0D361B00CC88BA /* Session.swift */,
 				99A078452C1A01EC008EE21B /* Track.swift */,
+				99C645552CEE3F310080F011 /* PreviousSessionModels.swift */,
+				99C645572CEE41190080F011 /* SessionGroup.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -142,8 +148,8 @@
 			isa = PBXGroup;
 			children = (
 				99A0784C2C1A5DE8008EE21B /* TrackCellView.swift */,
-				99A0784E2C1A5E11008EE21B /* MasterCellView.swift */,
 				99FB918F2C6D04E80015C508 /* LoopBarView.swift */,
+				99C645592CEE55A80080F011 /* GroupView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -360,6 +366,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99C645582CEE41190080F011 /* SessionGroup.swift in Sources */,
 				99A384C42C1CB72B00736BA8 /* CellSpacerView.swift in Sources */,
 				99A078512C1A78D7008EE21B /* HomeViewModel.swift in Sources */,
 				99F0F72D2C10F8C3001B22CE /* MetronomeButtonView.swift in Sources */,
@@ -371,12 +378,12 @@
 				99C364F02C0F642B00873213 /* SessionFixtures.swift in Sources */,
 				99B9A7792C4C6F5300EAA9DA /* AppButtonLabelView.swift in Sources */,
 				4521F4512C18B10200246189 /* MockRecordingManager.swift in Sources */,
-				99A0784F2C1A5E11008EE21B /* MasterCellView.swift in Sources */,
 				99B21E092C21043F004D5669 /* AppSettingsView.swift in Sources */,
 				99F0F7332C112055001B22CE /* AudioManager.swift in Sources */,
 				991F56D02C0CC71700CC88BA /* RecordButtonView.swift in Sources */,
 				99F9EE552B6EC9DE003308D2 /* HomeView.swift in Sources */,
 				99F9EE532B6EC9DE003308D2 /* MelodyMemoApp.swift in Sources */,
+				99C6455A2CEE55A80080F011 /* GroupView.swift in Sources */,
 				991F56D72C0D361B00CC88BA /* Session.swift in Sources */,
 				99FB91902C6D04E80015C508 /* LoopBarView.swift in Sources */,
 				99DBF3792C235F3E002B6419 /* Metronome.swift in Sources */,
@@ -387,6 +394,7 @@
 				99C364EB2C0F61AE00873213 /* SessionsListView.swift in Sources */,
 				99DBF3802C24A2DE002B6419 /* PlaybackControlButtonView.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,
+				99C645562CEE3F310080F011 /* PreviousSessionModels.swift in Sources */,
 				99B21E062C20A488004D5669 /* AppTheme.swift in Sources */,
 				99A0784A2C1A085B008EE21B /* SessionDetailView.swift in Sources */,
 				991F56D92C0D3B1E00CC88BA /* SessionCellView.swift in Sources */,

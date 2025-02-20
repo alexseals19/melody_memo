@@ -36,135 +36,182 @@ struct SessionDetailView: View {
     @State private var opacity: Double = 0.0
     @StateObject private var viewModel: SessionDetailViewModel
     
-    private var isRecording: Bool
-    
-    private var tracks: [Track] {
-        viewModel.session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
-            return lhs.date > rhs.date
-        }
+    private var bpmSectionOpacity: Double {
+        viewModel.session.isUsingGlobalBpm ? 0.3 : 1.0
     }
     
+    private var isRecording: Bool
+
     //MARK: - Body
     
     var body: some View {
         ZStack {
-            VStack(spacing: 3.0) {
-                HStack {
-                    backButton
-                    Capsule()
-                        .frame(maxWidth: .infinity, maxHeight: 1)
-                        .foregroundStyle(appTheme.accentColor)
-                    Text(viewModel.session.name)
-                        .font(.largeTitle)
-                        .frame(width: 200)
-                    Capsule()
-                        .frame(maxWidth: .infinity, maxHeight: 1)
-                        .foregroundStyle(appTheme.accentColor)
-                    Button {
-                        viewModel.sessionTrashButtonTapped()
-                        dismiss()
-                    } label: {
-                        AppButtonLabelView(name: "trash", color: .secondary)
+            VStack(spacing: 0) {
+                ZStack {
+                    HStack {
+                        Text(viewModel.session.name)
+                            .font(.largeTitle)
+                            .frame(width: 200)
                     }
-                    .padding(15)
+                    HStack {
+                        Spacer()
+                        backButton
+                            .padding(.trailing, 10)
+                            .padding(.bottom, 5)
+                    }
                 }
-                .background(Color(UIColor.systemBackground).opacity(0.3))
-                .padding(.top, 78)
+                .padding(.top, 5)
+                Divider()
                 
-                MasterCellView(
-                    session: viewModel.session,
-                    currentlyPlaying: viewModel.currentlyPlaying,
-                    useGlobalBpm: $viewModel.isUsingGlobalBpm,
-                    sessionBpm: $viewModel.sessionBpm,
-                    playheadPosition: viewModel.trackTimer,
-                    playButtonAction: viewModel.masterCellPlayButtonTapped,
-                    pauseButtonAction: viewModel.masterCellPauseButtonTapped,
-                    stopButtonAction: viewModel.masterCellStopButtonTapped,
-                    globalSoloButtonAction: viewModel.masterCellSoloButtonTapped,
-                    restartButtonAction: viewModel.masterCellRestartButtonTapped,
-                    setBpmButtonAction: viewModel.setSessionBpm
-                )
-                LoopBarView(
-                    leftIndicatorFraction: viewModel.session.leftIndicatorFraction,
-                    rightIndicatorFraction: viewModel.session.rightIndicatorFraction,
-                    leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
-                    rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
-                    isLoopActive: viewModel.session.isLoopActive,
-                    sessionTracks: viewModel.session.tracks,
-                    loopReferenceTrack: $viewModel.loopReferenceTrack,
-                    leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
-                    rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange,
-                    loopToggleButtonAction: viewModel.toggleIsLoopActive
-                )
-                .frame(height: 28)
+                controlPanelView
+                
                 GeometryReader { proxy in
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 3.0) {
-                            ForEach(tracks) { track in
-                                TrackCellView(
-                                    track: track,
-                                    session: viewModel.session,
-                                    isGlobalSoloActive: viewModel.session.isGlobalSoloActive,
-                                    isSessionPlaying: viewModel.isSessionPlaying,
-                                    trackTimer: viewModel.trackTimer,
-                                    lastPlayheadPosition: viewModel.lastPlayheadPosition,
-                                    leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
-                                    rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
-                                    waveformWidth: $viewModel.waveformWidth,
-                                    muteButtonAction: viewModel.trackCellMuteButtonTapped,
-                                    soloButtonAction: viewModel.trackCellSoloButtonTapped,
-                                    trackVolumeDidChange: viewModel.trackVolumeDidChange,
-                                    trackPanDidChange: viewModel.trackPanDidChange,
-                                    playheadPositionDidChange: viewModel.playheadPositionDidChange,
-                                    setLastPlayheadPosition: viewModel.setLastPlayheadPosition,
-                                    restartPlaybackFromPosition: viewModel.restartPlaybackFromPosition,
-                                    trackCellPlayPauseAction: viewModel.trackCellPlayPauseAction,
-                                    stopTimer: viewModel.stopTimer,
-                                    trashButtonAction: viewModel.trackCellTrashButtonTapped,
-                                    getExpandedWaveform: viewModel.getExpandedWaveform,
-                                    leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
-                                    rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange
-                                )
+                        LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
+                            ForEach(viewModel.sortedGroups) { group in
+                                let isCurrentlyPlaying = viewModel.currentlyPlaying == group
+                                let isAdjustingPlayhead = viewModel.isAdjustingGroupPlayhead == group
+                                let isGroupSoloActive = group.isGroupSoloActive
+                                let isGroupExpanded = group.isGroupExpanded
+                                let sortedTracks = group.sortedTracks
+                                let isPlaybackPaused = viewModel.isGroupPlaybackPaused == group
+                                Section {
+                                    if isGroupExpanded {
+                                        ForEach(sortedTracks) { track in
+                                            TrackCellView(
+                                                track: track,
+                                                group: group,
+                                                isGlobalSoloActive: isGroupSoloActive,
+                                                isCurrentlyPlaying: isCurrentlyPlaying,
+                                                isAdjustingGroupIndicators: $viewModel.isAdjustingGroupIndicators,
+                                                isAdjustingGroupPlayhead: $viewModel.isAdjustingGroupPlayhead,
+                                                isAdjustingPlayhead: isAdjustingPlayhead,
+                                                trackTimer: viewModel.trackTimer,
+                                                leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
+                                                rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
+                                                waveformWidth: $viewModel.waveformWidth,
+                                                isPlaybackPaused: isPlaybackPaused,
+                                                muteButtonAction: viewModel.trackCellMuteButtonTapped,
+                                                soloButtonAction: viewModel.trackCellSoloButtonTapped,
+                                                trackVolumeDidChange: viewModel.trackVolumeDidChange,
+                                                trackPanDidChange: viewModel.trackPanDidChange,
+                                                playheadPositionDidChange: viewModel.playheadPositionDidChange,
+                                                setLastPlayheadPosition: viewModel.setLastPlayheadPosition,
+                                                restartPlaybackFromPosition: viewModel.restartPlaybackFromPosition,
+                                                trackCellPlayPauseAction: viewModel.trackCellPlayPauseAction,
+                                                stopTimer: viewModel.stopTimer,
+                                                trashButtonAction: viewModel.trackCellTrashButtonTapped,
+                                                getExpandedWaveform: viewModel.getExpandedWaveform,
+                                                leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
+                                                rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange
+                                            )
+                                        }
+                                    }
+                                } header: {
+                                    GroupView(
+                                        group: group,
+                                        session: viewModel.session,
+                                        armedGroup: $viewModel.armedGroup,
+                                        currentlyPlaying: viewModel.currentlyPlaying,
+                                        playheadPosition: viewModel.trackTimer,
+                                        isAdjustingGroupIndicators: $viewModel.isAdjustingGroupIndicators,
+                                        isGroupPlaybackPaused: viewModel.isGroupPlaybackPaused,
+                                        leftIndicatorDragOffset: $viewModel.leftIndicatorDragOffset,
+                                        rightIndicatorDragOffset: $viewModel.rightIndicatorDragOffset,
+                                        playButtonTapped: viewModel.playButtonTapped,
+                                        stopButtonTapped: viewModel.stopButtonTapped,
+                                        pauseButtonTapped: viewModel.pauseButtonTapped,
+                                        soloButtonTapped: viewModel.soloButtonTapped,
+                                        leftIndicatorPositionDidChange: viewModel.leftIndicatorPositionDidChange,
+                                        rightIndicatorPositionDidChange: viewModel.rightIndicatorPositionDidChange,
+                                        deleteGroupAction: viewModel.deleteGroupAction,
+                                        toggleIsLoopActive: viewModel.toggleIsLoopActive,
+                                        toggleIsGroupExpanded: viewModel.toggleIsGroupExpanded,
+                                        groupLabelDidChange: viewModel.groupLabelDidChange,
+                                        loopReferenceTrackDidChange: viewModel.loopReferenceTrackDidChange,
+                                        isPlayheadOutOfPosition: viewModel.isPlayheadOutOfPosition
+                                    )
+                                }
                             }
                             CellSpacerView(
                                 screenHeight: proxy.size.height,
-                                numberOfSessions: viewModel.session.tracks.count,
+                                numberOfSessions: viewModel.session.armedGroup.tracks.count,
                                 showMessage: false
                             )
                         }
-                        .animation(.spring, value: viewModel.session.tracks)
+                        .animation(.spring, value: viewModel.session.groups)
                     }
+                    .ignoresSafeArea(edges: .bottom)
                 }
                 Spacer()
             }
             .navigationBarBackButtonHidden()
-            .background(
-                Image("swirl")
-                    .resizable()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .blur(radius: 15)
-                    .ignoresSafeArea()
-                    .opacity(0.7)
-            )
             .opacity(opacity)
             .onAppear {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     self.opacity = 1.0
                 }
             }
-            .ignoresSafeArea()
             
             VStack {
                 if viewModel.errorMessage != nil {
                     ErrorMessageView(message: $viewModel.errorMessage)
-                        .offset(y: 25)
+                        .offset(y: 50)
                 }
                 Spacer()
             }
         }
+        .background(Color(UIColor.secondarySystemBackground).opacity(0.5))
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
                 viewModel.saveSession()
         }
+    }
+    
+    var controlPanelView: some View {
+        HStack {
+            VStack {
+                HStack {
+                    Button {
+                        if viewModel.sessionBpm > 0 {
+                            viewModel.sessionBpm -= 1
+                        }
+                    } label: {
+                        AppButtonLabelView(name: "minus", color: .primary)
+                    }
+                    .buttonRepeatBehavior(.enabled)
+                    Text("BPM")
+                        .frame(width: 40)
+                    Text("\(viewModel.sessionBpm == 0 ? "--" : "\(viewModel.sessionBpm)")")
+                        .frame(width: 33)
+                        .foregroundStyle(.secondary)
+                    Button {
+                        if viewModel.sessionBpm < 300 {
+                            viewModel.sessionBpm += 1
+                        }
+                    } label: {
+                        AppButtonLabelView(name: "plus", color: .primary)
+                    }
+                    .buttonRepeatBehavior(.enabled)
+                }
+                .opacity(bpmSectionOpacity)
+                useGlobalBpmButtonView
+            }
+            Divider()
+                .frame(height: 30)
+            Spacer()
+            
+            Button {
+                viewModel.addGroup()
+            } label: {
+                VStack {
+                    AppButtonLabelView(name: "plus", color: .primary)
+                    Text("Add Group")
+                        .font(.caption)
+                }
+            }
+            .foregroundStyle(.secondary)
+        }
+        .padding(5)
     }
     
     var backButton: some View {
@@ -172,27 +219,46 @@ struct SessionDetailView: View {
             if !isRecording {
                 if viewModel.currentlyPlaying == nil {
                     viewModel.playheadPositionDidChange(position: 0.0)
-                    viewModel.setLastPlayheadPosition(position: 0.0)
                 }
                 viewModel.saveSession()
+                viewModel.isAdjustingGroupPlayhead = nil
                 dismiss()
             }
             
         } label: {
-            ZStack {
-                Image(systemName: "chevron.left.circle.fill")
-                    .resizable()
-                    .frame(width: 26, height: 26)
-                    .opacity(0.1)
-                    
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .frame(width: 8, height: 14)
-                    .padding(.trailing, 2)
-            }
-            .padding(15)
+            AppButtonLabelView(name: "xmark", color: .primary, size: 20)
+                .padding(8)
+                .background(.ultraThinMaterial)
+                .cornerRadius(20)
         }
         .foregroundColor(.primary)
+    }
+    
+    var useGlobalBpmButtonView: some View {
+        
+        Button {
+            viewModel.isUsingGlobalBpm.toggle()
+        } label: {
+            ZStack {
+                if viewModel.isUsingGlobalBpm {
+                    RoundedRectangle(cornerRadius: 5)
+                        .frame(width: 75, height: 15)
+                        .foregroundStyle(appTheme.accentColor)
+                    Text("Use Global")
+                        .font(.caption)
+                        .foregroundStyle(.black)
+                } else {
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(lineWidth: 1.0)
+                        .frame(width: 75, height: 15)
+                        .foregroundStyle(appTheme.accentColor)
+                    Text("Use Global")
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                }
+            }
+        }
+        .foregroundStyle(.primary)
     }
 }
 

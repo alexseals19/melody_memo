@@ -14,7 +14,7 @@ class SessionsListViewModel: ObservableObject {
     
     //MARK: - API
     
-    @Published var currentlyPlaying: Session?
+    @Published var currentlyPlaying: SessionGroup?
     @Published var isUpdatingSessionModels: Bool?
     @Published var sessions: [Session] = []
     @Published var playerProgress: Double = 0.0
@@ -37,20 +37,42 @@ class SessionsListViewModel: ObservableObject {
             .assign(to: &$playerProgress)
     }
     
-    func sessionCellPlayButtonTapped(for session: Session) {
+    func sessionCellPlayButtonTapped(for group: SessionGroup) {
         do {
-            try audioManager.startPlayback(for: session, at: 0.0)
+            try audioManager.startPlayback(for: group, at: 0.0)
         } catch {
             errorMessage = "ERROR: Cannot play session."
         }
     }
     
     func sessionCellStopButtonTapped() {
+        
+        guard let currentlyPlaying else {
+            return
+        }
+        
+        var group = currentlyPlaying
+        
         do {
             try audioManager.stopPlayback(stopTimer: true)
         } catch {
             errorMessage = "ERROR: Could not stop playback."
         }
+        
+        if let  session = sessions.first (where:  { $0.id == group.id } ) {
+            var updatedSession = session
+            group.lastPlayheadPosition = 0.0
+            updatedSession.groups[group.id] = group
+            if updatedSession.armedGroup.id == group.id {
+                updatedSession.armedGroup = group
+            }
+            do {
+                try recordingManager.updateSession(updatedSession)
+            } catch {
+                errorMessage = "ERROR: Could not update session."
+            }
+        }
+        
     }
     
     func sessionCellTrashButtonTapped(for session: Session) {

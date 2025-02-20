@@ -32,13 +32,28 @@ struct HomeView: View {
                 audioManager: viewModel.audioManager,
                 recordingManager: viewModel.recordingManager,
                 selectedSession: $viewModel.selectedSession,
-                isRecording: viewModel.isRecording
+                isRecording: $viewModel.isRecording,
+                isSettingsPresented: $viewModel.isSettingsPresented,
+                didFinishRecording: viewModel.didFinishRecording,
+                inputSamples: viewModel.inputSamples
             )
-            VStack {
-                HomeViewNavBarView()
+            VStack(spacing: 0) {
+                HStack {
+                    appSettingsButton
+                    MetronomeButtonView(
+                        isMetronomeArmed: $viewModel.isMetronomeArmed,
+                        metronomeBpm: viewModel.sessionBpm,
+                        isRecording: viewModel.isRecording
+                    )
+                    Spacer()
+                }
+                .padding(.horizontal, 10)
+                .padding(.top, 5)
+                
                 if viewModel.errorMessage != nil {
                     ErrorMessageView(message: $viewModel.errorMessage)
                 }
+                
                 Spacer()
                 TrackingToolbarView(
                     isRecording: $viewModel.isRecording,
@@ -61,6 +76,18 @@ struct HomeView: View {
                 viewModel.saveSettings()
                 viewModel.resetTapIn()
             }
+        }
+    }
+    var appSettingsButton: some View {
+        Button {
+            if !viewModel.isRecording {
+                viewModel.isSettingsPresented.toggle()
+            }
+        } label: {
+            AppButtonLabelView(name: "slider.horizontal.3", color: .primary, size: 22)
+                .padding(8)
+                .background(.ultraThinMaterial)
+                .cornerRadius(20)
         }
     }
 }

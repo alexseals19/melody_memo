@@ -9,6 +9,20 @@ import Foundation
 
 extension Session {
     
+    static let groupFixture: SessionGroup = SessionGroup(
+        label: .basic,
+        tracks: [:],
+        absoluteTrackCount: 1,
+        id: UUID(),
+        sessionId: UUID(),
+        groupNumber: 1,
+        isGroupExpanded: false,
+        isGroupSoloActive: false,
+        isLoopActive: false,
+        leftIndicatorFraction: 0.0,
+        rightIndicatorFraction: 0.0,
+        loopReferenceTrack: trackFixture)
+    
     static let trackFixture: Track = Track(
                                         name: "TrackFixture",
                                         fileName: "",
@@ -28,16 +42,12 @@ extension Session {
                                             name: "SessionFixture",
                                             date: Date(),
                                             length: 4,
-                                            tracks: [:],
-                                            absoluteTrackCount: 0,
+                                            groups: [:],
+                                            absoluteGroupCount: 0,
                                             sessionBpm: 120,
                                             isUsingGlobalBpm: false,
-                                            id: UUID(),
-                                            isGlobalSoloActive: true,
-                                            isLoopActive: false,
-                                            leftIndicatorFraction: 0.0,
-                                            rightIndicatorFraction: 1.0,
-                                            loopReferenceTrack: trackFixture
+                                            armedGroup: groupFixture,
+                                            id: UUID()
                                         )
     
     static let sessionsFixture: [Session] = {
@@ -49,16 +59,12 @@ extension Session {
                     name: "Session \(i)",
                     date: date,
                     length: 4,
-                    tracks: [:],
-                    absoluteTrackCount: 0,
+                    groups: [:],
+                    absoluteGroupCount: 0,
                     sessionBpm: 120,
                     isUsingGlobalBpm: false,
-                    id: UUID(),
-                    isGlobalSoloActive: false,
-                    isLoopActive: false,
-                    leftIndicatorFraction: 0.0,
-                    rightIndicatorFraction: 1.0,
-                    loopReferenceTrack: trackFixture
+                    armedGroup: groupFixture,
+                    id: UUID()
                 )
             )
         }
