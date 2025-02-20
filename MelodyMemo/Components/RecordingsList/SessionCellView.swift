@@ -12,10 +12,10 @@ struct SessionCellView: View {
     // MARK: - API
         
     init(
-        currentlyPlaying: Session?,
+        currentlyPlaying: SessionGroup?,
         session: Session,
         playerProgress: Double,
-        playButtonAction: @escaping (_: Session) -> Void,
+        playButtonAction: @escaping (_: SessionGroup) -> Void,
         stopButtonAction: @escaping () -> Void,
         trashButtonAction: @escaping (_: Session) -> Void
     ) {
@@ -32,10 +32,10 @@ struct SessionCellView: View {
     @EnvironmentObject private var appTheme: AppTheme
     
     private var session: Session
-    private var currentlyPlaying: Session?
+    private var currentlyPlaying: SessionGroup?
     private var playerProgress: Double
     
-    private let playButtonAction: (_ session: Session) -> Void
+    private let playButtonAction: (_ group: SessionGroup) -> Void
     private let stopButtonAction: () -> Void
     private let trashButtonAction: (_ session: Session) -> Void
     
@@ -50,7 +50,7 @@ struct SessionCellView: View {
     @State private var progressViewWidth: CGFloat = 0.0
     
     private var opacity: Double {
-        if let currentlyPlaying, currentlyPlaying == session {
+        if let currentlyPlaying, currentlyPlaying == session.armedGroup {
             return 1.0
         }
         return 0.0
@@ -143,7 +143,17 @@ struct SessionCellView: View {
                                     .minimumScaleFactor(0.75)
                                     .lineLimit(1)
                                     .padding(.bottom, 1)
-                                if let currentlyPlaying, currentlyPlaying == session {
+                                Menu {
+                                    Button(role: .destructive) {
+                                        trashButtonAction(session)
+                                    } label: {
+                                        Text("Delete")
+                                    }
+                                } label: {
+                                    AppButtonLabelView(name: "ellipsis", color: .primary)
+                                }
+                                
+                                if let currentlyPlaying, currentlyPlaying.sessionId == session.id {
                                     ProgressView(value: min(playerProgress / session.length, 1.0))
                                         .progressViewStyle(LinearProgressViewStyle(tint: .primary))
                                         .transition(.scale(0.0, anchor: .trailing).animation(.linear(duration: 0.2)))
@@ -167,7 +177,7 @@ struct SessionCellView: View {
                     }
                     .padding(.trailing, 80)
                     .foregroundStyle(.primary)
-                    .background(Color(UIColor.systemBackground).opacity(0.3))
+                    .background(.clear)
                     .gesture(drag)
                     .onDisappear {
                         offset = .zero
@@ -177,10 +187,10 @@ struct SessionCellView: View {
                 HStack {
                     Spacer()
                     PlaybackControlButtonView(
-                        session: session,
+                        group: session.armedGroup,
                         currentlyPlaying: currentlyPlaying,
-                        playButtonAction: playButtonAction,
-                        pauseButtonAction: stopButtonAction
+                        playButtonTapped: playButtonAction,
+                        pauseButtonTapped: stopButtonAction
                     )
                     .padding(.trailing, 20)
                 }
@@ -189,6 +199,7 @@ struct SessionCellView: View {
             .animation(.snappy(duration: animationDuration), value: gestureOffset)
         }
         .foregroundStyle(.primary)
+        .background(Color(UIColor.secondarySystemBackground).opacity(0.3))
     }
     
     var trashButton: some View {

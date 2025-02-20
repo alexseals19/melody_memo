@@ -22,6 +22,8 @@ class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var selectedSession: Session?
     
+    @Published var didFinishRecording: Bool = false
+    
     var sessionBpm: Int {
         if let selectedSession, selectedSession.sessionBpm != 0, !selectedSession.isUsingGlobalBpm {
             Task {
@@ -67,7 +69,7 @@ class HomeViewModel: ObservableObject {
                 if let selectedSession {
                     Task {
                         do {
-                            try await audioManager.startTracking(for: selectedSession)
+                            try await audioManager.startTracking(for: selectedSession.armedGroup)
                         } catch {
                             errorMessage = "ERROR: Could not begin recording."
                         }
@@ -90,7 +92,8 @@ class HomeViewModel: ObservableObject {
                 if let selectedSession {
                     Task {
                         do {
-                            try await audioManager.stopTracking(for: selectedSession)
+                            try await audioManager.stopTracking(for: selectedSession, group: selectedSession.armedGroup)
+                            didFinishRecording.toggle()
                         } catch {
                             errorMessage = "ERROR: Could not stop recording."
                         }
@@ -98,7 +101,7 @@ class HomeViewModel: ObservableObject {
                 } else {
                     Task {
                         do {
-                            try await audioManager.stopTracking(for: nil)
+                            try await audioManager.stopTracking(for: nil, group: nil)
                         } catch {
                             errorMessage = "ERROR: Could not stop recording."
                         }
@@ -151,7 +154,6 @@ class HomeViewModel: ObservableObject {
     private func setVariables() {
         Task {
             await isMetronomeArmed = metronome.isArmed
-            //await metronomeBpm = metronome.bpm
             await metronomeVolume = metronome.volume
             await isCountInActive = metronome.isCountInActive
         }

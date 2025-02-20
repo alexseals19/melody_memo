@@ -13,37 +13,38 @@ struct PlaybackControlButtonView: View {
     
     @EnvironmentObject var appTheme: AppTheme
     
-    init(session: Session, 
-         currentlyPlaying: Session?,
-         playButtonAction: @escaping (_: Session) -> Void,
-         pauseButtonAction: @escaping () -> Void
+    init(
+         group: SessionGroup,
+         currentlyPlaying: SessionGroup?,
+         playButtonTapped: @escaping (_: SessionGroup) -> Void,
+         pauseButtonTapped: @escaping () -> Void
     ) {
-        self.session = session
+        self.group = group
         self.currentlyPlaying = currentlyPlaying
-        self.playButtonAction = playButtonAction
-        self.pauseButtonAction = pauseButtonAction
+        self.playButtonTapped = playButtonTapped
+        self.pauseButtonTapped = pauseButtonTapped
     }
     
     //MARK: - Variables
     
-    private var session: Session
-    private var currentlyPlaying: Session?
+    private var group: SessionGroup
+    private var currentlyPlaying: SessionGroup?
     
-    private let playButtonAction: (_ session: Session) -> Void
-    private let pauseButtonAction: () -> Void
+    private let playButtonTapped: (_ group: SessionGroup) -> Void
+    private let pauseButtonTapped: () -> Void
     
     //MARK: - Body
     
     var body: some View {
         Button {
-            if let currentlyPlaying, currentlyPlaying == session {
-                pauseButtonAction()
+            if let currentlyPlaying, currentlyPlaying == group {
+                pauseButtonTapped()
             } else {
-                playButtonAction(session)
+                playButtonTapped(group)
             }
         } label: {
-            Group {
-                if let currentlyPlaying, currentlyPlaying == session {
+            ZStack {
+                if let currentlyPlaying, currentlyPlaying == group {
                     Image(systemName: "pause")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -61,9 +62,9 @@ struct PlaybackControlButtonView: View {
 
 #Preview {
     PlaybackControlButtonView(
-        session: Session.sessionFixture,
+        group: Session.groupFixture,
         currentlyPlaying: nil,
-        playButtonAction: { _ in },
-        pauseButtonAction: {}
+        playButtonTapped: { _ in },
+        pauseButtonTapped: {}
     )
 }

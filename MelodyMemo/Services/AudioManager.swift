@@ -23,21 +23,21 @@ struct SampleModel: Hashable, Identifiable {
 @MainActor
 protocol AudioManager {
     var trackLengthLimit: Int { get set }
-    var currentlyPlaying: CurrentValueSubject<Session?, Never> { get }
+    var currentlyPlaying: CurrentValueSubject<SessionGroup?, Never> { get }
     var isRecording: CurrentValueSubject<Bool, Never> { get }
     var playerProgress: CurrentValueSubject<Double, Never> { get }
     var lastPlayheadPosition: CurrentValueSubject<Double, Never> { get }
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never> { get }
-    func startTracking(for session: Session?) async throws
-    func stopTracking(for session: Session?) async throws
-    func startPlayback(for session: Session, at time: Double) throws
+    func startTracking(for group: SessionGroup?) async throws
+    func stopTracking(for session: Session?, group: SessionGroup?) async throws
+    func startPlayback(for group: SessionGroup, at time: Double) throws
     func stopPlayback(stopTimer: Bool) throws
     func removeTrack(track: Track)
     func toggleMute(for tracks: [Track])
     func setTrackVolume(for track: Track)
     func setTrackPan(for track: Track)
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage
-    func updateCurrentlyPlaying(_ session: Session)
+    func updateCurrentlyPlaying(_ group: SessionGroup)
     func updatePlayheadPosition(position: Double)
     func stopTimer(willReset: Bool)
     func setLastPlayheadPosition(_ position: Double)
@@ -63,7 +63,7 @@ class DefaultAudioManager: AudioManager {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
-    var currentlyPlaying: CurrentValueSubject<Session?, Never>
+    var currentlyPlaying: CurrentValueSubject<SessionGroup?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
     var lastPlayheadPosition: CurrentValueSubject<Double, Never>
@@ -72,7 +72,7 @@ class DefaultAudioManager: AudioManager {
     var meterTimerSubscription: AnyCancellable?
     var loopTimerSubscription: AnyCancellable?
     
-    func startTracking(for session: Session?) async throws {
+    func startTracking(for group: SessionGroup?) async throws {
                 
         try setupRecorder()
         
@@ -84,12 +84,12 @@ class DefaultAudioManager: AudioManager {
         
         let startTime = CACurrentMediaTime() + 0.5
         
-        if let session, !session.tracks.isEmpty {
-            try setupPlayers(for: session, at: 0, stopTimer: false)
+        if let group, !group.tracks.isEmpty {
+            try setupPlayers(for: group, at: 0, stopTimer: false)
             
-            currentlyPlaying.send(session)
+            currentlyPlaying.send(group)
             
-            if !session.tracks.isEmpty {
+            if !group.tracks.isEmpty {
                 for player in players {
                     await player.player.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: startTime + metronome.countInDelay)))
                 }
@@ -105,7 +105,7 @@ class DefaultAudioManager: AudioManager {
         try await startTimer(at: (startTime +  metronome.countInDelay + bluetoothDelay))
     }
     
-    func stopTracking(for session: Session?) async throws {
+    func stopTracking(for session: Session?, group: SessionGroup?) async throws {
         defer { currentFileName = nil }
         
         stopMetering()
@@ -144,14 +144,14 @@ class DefaultAudioManager: AudioManager {
             return
         }
         
-        var name = "Track 1"
+        var trackName = "Track 1"
         
-        if let session {
-            name = "Track \(session.absoluteTrackCount + 1)"
+        if let group {
+            trackName = "Track \(group.absoluteTrackCount + 1)"
         }
         
         let track = Track(
-            name: name,
+            name: trackName,
             fileName: currentFileName,
             date: Date(),
             length: Double(durationInSeconds),
@@ -165,34 +165,54 @@ class DefaultAudioManager: AudioManager {
             lightWaveformImage: lightWaveforomData
         )
         
-        if let session {
+        if  let session, let group {
+            currentlyPlaying.send(nil)
             var updatedSession = session
-            updatedSession.tracks[track.id] = track
-            updatedSession.absoluteTrackCount += 1
+            var updatedGroup = group
+            updatedGroup.tracks[track.id] = track
+            if group.absoluteTrackCount == 0 {
+                updatedGroup.loopReferenceTrack = track
+            }
+            updatedGroup.absoluteTrackCount += 1
+            updatedSession.groups[updatedGroup.id] = updatedGroup
+            updatedSession.armedGroup = updatedGroup
             
             if track.length > updatedSession.length {
                 updatedSession.length = track.length
             }
             
             try DefaultRecordingManager.shared.saveSession(updatedSession)
+            
         } else {
             
             let sessionBpm = await metronome.isArmed ? metronome.bpm.value : 0
+            let sessionId = UUID()
+            
+            let newGroup = SessionGroup(
+                label: .basic,
+                tracks: [track.id : track],
+                absoluteTrackCount: 1,
+                id: UUID(),
+                sessionId: sessionId,
+                groupNumber: 1,
+                isGroupExpanded: true,
+                isGroupSoloActive: false,
+                isLoopActive: false,
+                leftIndicatorFraction: 0.0,
+                rightIndicatorFraction: 1.0,
+                loopReferenceTrack: track
+            )
             
             let session = Session(
                 name: "Session \(DefaultRecordingManager.shared.absoluteSessionCount + 1)",
                 date: Date(),
                 length: durationInSeconds,
-                tracks: [track.id : track],
-                absoluteTrackCount: 1,
+                groups: [newGroup.id : newGroup],
+                absoluteGroupCount: 1,
                 sessionBpm: sessionBpm,
                 isUsingGlobalBpm: false,
-                id: UUID(),
-                isGlobalSoloActive: false,
-                isLoopActive: false,
-                leftIndicatorFraction: 0.0,
-                rightIndicatorFraction: 1.0,
-                loopReferenceTrack: track
+                armedGroup: newGroup,
+                id: sessionId
             )
             try DefaultRecordingManager.shared.saveSession(session)
             DefaultRecordingManager.shared.incrementAbsoluteSessionCount()
@@ -200,8 +220,8 @@ class DefaultAudioManager: AudioManager {
         
     }
     
-    func startPlayback(for session: Session, at time: Double) throws {
-        try setupPlayers(for: session, at: time)
+    func startPlayback(for group: SessionGroup, at time: Double) throws {
+        try setupPlayers(for: group, at: time)
         
         let startTimeInSeconds = CACurrentMediaTime() + 0.25
         
@@ -211,13 +231,13 @@ class DefaultAudioManager: AudioManager {
             )
         )
         
-        currentlyPlaying.send(session)
+        currentlyPlaying.send(group)
         
         for player in players {
             player.player.play(at: startTime)
         }
         
-        loopTimer(isFinalCheck: false)
+//        startLoopTimer(isFinalCheck: false)
         try startTimer(at: startTimeInSeconds + 0.03)
     }
     
@@ -230,6 +250,13 @@ class DefaultAudioManager: AudioManager {
         players.removeAll()
         if stopTimer {
             self.stopTimer(willReset: true)
+            if let currentlyPlaying = currentlyPlaying.value {
+                var group = currentlyPlaying
+                group.lastPlayheadPosition = 0.0
+                
+                try DefaultRecordingManager.shared.updateGroup(group)
+            }
+            
         }
         currentlyPlaying.send(nil)
     }
@@ -317,13 +344,8 @@ class DefaultAudioManager: AudioManager {
         return uiImage
     }
     
-    func updateCurrentlyPlaying(_ session: Session) {
-        currentlyPlaying.send(session)
-        if session.isLoopActive, playerProgress.value < session.rightIndicatorTime {
-            loopTimer(isFinalCheck: false)
-        } else if !session.isLoopActive {
-            loopTimerSubscription?.cancel()
-        }
+    func updateCurrentlyPlaying(_ group: SessionGroup) {
+        currentlyPlaying.send(group)
     }
     
     func updatePlayheadPosition(position: Double) {
@@ -347,24 +369,24 @@ class DefaultAudioManager: AudioManager {
     }
     
     func loopIndicatorChangedPosition() throws {
-        guard let session = currentlyPlaying.value else {
+        guard let group = currentlyPlaying.value else {
             return
         }
-        if playerProgress.value > session.rightIndicatorTime, session.isLoopActive {
+        if playerProgress.value > group.rightIndicatorTime, group.isLoopActive {
             loopTimerSubscription?.cancel()
         }
     }
     
     func restartPlayback(from position: Double) throws {
         
-        guard let session = currentlyPlaying.value else {
+        guard let group = currentlyPlaying.value else {
             return
         }
         
         try stopPlayback(stopTimer: false)
-        try startPlayback(for: session, at: position)
+        try startPlayback(for: group, at: position)
         
-        if position > session.rightIndicatorTime {
+        if position > group.rightIndicatorTime {
             loopTimerSubscription?.cancel()
         }
     }
@@ -443,11 +465,15 @@ class DefaultAudioManager: AudioManager {
         
     }
     
-    private func startNextLoop(for session: Session, from time: Double, at startTimeInSeconds: Double) throws {
+    private func startNextLoop(from time: Double, at startTimeInSeconds: Double) throws {
+                
+        guard let group = currentlyPlaying.value else {
+            return
+        }
         
-        let firstPlayerIndex = session.tracks.count
+        let firstPlayerIndex = group.tracks.count
         
-        try setupPlayers(for: session, at: session.leftIndicatorTime, firstPlayerIndex: firstPlayerIndex, isInLoop: true)
+        try setupPlayers(for: group, at: group.leftIndicatorTime, firstPlayerIndex: firstPlayerIndex, isInLoop: true)
                 
         let startTime = AVAudioTime(
             hostTime: AVAudioTime.hostTime(
@@ -460,17 +486,17 @@ class DefaultAudioManager: AudioManager {
         }
     }
         
-    private func setupPlayers(for session: Session, at time: Double, firstPlayerIndex: Int = 0, stopTimer: Bool = true, isInLoop: Bool = false) throws {
+    private func setupPlayers(for group: SessionGroup, at time: Double, firstPlayerIndex: Int = 0, stopTimer: Bool = true, isInLoop: Bool = false) throws {
         
-        if session.tracks.values.isEmpty {
+        if group.tracks.values.isEmpty {
             return
         }
         
-        let sortedTracks = session.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
+        let sortedTracks = group.tracks.values.sorted { (lhs: Track, rhs: Track) -> Bool in
             return lhs.length < rhs.length
         }
-                
-        if currentlyPlaying.value != nil, currentlyPlaying.value != session {
+        
+        if currentlyPlaying.value != nil, currentlyPlaying.value != group {
             for player in players {
                 player.player.stop()
                 playbackEngine.detach(player.player)
@@ -536,12 +562,12 @@ class DefaultAudioManager: AudioManager {
             
         }
         
-        if currentlyPlaying.value == nil {
+        if !playbackEngine.isRunning {
             playbackEngine.prepare()
             try playbackEngine.start()
         }
         
-        if session.isGlobalSoloActive {
+        if group.isGroupSoloActive {
             for player in players {
                 if !player.player.isPlaying {
                     if player.track.isSolo {
@@ -675,56 +701,9 @@ class DefaultAudioManager: AudioManager {
         inputSamples.send(nil)
     }
     
-    private func loopTimer(isFinalCheck: Bool) {
-        
-        guard let session = currentlyPlaying.value else {
-            return
-        }
-                
-        var nextCheck: Double {
-            if isFinalCheck {
-                return session.rightIndicatorTime - playerProgress.value
-            } else {
-                return session.rightIndicatorTime - playerProgress.value - 0.5
-            }
-        }
-        
-        let loopTimer = Timer.publish(every: nextCheck, on: .main, in: .common).autoconnect()
-        
-        loopTimerSubscription = loopTimer.sink { date in
-            if isFinalCheck {
-                guard let session = self.currentlyPlaying.value else {
-                    return
-                }
-                if session.isLoopActive {
-                    self.loopTimerSubscription?.cancel()
-                    self.playerProgress.send(session.leftIndicatorTime)
-                    do {
-                        try self.startTimer(at: CACurrentMediaTime())
-                    } catch {}
-                    for _ in 0 ..< session.tracks.count {
-                        self.players[0].player.stop()
-                        self.playbackEngine.detach(self.players[0].player)
-                        self.players.remove(at: 0)
-                    }
-                    self.loopTimer(isFinalCheck: false)
-                }
-            } else {
-                guard let session = self.currentlyPlaying.value else {
-                    return
-                }
-                if session.isLoopActive {
-                    do {
-                        let nextLoopInterval = session.rightIndicatorTime - self.playerProgress.value
-                        try self.startNextLoop(for: session, from: session.leftIndicatorTime, at: CACurrentMediaTime() + nextLoopInterval)
-                    } catch {}
-                    self.loopTimer(isFinalCheck: true)
-                }
-            }
-        }
-    }
-    
     private func startTimer(at startTime: TimeInterval) throws {
+        
+        var nextLoopScheduled = false
         
         let delay: Double = startTime - CACurrentMediaTime()
         let start: Date = Date() + delay
@@ -738,6 +717,31 @@ class DefaultAudioManager: AudioManager {
             } else {
                 self.playerProgress.send(startPosition)
                 self.lastPlayheadPosition.send(startPosition)
+            }
+            
+            guard let group = self.currentlyPlaying.value else {
+                return
+            }
+            
+            if group.isLoopActive {
+                let timeRemaining = group.rightIndicatorTime - self.playerProgress.value
+                if timeRemaining < 0.5, !nextLoopScheduled {
+                    do {
+                        try self.startNextLoop(from: group.leftIndicatorTime, at: CACurrentMediaTime() + timeRemaining)
+                    } catch {}
+                    nextLoopScheduled = true
+                } else if timeRemaining <= 0.0 {
+                    self.playerProgress.send(group.leftIndicatorTime)
+                    do {
+                        try self.startTimer(at: CACurrentMediaTime())
+                    } catch {}
+                    for _ in 0 ..< group.tracks.count {
+                        self.players[0].player.stop()
+                        self.playbackEngine.detach(self.players[0].player)
+                        self.players.remove(at: 0)
+                    }
+                    nextLoopScheduled = false
+                }
             }
         }
     }

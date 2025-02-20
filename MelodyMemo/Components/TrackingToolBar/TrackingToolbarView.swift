@@ -52,15 +52,7 @@ struct TrackingToolbarView: View {
     var body: some View {
         VStack {
             HStack {
-                MetronomeButtonView(
-                    isMetronomeArmed: $isMetronomeArmed,
-                    metronomeBpm: metronomeBpm,
-                    isRecording: isRecording
-                )
-                    .padding(.leading)
                 RecordButtonView(isRecording: $isRecording, inputLevel: inputSamples)
-                appSettingsButton
-                    .padding(.trailing)
             }
             if isRecording {
                 Text(timerDisplay)
@@ -68,12 +60,6 @@ struct TrackingToolbarView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .background(
-            Color(UIColor.systemBackground).opacity(0.3)
-                .background(.ultraThickMaterial.opacity(0.97))
-                .frame(height: 90)
-                .clipShape(RoundedRectangle(cornerRadius: 25))
-        )
         .animation(.spring, value: isRecording)
         .offset(y: -20)
         .padding(.top, 25)
@@ -86,10 +72,11 @@ struct TrackingToolbarView: View {
             }
         } label: {
             AppButtonLabelView(name: "slider.horizontal.3", color: .primary, size: 22)
+                .padding(8)
+                .background(.ultraThinMaterial)
+                .cornerRadius(20)
         }
-        
     }
-    
 }
 
 #Preview {

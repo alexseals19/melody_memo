@@ -12,15 +12,15 @@ import SwiftUI
 
 class MockAudioManager: AudioManager {
     var trackLengthLimit: Int
-    var currentlyPlaying: CurrentValueSubject<Session?, Never>
+    var currentlyPlaying: CurrentValueSubject<SessionGroup?, Never>
     var isRecording: CurrentValueSubject<Bool, Never>
     var playerProgress: CurrentValueSubject<Double, Never>
     var lastPlayheadPosition: CurrentValueSubject<Double, Never>
     var inputSamples: CurrentValueSubject<[SampleModel]?, Never>
     
-    func startTracking(for session: Session?) throws {}
-    func stopTracking(for _: Session?) async {}
-    func startPlayback(for session: Session, at time: Double) throws {}
+    func startTracking(for group: SessionGroup?) throws {}
+    func stopTracking(for _: Session?, group: SessionGroup?) async {}
+    func startPlayback(for group: SessionGroup, at time: Double) throws {}
     func stopPlayback(stopTimer: Bool) {}
     func playMetronome(bpm: Double, timeSignature: Int, beat: Int) throws {}
     func stopMetronome() {}
@@ -29,7 +29,7 @@ class MockAudioManager: AudioManager {
     func setTrackVolume(for track: Track) {}
     func setTrackPan(for track: Track) {}
     func getImage(for fileName: String, colorScheme: ColorScheme) throws -> UIImage {UIImage(imageLiteralResourceName: "waveform")}
-    func updateCurrentlyPlaying(_ session: Session) {}
+    func updateCurrentlyPlaying(_ group: SessionGroup) {}
     func updatePlayheadPosition(position: Double) {}
     func stopTimer(willReset: Bool) {}
     func setLastPlayheadPosition(_ position: Double) {}

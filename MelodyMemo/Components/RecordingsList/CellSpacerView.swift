@@ -33,7 +33,7 @@ struct CellSpacerView: View {
     
     var body: some View {
         ZStack {
-            Color(UIColor.systemBackground).opacity(0.3)
+            Color(.clear)
                 .frame(maxWidth: .infinity, minHeight: 150)
                 .frame(height: height)
                 .ignoresSafeArea()
