@@ -45,7 +45,6 @@ struct SessionsListView: View {
     
     @StateObject private var viewModel: SessionsListViewModel
     
-    
     private var isScrollDisabled: Bool {
         false
     }
@@ -67,9 +66,12 @@ struct SessionsListView: View {
                                     currentlyPlaying: viewModel.currentlyPlaying,
                                     session: session,
                                     playerProgress: viewModel.playerProgress,
+                                    nameChangeText: $viewModel.nameChangeText,
+                                    isEditingSession: $viewModel.isEditingSession,
                                     playButtonAction: viewModel.sessionCellPlayButtonTapped,
                                     stopButtonAction: viewModel.sessionCellStopButtonTapped,
-                                    trashButtonAction: viewModel.sessionCellTrashButtonTapped
+                                    trashButtonAction: viewModel.sessionCellTrashButtonTapped,
+                                    sessionNameDidChange: viewModel.sessionNameDidChange
                                 )
                                 Rectangle()
                                     .frame(maxWidth: .infinity, maxHeight: 1)
@@ -113,6 +115,14 @@ struct SessionsListView: View {
                         .offset(y: 50)
                 }
                 Spacer()
+            }
+            if viewModel.isEditingSession != nil {
+                Color.gray.opacity(0.001)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onTapGesture {
+                        viewModel.isEditingSession = nil
+                        viewModel.nameChangeText = ""
+                    }
             }
         }
     }

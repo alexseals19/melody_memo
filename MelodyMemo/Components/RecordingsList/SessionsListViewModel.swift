@@ -18,8 +18,10 @@ class SessionsListViewModel: ObservableObject {
     @Published var isUpdatingSessionModels: Bool?
     @Published var sessions: [Session] = []
     @Published var playerProgress: Double = 0.0
+    @Published var nameChangeText: String = ""
     
     @Published var errorMessage: String?
+    @Published var isEditingSession: Session?
     
     let recordingManager: RecordingManager
     let audioManager: AudioManager
@@ -81,6 +83,17 @@ class SessionsListViewModel: ObservableObject {
         } catch {
             errorMessage = "ERROR: Cannot remove session."
         }
+    }
+    
+    func sessionNameDidChange(session: Session, name: String) {
+        var updatedSession = session
+        updatedSession.name = name
+        do {
+            try recordingManager.saveSession(updatedSession)
+        } catch {
+            errorMessage = "ERROR: Could not update session."
+        }
+        nameChangeText = ""
     }
     
     // MARK: - Variables
