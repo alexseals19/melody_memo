@@ -10,14 +10,20 @@ import SwiftUI
 struct SessionCellView: View {
     
     // MARK: - API
+    
+    @Binding var nameChangeText: String
+    @Binding var isEditingSession: Session?
         
     init(
         currentlyPlaying: SessionGroup?,
         session: Session,
         playerProgress: Double,
+        nameChangeText: Binding<String>,
+        isEditingSession: Binding<Session?>,
         playButtonAction: @escaping (_: SessionGroup) -> Void,
         stopButtonAction: @escaping () -> Void,
-        trashButtonAction: @escaping (_: Session) -> Void
+        trashButtonAction: @escaping (_: Session) -> Void,
+        sessionNameDidChange: @escaping (_: Session, _: String) -> Void
     ) {
         self.currentlyPlaying = currentlyPlaying
         self.session = session
@@ -25,6 +31,10 @@ struct SessionCellView: View {
         self.playButtonAction = playButtonAction
         self.stopButtonAction = stopButtonAction
         self.trashButtonAction = trashButtonAction
+        self.sessionNameDidChange = sessionNameDidChange
+        
+        _nameChangeText = nameChangeText
+        _isEditingSession = isEditingSession
     }
     
     // MARK: - Variables
@@ -38,6 +48,7 @@ struct SessionCellView: View {
     private let playButtonAction: (_ group: SessionGroup) -> Void
     private let stopButtonAction: () -> Void
     private let trashButtonAction: (_ session: Session) -> Void
+    private let sessionNameDidChange: (_: Session, _: String) -> Void
     
     private let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
     private let softImpact = UIImpactFeedbackGenerator(style: .soft)
@@ -48,6 +59,9 @@ struct SessionCellView: View {
     @State private var twoWayDrag: Bool = false
     
     @State private var progressViewWidth: CGFloat = 0.0
+    
+    @FocusState private var isTextFieldFocused: Bool
+    
     
     private var opacity: Double {
         if let currentlyPlaying, currentlyPlaying == session.armedGroup {
@@ -138,20 +152,37 @@ struct SessionCellView: View {
                     HStack {
                         VStack(alignment: .leading) {
                             HStack {
-                                Text(session.name)
-                                    .font(.title2)
-                                    .minimumScaleFactor(0.75)
-                                    .lineLimit(1)
-                                    .padding(.bottom, 1)
-                                Menu {
-                                    Button(role: .destructive) {
-                                        trashButtonAction(session)
+                                if isEditingSession == session {
+                                    TextField("\(session.name)", text: $nameChangeText)
+                                        .focused($isTextFieldFocused)
+                                        .submitLabel(.done)
+                                        .onSubmit {
+                                            if !nameChangeText.isEmpty {
+                                                sessionNameDidChange(session, nameChangeText)
+                                            }
+                                            isEditingSession = nil
+                                        }
+                                    Spacer()
+                                    
+                                } else {
+                                    Text(session.name)
+                                        .font(.title2)
+                                        .minimumScaleFactor(0.9)
+                                        .lineLimit(1)
+                                        .padding(.bottom, 1)
+                                    Menu {
+                                        Button("Change Name") {
+                                            isEditingSession = session
+                                            isTextFieldFocused = true
+                                        }
+                                        Button("Delete", role: .destructive) {
+                                            trashButtonAction(session)
+                                        }
                                     } label: {
-                                        Text("Delete")
+                                        AppButtonLabelView(name: "ellipsis", color: .primary)
                                     }
-                                } label: {
-                                    AppButtonLabelView(name: "ellipsis", color: .primary)
                                 }
+                                
                                 
                                 if let currentlyPlaying, currentlyPlaying.sessionId == session.id {
                                     ProgressView(value: min(playerProgress / session.length, 1.0))
@@ -231,8 +262,11 @@ struct SessionCellView: View {
         currentlyPlaying: nil,
         session: Session.sessionFixture,
         playerProgress: 0.0,
+        nameChangeText: .constant(""),
+        isEditingSession: .constant(nil),
         playButtonAction: {_ in },
         stopButtonAction: {},
-        trashButtonAction: { _ in }
+        trashButtonAction: { _ in },
+        sessionNameDidChange: { _, _ in }
     )
 }
