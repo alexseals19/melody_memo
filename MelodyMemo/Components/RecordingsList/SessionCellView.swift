@@ -228,6 +228,15 @@ struct SessionCellView: View {
             }
             .offset(x: gestureOffset + offset)
             .animation(.snappy(duration: animationDuration), value: gestureOffset)
+            
+            if let isEditingSession, isEditingSession != session {
+                Color.gray.opacity(0.001)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onTapGesture {
+                        self.isEditingSession = nil
+                        nameChangeText = ""
+                    }
+            }
         }
         .foregroundStyle(.primary)
         .background(Color(UIColor.secondarySystemBackground).opacity(0.3))

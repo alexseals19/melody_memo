@@ -116,14 +116,6 @@ struct SessionsListView: View {
                 }
                 Spacer()
             }
-            if viewModel.isEditingSession != nil {
-                Color.gray.opacity(0.001)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .onTapGesture {
-                        viewModel.isEditingSession = nil
-                        viewModel.nameChangeText = ""
-                    }
-            }
         }
     }
 }
