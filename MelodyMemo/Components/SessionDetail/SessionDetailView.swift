@@ -52,6 +52,8 @@ struct SessionDetailView: View {
                         Text(viewModel.session.name)
                             .font(.largeTitle)
                             .frame(width: 200)
+                            .minimumScaleFactor(0.9)
+                            .lineLimit(1)
                     }
                     HStack {
                         Spacer()
