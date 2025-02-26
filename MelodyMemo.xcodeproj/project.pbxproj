@@ -22,6 +22,7 @@
 		99A384C42C1CB72B00736BA8 /* CellSpacerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */; };
 		99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */; };
 		99AD35C82C1355E50055CC2A /* DataPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */; };
+		99B1C90C2D6E7A680026FD4E /* CellType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B1C90B2D6E7A680026FD4E /* CellType.swift */; };
 		99B21E062C20A488004D5669 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B21E052C20A488004D5669 /* AppTheme.swift */; };
 		99B21E092C21043F004D5669 /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B21E082C21043F004D5669 /* AppSettingsView.swift */; };
 		99B9A7792C4C6F5300EAA9DA /* AppButtonLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B9A7782C4C6F5300EAA9DA /* AppButtonLabelView.swift */; };
@@ -62,6 +63,7 @@
 		99A384C32C1CB72B00736BA8 /* CellSpacerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellSpacerView.swift; sourceTree = "<group>"; };
 		99A384C52C1CE9F600736BA8 /* HomeViewNavBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewNavBarView.swift; sourceTree = "<group>"; };
 		99AD35C72C1355E50055CC2A /* DataPersistenceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPersistenceManager.swift; sourceTree = "<group>"; };
+		99B1C90B2D6E7A680026FD4E /* CellType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellType.swift; sourceTree = "<group>"; };
 		99B21E052C20A488004D5669 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		99B21E082C21043F004D5669 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
 		99B9A7782C4C6F5300EAA9DA /* AppButtonLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppButtonLabelView.swift; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 				99B21E052C20A488004D5669 /* AppTheme.swift */,
 				99DBF3782C235F3D002B6419 /* Metronome.swift */,
 				999461192C3C5F6000BA862A /* ErrorMessageView.swift */,
+				99B1C90B2D6E7A680026FD4E /* CellType.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -393,6 +396,7 @@
 				99A384C62C1CE9F600736BA8 /* HomeViewNavBarView.swift in Sources */,
 				99C364EB2C0F61AE00873213 /* SessionsListView.swift in Sources */,
 				99DBF3802C24A2DE002B6419 /* PlaybackControlButtonView.swift in Sources */,
+				99B1C90C2D6E7A680026FD4E /* CellType.swift in Sources */,
 				4521F44C2C189EE400246189 /* RecordingManager.swift in Sources */,
 				99C645562CEE3F310080F011 /* PreviousSessionModels.swift in Sources */,
 				99B21E062C20A488004D5669 /* AppTheme.swift in Sources */,

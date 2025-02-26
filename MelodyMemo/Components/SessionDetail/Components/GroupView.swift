@@ -231,7 +231,7 @@ struct GroupView: View {
         }
         .background(
             Color(UIColor.secondarySystemBackground).opacity(0.5)
-                .background(.black)
+                .background(Color(UIColor.systemBackground))
         )
         
     }

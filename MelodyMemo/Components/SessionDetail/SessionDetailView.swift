@@ -138,12 +138,13 @@ struct SessionDetailView: View {
                             CellSpacerView(
                                 screenHeight: proxy.size.height,
                                 numberOfSessions: viewModel.session.armedGroup.tracks.count,
-                                showMessage: false
+                                showMessage: false,
+                                cellType: .track
                             )
                         }
                         .animation(.spring, value: viewModel.session.groups)
                     }
-                    .ignoresSafeArea(edges: .bottom)
+                    
                 }
                 Spacer()
             }
@@ -163,6 +164,7 @@ struct SessionDetailView: View {
                 Spacer()
             }
         }
+        .ignoresSafeArea(edges: .bottom)
         .background(Color(UIColor.secondarySystemBackground).opacity(0.5))
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
                 viewModel.saveSession()
