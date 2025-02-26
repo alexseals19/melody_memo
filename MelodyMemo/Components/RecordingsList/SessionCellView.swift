@@ -239,7 +239,6 @@ struct SessionCellView: View {
             }
         }
         .foregroundStyle(.primary)
-        .background(Color(UIColor.secondarySystemBackground).opacity(0.3))
     }
     
     var trashButton: some View {

@@ -627,6 +627,7 @@ struct TrackCellView: View {
                 }
                 .padding(.horizontal, 20)
             }
+            
             .padding(.vertical, 10)
             .foregroundColor(.primary)
             

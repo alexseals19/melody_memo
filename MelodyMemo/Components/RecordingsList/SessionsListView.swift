@@ -60,7 +60,7 @@ struct SessionsListView: View {
                             Rectangle()
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 40)
-                                .foregroundStyle(Color(UIColor.secondarySystemBackground).opacity(0.3))
+                                .foregroundStyle(Color(UIColor.secondarySystemBackground).opacity(0.5))
                             ForEach(viewModel.sessions) { session in
                                 SessionCellView(
                                     currentlyPlaying: viewModel.currentlyPlaying,
@@ -73,6 +73,7 @@ struct SessionsListView: View {
                                     trashButtonAction: viewModel.sessionCellTrashButtonTapped,
                                     sessionNameDidChange: viewModel.sessionNameDidChange
                                 )
+                                .background(Color(UIColor.secondarySystemBackground).opacity(0.5))
                                 Rectangle()
                                     .frame(maxWidth: .infinity, maxHeight: 1)
                                     .foregroundStyle(.clear)
@@ -82,10 +83,10 @@ struct SessionsListView: View {
                                 screenHeight: proxy.size.height,
                                 numberOfSessions: viewModel.sessions.count,
                                 showMessage: true,
-                                isUpdatingSessionModels: viewModel.isUpdatingSessionModels
+                                isUpdatingSessionModels: viewModel.isUpdatingSessionModels,
+                                cellType: .session
                             )
                         }
-                        .background(Color(UIColor.secondarySystemBackground).opacity(0.5))
                         .animation(.spring, value: viewModel.sessions)
                         .navigationDestination(
                             for: Session.self,
